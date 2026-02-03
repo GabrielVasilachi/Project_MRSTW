@@ -24,9 +24,25 @@ function App() {
         <p>
           Edit <code>src/App.tsx</code> and save to test HMR
         </p>
-        <p>
+          <p>
+              Edit <code>src/App.tsx</code> and save to test HMR
+          </p><p>
           Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+      </p><p>
+          Edit <code>src/App.tsx</code> and save to test HMR
+      </p><p>
+          Edit <code>src/App.tsx</code> and save to test HMR
+      </p><p>
+          Edit <code>src/App.tsx</code> and save to test HMR
+      </p><p>
+          Edit <code>src/App.tsx</code> and save to test HMR
+      </p><p>
+          Edit <code>src/App.tsx</code> and save to test HMR
+      </p><p>
+          Edit <code>src/App.tsx</code> and save to test HMR
+      </p><p>
+          Edit <code>src/App.tsx</code> and save to test HMR
+      </p>
         <p>
           Edit <code>src/App.tsx</code> and save to test HMR
         </p>
