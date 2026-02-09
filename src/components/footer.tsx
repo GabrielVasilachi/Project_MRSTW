@@ -36,8 +36,6 @@ const Footer: React.FC = () => {
             </p>
           </div>
           
-
-
           <div>
             <h4 className="text-sm font-semibold text-gray-900 mb-4">Navigare rapidă</h4>
             <ul className="space-y-3">
@@ -48,8 +46,6 @@ const Footer: React.FC = () => {
                         </a>
                     </li>
                 ))}
-                
-              
             </ul>
           </div>
 
