@@ -1,3 +1,5 @@
+
 export const paths = {
-    signup: "/signup"
+    LandingPage: "/",
+    HowItWorksSteps: "/guide",
 }
