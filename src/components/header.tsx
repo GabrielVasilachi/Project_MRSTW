@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import BaseButton from './base/BaseButton'
-import packageSvg from '../images/package.svg'
 
 export default function Header() {
     return (
@@ -8,7 +7,7 @@ export default function Header() {
         <nav className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                    <img src={packageSvg} alt="Logo" className="h-8 w-8" />
+                     <img src="/public/package.svg" alt="Logo" className="h-8 w-8" /> 
                     <span className="text-xl font-bold text-gray-800">Portal Vamal</span>
                 </div>
                 
