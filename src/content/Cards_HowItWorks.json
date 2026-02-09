@@ -1,0 +1,67 @@
+{
+  "steps": [
+    {
+      "icon_key": "document",
+      "heading": "1. Creați un cont",
+      "description": "Înregistrați-vă ca persoană fizică sau juridică. Procesul durează doar 2 minute.",
+      "bullets": [
+        "Alegeți tipul de cont (persoană fizică sau juridică)",
+        "Completați datele de identificare",
+        "Confirmați adresa de email",
+        "Setați o parolă sigură"
+      ]
+    },
+    {
+      "icon_key": "box",
+      "heading": "2. Înregistrați coletul",
+      "description": "Încărcați documentele necesare pentru coletul dvs.",
+      "bullets": [
+        "Încărcați documentele necesare pentru colet",
+        "Completați detaliile despre colet și bunuri",
+        "Selectați modalitatea de transport și tipul de bunuri"
+      ]
+    },
+    {
+      "icon_key": "search",
+      "heading": "3. Verificare documente",
+      "description": "Oficiul vamal verifică documentele și calculează taxele.",
+      "bullets": [
+        "Oficiul vamal verifică autenticitatea documentelor",
+        "Clasifică tarifară bunurile",
+        "Calculează TVA, taxe vamale și accize (dacă este cazul)",
+        "Timp estimat de procesare: 24-48 ore"
+      ]
+    },
+    {
+      "icon_key": "info",
+      "heading": "4. Solicitare informații (dacă este cazul)",
+      "description": "Dacă sunt necesare documente suplimentare, veți fi notificat.",
+      "bullets": [
+        "Dacă sunt necesare documente suplimentare, veți fi notificat",
+        "Puteți încărca documente adiționale",
+        "Puteți comunica direct cu inspectorul vamal pentru clarificări",
+        "Termenul de răspuns pentru solicitarea de informații: 5 zile lucrătoare"
+      ]
+    },
+    {
+      "icon_key": "card",
+      "heading": "5. Plata taxelor",
+      "description": "După aprobare, plătiți taxele calculate online sau la sediu.",
+      "bullets": [
+        "După aprobare, veți vedea defalcarea completă a taxelor",
+        "Puteți plăti online cu card bancar sau la ghișeu la ridicarea coletului",
+        "Primiți chitanță electronică după plată"
+      ]
+    },
+    {
+      "icon_key": "check",
+      "heading": "6. Ridicarea coletului",
+      "description": "Prezentați-vă la punctul vamal cu documentele pentru ridicare.",
+      "bullets": [
+        "Prezentați-vă la punctul vamal cu documentele necesare pentru ridicare",
+        "Asigurați-vă că aveți confirmarea plății (electronică sau chitanță) și un act de identitate valid",
+        "Coletul vă va fi eliberat pe loc după verificare"
+      ]
+    }
+  ]
+}
