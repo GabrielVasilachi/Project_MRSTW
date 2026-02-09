@@ -17,7 +17,7 @@ const HowItWorksStep: React.FC = () => {
       {steps.map((s, idx) => (
         <div key={idx} className="bg-white border rounded-lg p-6">
           <div className="flex gap-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
               {icons[s.icon_key]}
             </div>
 

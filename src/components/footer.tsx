@@ -1,25 +1,11 @@
-import React from 'react';
+import React from "react"
+import footer_content from "../content/Cards_Footer.json"
 
 const Footer: React.FC = () => {
-    const navigation = [
-        {name: "Acasă", link: "/" },
-        {name: "Cum funcționează", link: "/cum-functiuneaza"},
-        {name: "Autentificare", link: "/autentificare"},
-        {name: "Înregistrare", link: "/inregistrare"}
-    ];
+  const navigation = footer_content.navigation
+  const contactInfo = footer_content.contactInfo
+  const legalLinks = footer_content.legalLinks
 
-    const contactInfo = {
-        phone: "+373 22 XXX XXX",
-        email: "suport@portalvamal.demo",
-        hours: "Luni - Vineri: 08:00 - 17:00"
-    };
-
-    const legalLinks = [
-        {name: "Termeni și condiții", link: "/termeni-si-conditii"},
-        {name: "Politica de confidențialitate", link: "/politica-de-confidentialitate"},
-        {name: "Cookies", link: "/cookies"}
-    ];
-     
   return (
     <footer className="bg-gray-50 border-t border-gray-200">
       <div className="max-w-7xl mx-auto px-6 py-12">
@@ -35,47 +21,48 @@ const Footer: React.FC = () => {
               Platformă digitală pentru gestionarea coletelor și taxelor vamale.
             </p>
           </div>
-          
+
           <div>
             <h4 className="text-sm font-semibold text-gray-900 mb-4">Navigare rapidă</h4>
             <ul className="space-y-3">
-                {navigation.map((item) => (
-                    <li key={item.name}>
-                        <a href={item.link} className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
-                            {item.name}
-                        </a>
-                    </li>
-                ))}
+              {navigation.map((item) => (
+                <li key={item.name}>
+                  <a href={item.link} className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
+                    {item.name}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
           <div>
             <h4 className="text-sm font-semibold text-gray-900 mb-4">Contact</h4>
             <ul className="space-y-3">
-                {Object.entries(contactInfo).map(([key, value]) => (
-                    <li key={key} className="text-sm text-gray-600">
-                        <span className="capitalize">{key}</span>: {value}
-                    </li>
-                ))}
+              {Object.entries(contactInfo).map(([key, value]) => (
+                <li key={key} className="text-sm text-gray-600">
+                  <span className="capitalize">{key}</span>: {value}
+                </li>
+              ))}
             </ul>
           </div>
 
           <div>
             <h4 className="text-sm font-semibold text-gray-900 mb-4">Legal</h4>
             <ul className="space-y-3">
-              {legalLinks.map((link) => (
-                <li key={link.name}>
-                  <a href={link.link} className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
-                    {link.name}
+              {legalLinks.map((item) => (
+                <li key={item.name}>
+                  <a href={item.link} className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
+                    {item.name}
                   </a>
                 </li>
               ))}
             </ul>
           </div>
+
         </div>
       </div>
     </footer>
-  );
-};
+  )
+}
 
-export default Footer;
+export default Footer

@@ -1,0 +1,18 @@
+{
+  "navigation": [
+    { "name": "Acasă", "link": "/" },
+    { "name": "Cum funcționează", "link": "/guide" },
+    { "name": "Autentificare", "link": "/authentification" },
+    { "name": "Înregistrare", "link": "/signup" }
+  ],
+  "contactInfo": {
+    "phone": "+373 22 XXX XXX",
+    "email": "suport@portalvamal.demo",
+    "hours": "Luni - Vineri: 08:00 - 17:00"
+  },
+  "legalLinks": [
+    { "name": "Termeni și condiții", "link": "/terms" },
+    { "name": "Politica de confidențialitate", "link": "/privacy-policy" },
+    { "name": "Cookies", "link": "/cookies" }
+  ]
+}
