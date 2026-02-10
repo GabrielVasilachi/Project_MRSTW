@@ -1,6 +1,8 @@
 function DashboardMain (){
     return (
-        <div>Welcome to main dashboard</div>
+        <div className="flex items-center justify-center h-full">
+            Welcome to main dashboard
+            </div>
     )
 }
 
