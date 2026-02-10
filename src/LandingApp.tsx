@@ -2,7 +2,7 @@ import Footer from './components/footer'
 import Header from './components/header'
 import { Outlet } from 'react-router-dom'
 
-function App() { 
+function LandingApp() { 
   return (
     <>
     <Header/>
@@ -14,4 +14,4 @@ function App() {
   )
 }
 
-export default App
+export default LandingApp
