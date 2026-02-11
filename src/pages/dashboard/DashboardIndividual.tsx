@@ -1,4 +1,4 @@
-import data from '../../_mock/moch_persoana_fizica.json'
+import data from '../../_mock/mock_persoana_fizica.json'
 
 type PhysicalUser = {
     id: string
