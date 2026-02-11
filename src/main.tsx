@@ -7,9 +7,11 @@ import './index.css'
 import { paths } from './routes/paths.ts'
 import LandingPage from "./pages/landing";
 import HowItWorksStep from "./pages/guide";
-import DashboardMain from "./pages/DashboardMain";
 
 import DashboardApp from './DashboardApp.tsx'
+import DashboardAdmin from './pages/dashboard/DashboardAdmin.tsx'
+import Dashboard_Individual from "./pages/dashboard/DashboardIndividual.tsx";
+import Dashboard_Business from "./pages/dashboard/DashboardBusiness.tsx";
 import DashboardSettings from './pages/DashboardSettings.tsx'
 
 createRoot(document.getElementById('root')!).render(
@@ -24,7 +26,9 @@ createRoot(document.getElementById('root')!).render(
         </Route>
 
         <Route element={<DashboardApp />}> {/* aceasta linie este pentru a aplica sidebarul doar pentru paginile de mai jos */}
-          <Route path={paths.DashboardMain} element={<DashboardMain />} />
+          <Route/>
+          <Route path={paths.Dashboard_Individual} element={<Dashboard_Individual />} />
+          <Route path={paths.Dashboard_Business} element={<Dashboard_Business />} />
           <Route path={paths.DashboardSettings} element={<DashboardSettings />} />
         </Route>
         

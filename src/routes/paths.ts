@@ -2,6 +2,8 @@
 export const paths = {
     LandingPage: "/",
     HowItWorksSteps: "/guide",
-    DashboardMain: "/dashboard",
+    Dashboard_Admin: "/dashboard",
+    Dashboard_Business: "/dashboard/business",
+    Dashboard_Individual: "/dashboard/individual",
     DashboardSettings: "/dashboard/settings"
 }
