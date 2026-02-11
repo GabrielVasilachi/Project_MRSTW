@@ -1,16 +1,16 @@
 import { Outlet } from 'react-router-dom'
 import Sidebar from './components/dashboard/Sidebar'
-import Header from './components/dashboard/Header'
 
 function DashboardApp() { 
   return (
-    <>
-    <Header />
-    <Sidebar/>
-    <main className='flex-auto'>
-      <Outlet />
-    </main>
-    </>
+    <div className="flex min-h-screen flex-col bg-gray-50">
+			<div className="flex flex-1 min-h-0">
+				<Sidebar />
+				<main className="flex-1 min-h-0 overflow-y-auto p-6">
+					<Outlet />
+				</main>
+			</div>
+		</div>
   )
 }
 

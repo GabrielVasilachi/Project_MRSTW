@@ -9,10 +9,9 @@ import LandingPage from "./pages/landing";
 import HowItWorksStep from "./pages/guide";
 
 import DashboardApp from './DashboardApp.tsx'
-import DashboardAdmin from './pages/dashboard/DashboardAdmin.tsx'
+import Dashboard_Admin from './pages/dashboard/DashboardAdmin.tsx'
 import Dashboard_Individual from "./pages/dashboard/DashboardIndividual.tsx";
 import Dashboard_Business from "./pages/dashboard/DashboardBusiness.tsx";
-import DashboardSettings from './pages/DashboardSettings.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -26,10 +25,9 @@ createRoot(document.getElementById('root')!).render(
         </Route>
 
         <Route element={<DashboardApp />}> {/* aceasta linie este pentru a aplica sidebarul doar pentru paginile de mai jos */}
-          <Route/>
+          <Route path={paths.Dashboard_Admin} element={<Dashboard_Admin />} />
           <Route path={paths.Dashboard_Individual} element={<Dashboard_Individual />} />
           <Route path={paths.Dashboard_Business} element={<Dashboard_Business />} />
-          <Route path={paths.DashboardSettings} element={<DashboardSettings />} />
         </Route>
         
       </Routes>
