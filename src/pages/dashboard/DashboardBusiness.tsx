@@ -1,4 +1,4 @@
-import data from '../../_mock/moch_persoana_juridica.json'
+import data from '../../_mock/mock_persoana_juridica.json'
 
 type JuridicalUser = {
     id: string
