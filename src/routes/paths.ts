@@ -5,5 +5,6 @@ export const paths = {
     Dashboard_Admin: "/dashboard",
     Dashboard_Business: "/dashboard/business",
     Dashboard_Individual: "/dashboard/individual",
-    DashboardSettings: "/dashboard/settings"
+    DashboardSettings: "/dashboard/settings",
+    LoginPage: "/login"
 }
