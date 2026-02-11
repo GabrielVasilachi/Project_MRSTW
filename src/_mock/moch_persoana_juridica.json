@@ -1,0 +1,33 @@
+{
+  "users": [
+    {
+      "id": "j1",
+      "type": "juridical",
+      "company_name": "Import Solutions SRL",
+      "tax_id": "1003600123456",
+      "eori": "MD123456789",
+      "vat_registered": true,
+      "email": "office@importsolutions.md",
+      "phone": "+37369111222",
+      "address": "Str. Stefan cel Mare 12, Chisinau, Moldova"
+    }
+  ],
+  "declarations": [
+    {
+      "id": "jd1",
+      "user_id": "j1",
+      "awb_number": "176-12345675",
+      "hs_code": "8471300000",
+      "description": "Laptop computers",
+      "quantity": 50,
+      "gross_weight": 120,
+      "customs_value": 25000,
+      "currency": "EUR",
+      "vat": 5000,
+      "customs_duty": 1250,
+      "excise": 0,
+      "total_taxes": 6250,
+      "status": "Approved"
+    }
+  ]
+}
