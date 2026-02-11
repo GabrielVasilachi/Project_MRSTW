@@ -5,7 +5,6 @@ const Footer: React.FC = () => {
   const navigation = footer_content.navigation
   const contactInfo = footer_content.contactInfo
   const legalLinks = footer_content.legalLinks
-
   return (
     <footer className="bg-gray-50 border-t border-gray-200">
       <div className="max-w-7xl mx-auto px-6 py-12">
