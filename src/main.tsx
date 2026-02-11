@@ -12,6 +12,7 @@ import DashboardApp from './DashboardApp.tsx'
 import Dashboard_Admin from './pages/dashboard/DashboardAdmin.tsx'
 import Dashboard_Individual from "./pages/dashboard/DashboardIndividual.tsx";
 import Dashboard_Business from "./pages/dashboard/DashboardBusiness.tsx";
+import LoginPage from "./pages/login.tsx";  
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -21,7 +22,8 @@ createRoot(document.getElementById('root')!).render(
         <Route element={<LandingApp />}> {/* aceasta linie este pentru a aplica headerul si footerul doar pentru paginile de mai jos */}
           <Route path={paths.LandingPage} element={<LandingPage />} />
           <Route path={paths.HowItWorksSteps} element={<HowItWorksStep />} />
-          <Route path='*' element={<LandingPage />} />
+          <Route path='*' element={<LandingPage />} /> 
+          <Route path={paths.LoginPage} element={<LoginPage />} />
         </Route>
 
         <Route element={<DashboardApp />}> {/* aceasta linie este pentru a aplica sidebarul doar pentru paginile de mai jos */}
