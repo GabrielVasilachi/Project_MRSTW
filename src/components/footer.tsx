@@ -1,4 +1,5 @@
 import React from "react"
+import { Link } from "react-router-dom"
 import footer_content from "../content/Cards_Footer.json"
 
 const Footer: React.FC = () => {
@@ -26,9 +27,15 @@ const Footer: React.FC = () => {
             <ul className="space-y-3">
               {navigation.map((item) => (
                 <li key={item.name}>
-                  <a href={item.link} className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
-                    {item.name}
-                  </a>
+                  {item.name === "Autentificare" ? (
+                    <Link to="/login" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
+                      {item.name}
+                    </Link>
+                  ) : (
+                    <a href={item.link} className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
+                      {item.name}
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>
