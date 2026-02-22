@@ -1,10 +1,28 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Logo from "../../public/images/Logo.svg";
 
+import { getDashboardPathByRole, loginMock } from "../auth/auth.mock";
+import { setSession } from "../auth/auth.session";
+
 export default function LoginPage() {
-	const handleSubmit = (e: React.FormEvent) => {
+	const navigate = useNavigate()
+	const [email, setEmail] = React.useState('')
+	const [password, setPassword] = React.useState('')
+	const [error, setError] = React.useState<string | null>(null)
+
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+		setError(null)
+
+		const result = await loginMock(email, password)
+		if (!result.ok) {
+			setError(result.error)
+			return
+		}
+
+		setSession(result.session)
+		navigate(getDashboardPathByRole(result.session.role), { replace: true })
 	};
 
 	return (
@@ -26,6 +44,8 @@ export default function LoginPage() {
 						type="email"
 						placeholder="exemplu@email.com"
 						required
+						value={email}
+						onChange={(e) => setEmail(e.target.value)}
 						className="mt-2 w-full px-3 py-2 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
 					/>
 
@@ -38,8 +58,16 @@ export default function LoginPage() {
 						type="password"
 						placeholder="********"
 						required
+						value={password}
+						onChange={(e) => setPassword(e.target.value)}
 						className="mt-2 w-full px-3 py-2 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
 					/>
+
+					{error ? (
+						<div className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+							{error}
+						</div>
+					) : null}
 
 					<button
 						type="submit"

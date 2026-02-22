@@ -15,6 +15,8 @@ import Dashboard_Business from "./pages/dashboard/DashboardBusiness.tsx";
 import LoginPage from "./pages/login.tsx";
 import SignupPage from "./pages/signup.tsx";
 
+import AuthGuard from './auth/auth.guard.tsx'
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
@@ -29,9 +31,30 @@ createRoot(document.getElementById('root')!).render(
         </Route>
 
         <Route element={<DashboardApp />}> {/* aceasta linie este pentru a aplica sidebarul doar pentru paginile de mai jos */}
-          <Route path={paths.Dashboard_Admin} element={<Dashboard_Admin />} />
-          <Route path={paths.Dashboard_Individual} element={<Dashboard_Individual />} />
-          <Route path={paths.Dashboard_Business} element={<Dashboard_Business />} />
+          <Route
+        path={paths.Dashboard_Admin}
+        element={
+          <AuthGuard allowedRoles={['admin']}>
+            <Dashboard_Admin />
+          </AuthGuard>
+        }
+      />
+      <Route
+        path={paths.Dashboard_Individual}
+        element={
+          <AuthGuard allowedRoles={['individual']}>
+            <Dashboard_Individual />
+          </AuthGuard>
+        }
+      />
+      <Route
+        path={paths.Dashboard_Business}
+        element={
+          <AuthGuard allowedRoles={['business']}>
+            <Dashboard_Business />
+          </AuthGuard>
+        }
+      />
         </Route>
         
       </Routes>

@@ -3,20 +3,20 @@
     {
       "role": "individual",
       "user_id": "p1",
-      "email": "test.individual@example.com",
-      "password": "TestInd123!"
+      "email": "individual@gmail.com",
+      "password": "individual"
     },
     {
       "role": "business",
       "user_id": "j1",
-      "email": "test.business@example.com",
-      "password": "BizPass456!"
+      "email": "business@gmail.com",
+      "password": "business"
     },
     {
       "role": "admin",
       "user_id": null,
-      "email": "admin@example.com",
-      "password": "AdminPass789!"
+      "email": "admin@gmail.com",
+      "password": "admin"
     }
   ]
 }
