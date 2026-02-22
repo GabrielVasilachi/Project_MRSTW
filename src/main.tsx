@@ -16,6 +16,7 @@ import LoginPage from "./pages/login.tsx";
 import SignupPage from "./pages/signup.tsx";
 
 import AuthGuard from './auth/auth.guard.tsx'
+import FrequentlyAskedQuestions from './pages/faq.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -25,6 +26,7 @@ createRoot(document.getElementById('root')!).render(
         <Route element={<LandingApp />}> {/* aceasta linie este pentru a aplica headerul si footerul doar pentru paginile de mai jos */}
           <Route path={paths.LandingPage} element={<LandingPage />} />
           <Route path={paths.HowItWorksSteps} element={<HowItWorksStep />} />
+          <Route path={paths.FrequentlyAskedQuestions} element={<FrequentlyAskedQuestions />} />
           <Route path={paths.LoginPage} element={<LoginPage />} />
           <Route path={paths.SignupPage} element={<SignupPage />} />
           <Route path='*' element={<LandingPage />} />
