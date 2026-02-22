@@ -1,0 +1,22 @@
+{
+  "accounts": [
+    {
+      "role": "individual",
+      "user_id": "p1",
+      "email": "test.individual@example.com",
+      "password": "TestInd123!"
+    },
+    {
+      "role": "business",
+      "user_id": "j1",
+      "email": "test.business@example.com",
+      "password": "BizPass456!"
+    },
+    {
+      "role": "admin",
+      "user_id": null,
+      "email": "admin@example.com",
+      "password": "AdminPass789!"
+    }
+  ]
+}
