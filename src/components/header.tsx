@@ -13,9 +13,9 @@ export default function Header() {
                     </div>
 
                     <div className="hidden md:flex items-center space-x-8">
-                        <Link to="/" className="text-gray-700 hover:text-amber-600 font-medium transition">Acasă</Link>
-                        <Link to="/guide" className="text-gray-700 hover:text-amber-600 font-medium transition">Cum funcționează</Link>
-                        <a href="#about" className="text-gray-700 hover:text-amber-600 font-medium transition">FAQ</a>
+                        <Link to="/" className="text-gray-700 hover:text-blue-600 font-medium transition">Acasă</Link>
+                        <Link to="/guide" className="text-gray-700 hover:text-blue-600 font-medium transition">Cum funcționează</Link>
+                        <Link to="/faq" className="text-gray-700 hover:text-blue-600 font-medium transition">FAQ</Link>
                     </div>
 
                     <div className="flex items-center space-x-4">
