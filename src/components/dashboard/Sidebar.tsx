@@ -1,5 +1,7 @@
 import { NavLink } from 'react-router-dom'
 
+import {clearSession} from '../../auth/auth.session'
+
 import { paths } from '../../routes/paths'
 
 function linkClass(isActive: boolean) {
@@ -65,9 +67,9 @@ export default function Sidebar() {
 					<NavLink to={paths.DashboardSettings} className={({ isActive }) => linkClass(isActive)}>
 						Contul meu
 					</NavLink>
-					<button type="button" className={itemClass()}>
+					<NavLink to={paths.LandingPage} onClick={clearSession} className={({ isActive }) => linkClass(isActive)}>
 						Deconectare
-					</button>
+					</NavLink>
 				</div>
 			</div>
 		</aside>
