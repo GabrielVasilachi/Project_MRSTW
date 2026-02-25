@@ -51,16 +51,6 @@ export default function Sidebar() {
 					</button>
 
 					<div className="py-2" />
-
-					<NavLink to={paths.Dashboard_Admin} end className={({ isActive }) => linkClass(isActive)}>
-						Dashboard Admin
-					</NavLink>
-					<NavLink to={paths.Dashboard_Business} className={({ isActive }) => linkClass(isActive)}>
-						Dashboard Business
-					</NavLink>
-					<NavLink to={paths.Dashboard_Individual} className={({ isActive }) => linkClass(isActive)}>
-						Dashboard Individual
-					</NavLink>
 				</nav>
 
 				<div className="mt-4 border-t border-gray-200 pt-4 space-y-1">
