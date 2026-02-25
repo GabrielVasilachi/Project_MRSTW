@@ -3,14 +3,38 @@
     {
       "role": "individual",
       "user_id": "p1",
-      "email": "individual@gmail.com",
-      "password": "individual"
+      "email": "p1@gmail.com",
+      "password": "p1"
+    },
+    {
+      "role": "individual",
+      "user_id": "p2",
+      "email": "p2@gmail.com",
+      "password": "p2"
+    },
+    {
+      "role": "individual",
+      "user_id": "p3",
+      "email": "p3@gmail.com",
+      "password": "p3"
     },
     {
       "role": "business",
       "user_id": "j1",
-      "email": "business@gmail.com",
-      "password": "business"
+      "email": "j1@gmail.com",
+      "password": "j1"
+    },
+    {
+      "role": "business",
+      "user_id": "j2",
+      "email": "j2@gmail.com",
+      "password": "j2"
+    },
+    {
+      "role": "business",
+      "user_id": "j3",
+      "email": "j3@gmail.com",
+      "password": "j3"
     },
     {
       "role": "admin",
