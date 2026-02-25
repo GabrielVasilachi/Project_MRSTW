@@ -8,6 +8,24 @@
       "email": "andrei.popescu@mail.com",
       "phone": "+37368888777",
       "address": "Str. Dacia 20, Chisinau, Moldova"
+    },
+    {
+      "id": "p2",
+      "type": "physical",
+      "full_name": "Ionescu Maria",
+      "idnp": "2003034567890",
+      "email": "maria.ionescu@mail.com",
+      "phone": "+37369123456",
+      "address": "Str. Independentei 5, Balti, Moldova"
+    },
+    {
+      "id": "p3",
+      "type": "physical",
+      "full_name": "Botnari Victor",
+      "idnp": "1998077654321",
+      "email": "victor.botnari@mail.com",
+      "phone": "+37360777111",
+      "address": "Str. Mihai Eminescu 3, Chisinau, Moldova"
     }
   ],
   "declarations": [
@@ -19,13 +37,61 @@
       "description": "Children toys",
       "quantity": 5,
       "gross_weight": 10,
-      "customs_value": 300,
-      "currency": "EUR",
-      "vat": 60,
-      "customs_duty": 15,
+      "customs_value": 6051,
+      "currency": "MDL",
+      "vat": 1210,
+      "customs_duty": 303,
       "excise": 0,
-      "total_taxes": 75,
+      "total_taxes": 1513,
       "status": "Pending Documents"
+    },
+    {
+      "id": "pd2",
+      "user_id": "p1",
+      "awb_number": "176-55559999",
+      "hs_code": "6109100000",
+      "description": "T-shirts cotton",
+      "quantity": 10,
+      "gross_weight": 4,
+      "customs_value": 3026,
+      "currency": "MDL",
+      "vat": 605,
+      "customs_duty": 403,
+      "excise": 0,
+      "total_taxes": 1009,
+      "status": "Approved"
+    },
+    {
+      "id": "pd3",
+      "user_id": "p2",
+      "awb_number": "176-44443333",
+      "hs_code": "8517120000",
+      "description": "Mobile phones",
+      "quantity": 2,
+      "gross_weight": 1,
+      "customs_value": 16136,
+      "currency": "MDL",
+      "vat": 3227,
+      "customs_duty": 0,
+      "excise": 0,
+      "total_taxes": 3227,
+      "status": "Under Review"
+    },
+    {
+      "id": "pd4",
+      "user_id": "p3",
+      "awb_number": "176-22221111",
+      "hs_code": "6403990000",
+      "description": "Leather shoes",
+      "quantity": 3,
+      "gross_weight": 3,
+      "customs_value": 5043,
+      "currency": "MDL",
+      "vat": 1009,
+      "customs_duty": 706,
+      "excise": 0,
+      "total_taxes": 1714,
+      "status": "Rejected"
     }
   ]
 }
