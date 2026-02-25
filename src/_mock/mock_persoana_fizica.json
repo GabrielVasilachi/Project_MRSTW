@@ -26,6 +26,15 @@
       "email": "victor.botnari@mail.com",
       "phone": "+37360777111",
       "address": "Str. Mihai Eminescu 3, Chisinau, Moldova"
+    },
+    {
+      "id": "p4",
+      "type": "physical",
+      "full_name": "Rusu Elena",
+      "idnp": "2001055432109",
+      "email": "elena.rusu@mail.com",
+      "phone": "+37361234567",
+      "address": "Str. Columna 8, Chisinau, Moldova"
     }
   ],
   "declarations": [
@@ -47,7 +56,7 @@
     },
     {
       "id": "pd2",
-      "user_id": "p1",
+      "user_id": "p2",
       "awb_number": "176-55559999",
       "hs_code": "6109100000",
       "description": "T-shirts cotton",
@@ -63,7 +72,7 @@
     },
     {
       "id": "pd3",
-      "user_id": "p2",
+      "user_id": "p3",
       "awb_number": "176-44443333",
       "hs_code": "8517120000",
       "description": "Mobile phones",
@@ -79,7 +88,7 @@
     },
     {
       "id": "pd4",
-      "user_id": "p3",
+      "user_id": "p4",
       "awb_number": "176-22221111",
       "hs_code": "6403990000",
       "description": "Leather shoes",

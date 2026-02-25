@@ -25,13 +25,24 @@
     {
       "id": "j3",
       "type": "juridical",
-      "company_name": "AgroExport ÎM",
+      "company_name": "AgroExport SRL",
       "tax_id": "1007800111222",
       "eori": "MD111222333",
       "vat_registered": false,
       "email": "contact@agroexport.md",
       "phone": "+37367444888",
       "address": "Str. Industriala 7, Straseni, Moldova"
+    },
+    {
+      "id": "j4",
+      "type": "juridical",
+      "company_name": "LogisTrans SRL",
+      "tax_id": "1009100444555",
+      "eori": "MD444555666",
+      "vat_registered": true,
+      "email": "office@logistrans.md",
+      "phone": "+37368777333",
+      "address": "Str. Calea Iesilor 22, Chisinau, Moldova"
     }
   ],
   "declarations": [
@@ -53,7 +64,7 @@
     },
     {
       "id": "jd2",
-      "user_id": "j1",
+      "user_id": "j2",
       "awb_number": "176-12345600",
       "hs_code": "8443310000",
       "description": "Printing machines",
@@ -69,7 +80,7 @@
     },
     {
       "id": "jd3",
-      "user_id": "j2",
+      "user_id": "j3",
       "awb_number": "176-99887766",
       "hs_code": "8528720000",
       "description": "LED monitors",
@@ -85,7 +96,7 @@
     },
     {
       "id": "jd4",
-      "user_id": "j3",
+      "user_id": "j4",
       "awb_number": "176-77665544",
       "hs_code": "8433110000",
       "description": "Agricultural mowers",

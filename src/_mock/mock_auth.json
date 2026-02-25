@@ -19,6 +19,12 @@
       "password": "p3"
     },
     {
+      "role": "individual",
+      "user_id": "p4",
+      "email": "p4@gmail.com",
+      "password": "p4"
+    },
+    {
       "role": "business",
       "user_id": "j1",
       "email": "j1@gmail.com",
@@ -35,6 +41,12 @@
       "user_id": "j3",
       "email": "j3@gmail.com",
       "password": "j3"
+    },
+    {
+      "role": "business",
+      "user_id": "j4",
+      "email": "j4@gmail.com",
+      "password": "j4"
     },
     {
       "role": "admin",
