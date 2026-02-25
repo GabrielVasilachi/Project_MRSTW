@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import Sidebar from './components/dashboard/Sidebar'
+import SwitchingUsers from './test/SwitchingUsers'
 
 function DashboardApp() { 
   return (
@@ -10,6 +11,7 @@ function DashboardApp() {
 					<Outlet />
 				</main>
 			</div>
+			<SwitchingUsers />
 		</div>
   )
 }
