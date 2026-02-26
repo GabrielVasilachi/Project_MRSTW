@@ -10,28 +10,33 @@ function linkClass(isActive: boolean) {
 	].join(' ')
 }
 
-const NAV_ITEMS: Record<string, { label: string; to?: string }[]> = {
+type NavItem = { label: string; to?: string }
+
+const NAV_ITEMS: Record<string, NavItem[]> = {
 	admin: [
-		{ label: 'Dashboard', to: paths.Dashboard_Admin },
-		{ label: 'Declarații', to: paths.Admin_Declarations },
+		{ label: 'Dashboard',   to: paths.Dashboard_Admin },
+		{ label: 'Declarații',  to: paths.Admin_Declarations },
+		{ label: 'Invoice-uri', to: paths.Admin_Invoices },
 		{ label: 'Utilizatori', to: paths.Admin_Users },
-		{ label: 'Plăți', to: paths.Admin_Payments },
-		{ label: 'Rapoarte', to: paths.Admin_Reports },
-		{ label: 'Setări', to: paths.DashboardSettings },
+		{ label: 'Documente',   to: paths.Admin_Documents },
+		{ label: 'Rapoarte',    to: paths.Admin_Reports },
+		{ label: 'Audit Log',   to: paths.Admin_AuditLog },
 	],
 	individual: [
-		{ label: 'Dashboard', to: paths.Dashboard_Individual },
-		{ label: 'Declarațiile mele', to: paths.Individual_Declarations },
-		{ label: 'Tracking / Status', to: paths.Individual_Tracking },
-		{ label: 'Plăți', to: paths.Individual_Payments },
-		{ label: 'Profil', to: paths.Individual_Profile },
+		{ label: 'Dashboard',          to: paths.Dashboard_Individual },
+		{ label: 'Declarațiile mele',   to: paths.Individual_Declarations },
+		{ label: 'Tracking / Status',  to: paths.Individual_Tracking },
+		{ label: 'Plăți',              to: paths.Individual_Payments },
+		{ label: 'Documentele mele',   to: paths.Individual_Documents },
+		{ label: 'Setări cont',        to: paths.Individual_Settings },
 	],
 	business: [
-		{ label: 'Dashboard', to: paths.Dashboard_Business },
-		{ label: 'Declarațiile mele', to: paths.Business_Declarations },
-		{ label: 'Tracking / Status', to: paths.Business_Tracking },
-		{ label: 'Plăți', to: paths.Business_Payments },
-		{ label: 'Profil', to: paths.Business_Profile },
+		{ label: 'Dashboard',           to: paths.Dashboard_Business },
+		{ label: 'Declarații companie',  to: paths.Business_Declarations },
+		{ label: 'Plăți & Facturi',     to: paths.Business_Payments },
+		{ label: 'Documente companie',   to: paths.Business_Documents },
+		{ label: 'Importuri / Istoric',  to: paths.Business_Imports },
+		{ label: 'Setări companie',     to: paths.Business_Settings },
 	],
 }
 
@@ -51,7 +56,7 @@ export default function Sidebar() {
 								{label}
 							</NavLink>
 						) : (
-							<button key={label} type="button" className="block w-full rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left" aria-disabled="true" title="Neimplementat momentan">
+							<button key={label} type="button" className="block w-full rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 text-left" aria-disabled="true">
 								{label}
 							</button>
 						)
