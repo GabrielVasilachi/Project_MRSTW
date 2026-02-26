@@ -71,7 +71,7 @@ export default function LoginPage() {
 
 					<button
 						type="submit"
-						className="mt-6 w-full bg-sky-600 hover:bg-sky-700 text-white font-medium py-2 rounded-md shadow-sm"
+						className="mt-6 w-full bg-sky-600 hover:bg-sky-700 text-white font-medium py-2 rounded-md shadow-sm cursor-pointer"
 					>
 						Autentificare
 					</button>

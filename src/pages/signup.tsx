@@ -27,13 +27,13 @@ export default function SignupPage() {
           <div className="bg-slate-100 rounded-md p-1 flex items-stretch">
             <button
               onClick={() => setType("individual")}
-              className={`flex-1 px-4 py-2 text-sm rounded-md ${type === "individual" ? "bg-white shadow-sm" : "bg-transparent text-slate-600"}`}
+              className={`flex-1 px-4 py-2 text-sm rounded-md cursor-pointer ${type === "individual" ? "bg-white shadow-sm" : "bg-transparent text-slate-600"}`}
             >
               Persoană fizică
             </button>
             <button
               onClick={() => setType("business")}
-              className={`flex-1 px-4 py-2 text-sm rounded-md ${type === "business" ? "bg-white shadow-sm" : "bg-transparent text-slate-600"}`}
+              className={`flex-1 px-4 py-2 text-sm rounded-md cursor-pointer ${type === "business" ? "bg-white shadow-sm" : "bg-transparent text-slate-600"}`}
             >
               Persoană juridică
             </button>
@@ -144,7 +144,7 @@ export default function SignupPage() {
               </>
             )}
 
-            <button className="mt-4 w-full bg-sky-600 hover:bg-sky-700 text-white font-medium py-2 rounded-md">Creează cont</button>
+            <button className="mt-4 w-full bg-sky-600 hover:bg-sky-700 text-white font-medium py-2 rounded-md cursor-pointer">Creează cont</button>
           </form>
 
           <div className="mt-4 text-center text-sm text-slate-600">
