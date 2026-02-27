@@ -1,14 +1,80 @@
+import juridicalData from '../../../_mock/mock_persoana_juridica.json'
+import { getSession } from '../../../auth/auth.session'
+import type { JuridicalUser } from '../../../types/user'
 
 export default function BusinessSettings() {
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">Setări companie</h1>
-      <p className="text-gray-500 mb-6">
-        Actualizează informațiile firmei, precum datele de contact, informațiile fiscale și credențialele contului.
-      </p>
-      <div className="rounded-lg border border-gray-200 bg-white p-8 text-center text-gray-400">
-        Aici vor fi afișate setările companiei.
-      </div>
-    </div>
-  );
+    const companies = juridicalData.users as JuridicalUser[]
+    const session = getSession()
+    const company = companies.find(u => u.id === session?.userId) ?? companies[0]
+    if (!company) return null
+
+    const fields: [string, string][] = [
+        ['Companie', company.company_name],
+        ['ID Fiscal', company.tax_id],
+        ['EORI', company.eori],
+        ['Email', company.email],
+        ['Telefon', company.phone],
+        ['Adresă', company.address],
+    ]
+
+    return (
+        <div className="space-y-8">
+            <div>
+                <h1 className="text-2xl font-bold text-gray-900">Setări companie</h1>
+                <p className="mt-1 text-sm text-gray-500">
+                    Informațiile firmei, datele de contact și credențialele contului.
+                </p>
+            </div>
+
+            <div className="rounded-lg border border-gray-200 bg-white p-6 divide-y divide-gray-100">
+                <p className="pb-3 text-base font-semibold text-gray-900">Date companie</p>
+                {fields.map(([label, value]) => (
+                    <div key={label} className="flex justify-between py-3 text-sm">
+                        <span className="text-gray-500 w-36">{label}</span>
+                        <span className="font-medium text-gray-900 flex-1 text-right">{value}</span>
+                    </div>
+                ))}
+                <div className="flex justify-between py-3 text-sm">
+                    <span className="text-gray-500 w-36">Plătitor TVA</span>
+                    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+                        company.vat_registered ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
+                    }`}>
+                        {company.vat_registered ? 'Da' : 'Nu'}
+                    </span>
+                </div>
+            </div>
+
+            <div className="rounded-lg border border-gray-200 bg-white p-6 space-y-5">
+                <p className="text-base font-semibold text-gray-900">Modificare date</p>
+
+                {fields.map(([label, value]) => (
+                    <div key={label}>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
+                        <input
+                            type={label === 'Email' ? 'email' : label === 'Telefon' ? 'tel' : 'text'}
+                            defaultValue={value}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-gray-500 focus:outline-none"
+                        />
+                    </div>
+                ))}
+
+                <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Parolă nouă</label>
+                    <input type="password" placeholder="••••••••"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-gray-500 focus:outline-none" />
+                </div>
+
+                <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Confirmare parolă nouă</label>
+                    <input type="password" placeholder="••••••••"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-gray-500 focus:outline-none" />
+                </div>
+
+                <button type="button"
+                    className="rounded-lg bg-gray-900 px-5 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors">
+                    Salvează modificările
+                </button>
+            </div>
+        </div>
+    )
 }
