@@ -58,7 +58,7 @@ function FAQItem({ question, answer }: FAQItemProps) {
         className="w-full flex items-center justify-between px-6 py-5 text-left bg-white hover:bg-gray-50 transition-colors"
       >
         <span className="text-base sm:text-lg font-medium text-gray-900 pr-4">{question}</span>
-        <span className="shrink-0 text-gray-500">
+        <span className="flex-shrink-0 text-gray-500">
           {open ? (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />

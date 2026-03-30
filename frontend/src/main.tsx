@@ -10,6 +10,7 @@ import HowItWorksStep from "./pages/guide";
 import LoginPage from "./pages/login.tsx";
 import SignupPage from "./pages/signup.tsx";
 import FrequentlyAskedQuestions from './pages/faq.tsx'
+import ApiTestPage from './pages/apiTest.tsx'
 
 import DashboardApp from './DashboardApp.tsx'
 import Dashboard_Admin from './pages/dashboard/DashboardAdmin.tsx'
@@ -39,49 +40,53 @@ import BusinessImportsHistory from './pages/dashboard/business/BusinessImportsHi
 import BusinessSettings from './pages/dashboard/business/BusinessSettings.tsx'
 
 import AuthGuard from './auth/auth.guard.tsx'
+import { AxiosProvider } from './api/axiosProvider.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
-      <Routes>
+    <AxiosProvider>
+      <BrowserRouter>
+        <Routes>
 
-        <Route element={<LandingApp />}>
-          <Route path={paths.LandingPage} element={<LandingPage />} />
-          <Route path={paths.HowItWorksSteps} element={<HowItWorksStep />} />
-          <Route path={paths.FrequentlyAskedQuestions} element={<FrequentlyAskedQuestions />} />
-          <Route path={paths.LoginPage} element={<LoginPage />} />
-          <Route path={paths.SignupPage} element={<SignupPage />} />
-          <Route path='*' element={<LandingPage />} />
-        </Route>
+          <Route element={<LandingApp />}>
+            <Route path={paths.LandingPage} element={<LandingPage />} />
+            <Route path={paths.Api_Test} element={<ApiTestPage />} />
+            <Route path={paths.HowItWorksSteps} element={<HowItWorksStep />} />
+            <Route path={paths.FrequentlyAskedQuestions} element={<FrequentlyAskedQuestions />} />
+            <Route path={paths.LoginPage} element={<LoginPage />} />
+            <Route path={paths.SignupPage} element={<SignupPage />} />
+            <Route path='*' element={<LandingPage />} />
+          </Route>
 
-        <Route element={<DashboardApp />}>
-          {/* admin */}
-          <Route path={paths.Dashboard_Admin} element={<AuthGuard allowedRoles={['admin']}><Dashboard_Admin /></AuthGuard>} />
-          <Route path={paths.Admin_Declarations} element={<AuthGuard allowedRoles={['admin']}><AdminDeclarations /></AuthGuard>} />
-          <Route path={paths.Admin_Invoices} element={<AuthGuard allowedRoles={['admin']}><AdminInvoices /></AuthGuard>} />
-          <Route path={paths.Admin_Users} element={<AuthGuard allowedRoles={['admin']}><AdminUsers /></AuthGuard>} />
-          <Route path={paths.Admin_Documents} element={<AuthGuard allowedRoles={['admin']}><AdminDocuments /></AuthGuard>} />
-          <Route path={paths.Admin_Reports} element={<AuthGuard allowedRoles={['admin']}><AdminReports /></AuthGuard>} />
-          <Route path={paths.Admin_AuditLog} element={<AuthGuard allowedRoles={['admin']}><AdminAuditLog /></AuthGuard>} />
+          <Route element={<DashboardApp />}>
+            {/* admin */}
+            <Route path={paths.Dashboard_Admin} element={<AuthGuard allowedRoles={['admin']}><Dashboard_Admin /></AuthGuard>} />
+            <Route path={paths.Admin_Declarations} element={<AuthGuard allowedRoles={['admin']}><AdminDeclarations /></AuthGuard>} />
+            <Route path={paths.Admin_Invoices} element={<AuthGuard allowedRoles={['admin']}><AdminInvoices /></AuthGuard>} />
+            <Route path={paths.Admin_Users} element={<AuthGuard allowedRoles={['admin']}><AdminUsers /></AuthGuard>} />
+            <Route path={paths.Admin_Documents} element={<AuthGuard allowedRoles={['admin']}><AdminDocuments /></AuthGuard>} />
+            <Route path={paths.Admin_Reports} element={<AuthGuard allowedRoles={['admin']}><AdminReports /></AuthGuard>} />
+            <Route path={paths.Admin_AuditLog} element={<AuthGuard allowedRoles={['admin']}><AdminAuditLog /></AuthGuard>} />
 
-          {/* pers-fizica */}
-          <Route path={paths.Dashboard_Individual} element={<AuthGuard allowedRoles={['individual']}><Dashboard_Individual /></AuthGuard>} />
-          <Route path={paths.Individual_Declarations} element={<AuthGuard allowedRoles={['individual']}><IndividualDeclarations /></AuthGuard>} />
-          <Route path={paths.Individual_Tracking} element={<AuthGuard allowedRoles={['individual']}><IndividualTracking /></AuthGuard>} />
-          <Route path={paths.Individual_Payments} element={<AuthGuard allowedRoles={['individual']}><IndividualPayments /></AuthGuard>} />
-          <Route path={paths.Individual_Documents} element={<AuthGuard allowedRoles={['individual']}><IndividualDocuments /></AuthGuard>} />
-          <Route path={paths.Individual_Settings} element={<AuthGuard allowedRoles={['individual']}><IndividualSettings /></AuthGuard>} />
+            {/* pers-fizica */}
+            <Route path={paths.Dashboard_Individual} element={<AuthGuard allowedRoles={['individual']}><Dashboard_Individual /></AuthGuard>} />
+            <Route path={paths.Individual_Declarations} element={<AuthGuard allowedRoles={['individual']}><IndividualDeclarations /></AuthGuard>} />
+            <Route path={paths.Individual_Tracking} element={<AuthGuard allowedRoles={['individual']}><IndividualTracking /></AuthGuard>} />
+            <Route path={paths.Individual_Payments} element={<AuthGuard allowedRoles={['individual']}><IndividualPayments /></AuthGuard>} />
+            <Route path={paths.Individual_Documents} element={<AuthGuard allowedRoles={['individual']}><IndividualDocuments /></AuthGuard>} />
+            <Route path={paths.Individual_Settings} element={<AuthGuard allowedRoles={['individual']}><IndividualSettings /></AuthGuard>} />
 
-          {/* pers-juridica */}
-          <Route path={paths.Dashboard_Business} element={<AuthGuard allowedRoles={['business']}><Dashboard_Business /></AuthGuard>} />
-          <Route path={paths.Business_Declarations} element={<AuthGuard allowedRoles={['business']}><BusinessDeclarations /></AuthGuard>} />
-          <Route path={paths.Business_Payments} element={<AuthGuard allowedRoles={['business']}><BusinessPayments /></AuthGuard>} />
-          <Route path={paths.Business_Documents} element={<AuthGuard allowedRoles={['business']}><BusinessDocuments /></AuthGuard>} />
-          <Route path={paths.Business_Imports} element={<AuthGuard allowedRoles={['business']}><BusinessImportsHistory /></AuthGuard>} />
-          <Route path={paths.Business_Settings} element={<AuthGuard allowedRoles={['business']}><BusinessSettings /></AuthGuard>} />
-        </Route>
+            {/* pers-juridica */}
+            <Route path={paths.Dashboard_Business} element={<AuthGuard allowedRoles={['business']}><Dashboard_Business /></AuthGuard>} />
+            <Route path={paths.Business_Declarations} element={<AuthGuard allowedRoles={['business']}><BusinessDeclarations /></AuthGuard>} />
+            <Route path={paths.Business_Payments} element={<AuthGuard allowedRoles={['business']}><BusinessPayments /></AuthGuard>} />
+            <Route path={paths.Business_Documents} element={<AuthGuard allowedRoles={['business']}><BusinessDocuments /></AuthGuard>} />
+            <Route path={paths.Business_Imports} element={<AuthGuard allowedRoles={['business']}><BusinessImportsHistory /></AuthGuard>} />
+            <Route path={paths.Business_Settings} element={<AuthGuard allowedRoles={['business']}><BusinessSettings /></AuthGuard>} />
+          </Route>
 
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+      </BrowserRouter>
+    </AxiosProvider>
   </StrictMode>,
 )
