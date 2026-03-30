@@ -1,6 +1,7 @@
 
 export const paths = {
     LandingPage: "/",
+    Api_Test: "/api-test",
     HowItWorksSteps: "/guide",
     FrequentlyAskedQuestions: "/faq",
     SignupPage: "/signup",
