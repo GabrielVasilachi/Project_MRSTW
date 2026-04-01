@@ -4,6 +4,10 @@ import type { AuthAccount, AuthResult, AuthSession, UserRole } from './auth.type
 
 type MockAuthFile = { accounts: AuthAccount[] }
 
+type CreateAccountResult = { ok: true } | { ok: false; error: string }
+
+const LOCAL_ACCOUNTS_KEY = 'pv.accounts'
+
 // normalizeaza emailul sa fie lowercase si sa nu aiba spatii in plus
 function normalizeEmail(inputEmail: string) {
 	return inputEmail.trim().toLowerCase()
@@ -14,10 +18,70 @@ function isEmailFormatValid(inputEmail: string) {
 	return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(inputEmail))
 }
 
+function readLocalAccounts(): AuthAccount[] {
+	const raw = localStorage.getItem(LOCAL_ACCOUNTS_KEY)
+	if (!raw) return []
+
+	try {
+		const parsed = JSON.parse(raw) as unknown
+		if (!Array.isArray(parsed)) return []
+
+		return (parsed as any[]).map<AuthAccount>((a) => ({
+				role: a?.role,
+				user_id: (a?.user_id ?? a?.packageID ?? null) as string | null,
+				email: String(a?.email ?? ''),
+				password: String(a?.password ?? a?.phoneNumber ?? ''),
+			})).filter((a) => (a.role === 'admin' || a.role === 'business' || a.role === 'individual') && a.email.length > 0 && a.password.length > 0)
+	} catch {
+		return []
+	}
+}
+
+function writeLocalAccounts(accounts: AuthAccount[]) {
+	localStorage.setItem(LOCAL_ACCOUNTS_KEY, JSON.stringify(accounts))
+}
+
 // extrage lista de conturi din fisierul mock_auth.json daca structura nu este corecta, returneaza un array gol
 function getMockAccounts(): AuthAccount[] {
 	const mockFile = mockAuthJson as unknown as MockAuthFile
-	return Array.isArray(mockFile.accounts) ? mockFile.accounts : []
+	const fileAccounts = Array.isArray(mockFile.accounts) ? mockFile.accounts : []
+	const localAccounts = readLocalAccounts()
+	return [...fileAccounts, ...localAccounts]
+}
+
+export function createUserAccount(input: {
+	role: UserRole
+	email: string
+	phoneNumber: string
+	packageID?: string | null
+}): CreateAccountResult {
+	const normalizedEmail = normalizeEmail(input.email)
+	const trimmedPhoneNumber = input.phoneNumber.trim()
+	const normalizedPackageId = input.packageID?.trim() ? input.packageID.trim() : null
+
+	if (!isEmailFormatValid(normalizedEmail)) {
+		return { ok: false, error: 'Email Invalid' }
+	}
+
+	if (trimmedPhoneNumber.length === 0) {
+		return { ok: false, error: 'Număr de telefon Invalid' }
+	}
+
+	const existing = getMockAccounts().some((a) => normalizeEmail(a.email) === normalizedEmail)
+	if (existing) {
+		return { ok: false, error: 'Există deja un cont cu acest email' }
+	}
+
+	const newAccount: AuthAccount = {
+		role: input.role,
+		user_id: normalizedPackageId,
+		email: normalizedEmail,
+		password: trimmedPhoneNumber,
+	}
+
+	const nextAccounts = [...readLocalAccounts(), newAccount]
+	writeLocalAccounts(nextAccounts)
+	return { ok: true }
 }
 
 // functie pentru returnarea path-ului corect pentru roluri de admin business si individual

@@ -299,7 +299,9 @@ export default function SignupPage() {
               </>
             )}
 
-            <button className="mt-4 w-full bg-sky-600 hover:bg-sky-700 text-white font-medium py-2 rounded-md cursor-pointer">Creează cont</button>
+            <button
+            className="mt-4 w-full bg-sky-600 hover:bg-sky-700 text-white font-medium py-2 rounded-md cursor-pointer">Creează cont
+            </button>
           </form>
 
           <div className="mt-4 text-center text-sm text-slate-600">

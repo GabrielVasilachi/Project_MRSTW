@@ -8,7 +8,7 @@ import { paths } from './routes/paths.ts'
 import LandingPage from "./pages/landing";
 import HowItWorksStep from "./pages/guide";
 import LoginPage from "./pages/login.tsx";
-import SignupPage from "./pages/signup.tsx";
+// import SignupPage from "./pages/signup.tsx";
 import FrequentlyAskedQuestions from './pages/faq.tsx'
 import ApiTestPage from './pages/apiTest.tsx'
 
@@ -21,6 +21,7 @@ import Dashboard_Business from "./pages/dashboard/DashboardBusiness.tsx";
 import AdminDeclarations from './pages/dashboard/admin/AdminDeclarations.tsx'
 import AdminInvoices from './pages/dashboard/admin/AdminInvoices.tsx'
 import AdminUsers from './pages/dashboard/admin/AdminUsers.tsx'
+import AdminAccountCreations from './pages/dashboard/admin/AdminAccountCreations.tsx'
 import AdminDocuments from './pages/dashboard/admin/AdminDocuments.tsx'
 import AdminReports from './pages/dashboard/admin/AdminReports.tsx'
 import AdminAuditLog from './pages/dashboard/admin/AdminAuditLog.tsx'
@@ -54,7 +55,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path={paths.HowItWorksSteps} element={<HowItWorksStep />} />
             <Route path={paths.FrequentlyAskedQuestions} element={<FrequentlyAskedQuestions />} />
             <Route path={paths.LoginPage} element={<LoginPage />} />
-            <Route path={paths.SignupPage} element={<SignupPage />} />
+            {/* <Route path={paths.SignupPage} element={<SignupPage />} /> */}
             <Route path='*' element={<LandingPage />} />
           </Route>
 
@@ -64,6 +65,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path={paths.Admin_Declarations} element={<AuthGuard allowedRoles={['admin']}><AdminDeclarations /></AuthGuard>} />
             <Route path={paths.Admin_Invoices} element={<AuthGuard allowedRoles={['admin']}><AdminInvoices /></AuthGuard>} />
             <Route path={paths.Admin_Users} element={<AuthGuard allowedRoles={['admin']}><AdminUsers /></AuthGuard>} />
+            <Route path={paths.Admin_AccountCreations} element={<AuthGuard allowedRoles={['admin']}><AdminAccountCreations /></AuthGuard>} />
             <Route path={paths.Admin_Documents} element={<AuthGuard allowedRoles={['admin']}><AdminDocuments /></AuthGuard>} />
             <Route path={paths.Admin_Reports} element={<AuthGuard allowedRoles={['admin']}><AdminReports /></AuthGuard>} />
             <Route path={paths.Admin_AuditLog} element={<AuthGuard allowedRoles={['admin']}><AdminAuditLog /></AuthGuard>} />

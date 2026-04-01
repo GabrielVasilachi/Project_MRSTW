@@ -17,9 +17,9 @@ export default function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/signup">
+            {/* <Link to="/signup">
               <BaseButton variant="primary">Înregistrare</BaseButton>
-            </Link>
+            </Link> */}
             <Link to="/login">
               <BaseButton variant="secondary">Autentificare</BaseButton>
             </Link>
@@ -85,7 +85,7 @@ export default function LandingPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
           <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
             <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <div className="shrink-0 w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
@@ -107,7 +107,7 @@ export default function LandingPage() {
 
           <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
             <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <div className="shrink-0 w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
