@@ -19,9 +19,9 @@ export default function Header() {
                     </div>
 
                     <div className="flex items-center space-x-4">
-                        <Link to="/signup">
+                        {/* <Link to="/signup">
                             <BaseButton variant="primary">Înregistrare</BaseButton>
-                        </Link>
+                        </Link> */}
                         <Link to="/login">
                             <BaseButton variant="secondary">Autentificare</BaseButton>
                         </Link>
