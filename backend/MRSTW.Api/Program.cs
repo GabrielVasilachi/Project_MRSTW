@@ -1,3 +1,4 @@
+DotNetEnv.Env.Load("../../.env");
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
@@ -5,13 +6,20 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("Frontend", policy =>
+    options.AddPolicy("FrontendPolicy", policy =>
     {
-        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+        policy.WithOrigins(
+                "http://localhost:80",
+                "http://localhost:5173",
+                "http://127.0.0.1:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
     });
 });
 
+
 var app = builder.Build();
+
 
 if (app.Environment.IsDevelopment())
 {
@@ -19,7 +27,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors("Frontend");
 app.UseHttpsRedirection();
+app.UseCors("FrontendPolicy");
 app.MapControllers();
 app.Run();

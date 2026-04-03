@@ -2,7 +2,7 @@ import physicalData from '../../../_mock/mock_persoana_fizica.json'
 import juridicalData from '../../../_mock/mock_persoana_juridica.json'
 import type { Declaration } from '../../../types/declaration'
 import KpiCard from '../../../components/dashboard/KpiCard'
-import { STATUS_COLORS } from '../../../components/dashboard/StatusBadge'
+import { STATUS_COLORS } from '../../../components/dashboard/statusColors'
 
 const STATUSES = ['Approved', 'Under Review', 'Pending Documents', 'Rejected']
 

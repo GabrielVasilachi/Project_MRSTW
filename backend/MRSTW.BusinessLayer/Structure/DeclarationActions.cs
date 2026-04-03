@@ -39,7 +39,6 @@ public class DeclarationActions
     public ServiceResponse GetDeclarationByIdAction(int id)
     {
         var declaration = Declarations.Find(item => item.Id == id);
-
         if (declaration == null)
         {
             return new ServiceResponse
@@ -62,6 +61,58 @@ public class DeclarationActions
         {
             IsSuccess = true,
             Data = Declarations
+        };
+    }
+
+    public ServiceResponse UpdateDeclarationAction(int id, DeclarationUpdateDto declaration)
+    {
+        if (declaration == null || string.IsNullOrWhiteSpace(declaration.Name) || string.IsNullOrWhiteSpace(declaration.Description))
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Date invalide pentru declaratie."
+            };
+        }
+
+        var entity = Declarations.Find(item => item.Id == id);
+        if (entity == null)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Declaratia nu a fost gasita."
+            };
+        }
+
+        entity.Name = declaration.Name;
+        entity.Description = declaration.Description;
+
+        return new ServiceResponse
+        {
+            IsSuccess = true,
+            Message = "Declaratia a fost actualizata."
+        };
+    }
+
+    public ServiceResponse DeleteDeclarationAction(int id)
+    {
+        var entity = Declarations.Find(item => item.Id == id);
+        if (entity == null)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Declaratia nu a fost gasita."
+            };
+        }
+
+        Declarations.Remove(entity);
+
+        return new ServiceResponse
+        {
+            IsSuccess = true,
+            Message = "Declaratia a fost stearsa."
         };
     }
 }

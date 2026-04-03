@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Declaration } from '../../types/declaration'
-import StatusBadge, { STATUS_COLORS } from './StatusBadge'
+import StatusBadge from './StatusBadge'
+import { STATUS_COLORS } from './statusColors'
 
 const STATUSES = ['Toate', 'Approved', 'Pending Documents', 'Under Review', 'Rejected']
 

@@ -84,7 +84,7 @@ export default function AdminAccountCreations() {
 				</div>
 
 				<div>
-					<label className="block text-sm font-medium text-gray-700">Package ID (opțional)</label>
+					<label className="block text-sm font-medium text-gray-700">Package ID</label>
 					<input
 						value={packageID}
 						onChange={(e) => setPackageID(e.target.value)}
