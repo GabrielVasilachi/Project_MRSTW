@@ -1,26 +1,27 @@
 using Microsoft.AspNetCore.Mvc;
 using MRSTW.BusinessLayer;
 using MRSTW.BusinessLayer.Interfaces;
-using MRSTW.Domain.Models.Accounts;
+using MRSTW.Domain.Models.Invoices;
 
 namespace MRSTW.Api.Controllers;
 
 [ApiController]
-[Route("api/admin/accounts")]
-public class AdminAccountsController : ControllerBase
+[Route("api/invoices")]
+public class InvoiceController : ControllerBase
 {
-    private readonly IAdminAccountCreationLogic _logic;
+    private readonly IInvoiceLogic _logic;
 
-    public AdminAccountsController()
+    public InvoiceController()
     {
         var bl = new BusinessLogic();
-        _logic = bl.GetAdminAccountCreationLogic();
+        _logic = bl.GetInvoiceLogic();
     }
 
-    [HttpPost]
-    public IActionResult Create([FromBody] AccountCreateDto account)
+    // GET /api/invoices
+    [HttpGet]
+    public IActionResult GetList()
     {
-        var response = _logic.CreateAccount(account);
+        var response = _logic.GetInvoiceList();
         if (!response.IsSuccess)
         {
             return BadRequest(response.Message);
@@ -29,10 +30,11 @@ public class AdminAccountsController : ControllerBase
         return Ok(response.Data);
     }
 
+    // GET /api/invoices/{id}
     [HttpGet("{id:int}")]
     public IActionResult GetById(int id)
     {
-        var response = _logic.GetAccountById(id);
+        var response = _logic.GetInvoiceById(id);
         if (!response.IsSuccess)
         {
             return NotFound(response.Message);
@@ -41,10 +43,11 @@ public class AdminAccountsController : ControllerBase
         return Ok(response.Data);
     }
 
-    [HttpGet]
-    public IActionResult GetList()
+    // POST /api/invoices
+    [HttpPost]
+    public IActionResult Create([FromBody] InvoiceCreateDto invoice)
     {
-        var response = _logic.GetAccountList();
+        var response = _logic.CreateInvoice(invoice);
         if (!response.IsSuccess)
         {
             return BadRequest(response.Message);
@@ -53,10 +56,11 @@ public class AdminAccountsController : ControllerBase
         return Ok(response.Data);
     }
 
+    // PUT /api/invoices/{id}
     [HttpPut("{id:int}")]
-    public IActionResult Update(int id, [FromBody] AccountUpdateDto account)
+    public IActionResult Update(int id, [FromBody] InvoiceUpdateDto invoice)
     {
-        var response = _logic.UpdateAccount(id, account);
+        var response = _logic.UpdateInvoice(id, invoice);
         if (!response.IsSuccess)
         {
             return BadRequest(response.Message);
@@ -65,10 +69,11 @@ public class AdminAccountsController : ControllerBase
         return Ok(response.Data);
     }
 
+    // DELETE /api/invoices/{id}
     [HttpDelete("{id:int}")]
     public IActionResult Delete(int id)
     {
-        var response = _logic.DeleteAccount(id);
+        var response = _logic.DeleteInvoice(id);
         if (!response.IsSuccess)
         {
             return NotFound(response.Message);

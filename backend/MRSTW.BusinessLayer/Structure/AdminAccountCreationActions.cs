@@ -112,6 +112,80 @@ public class AdminAccountCreationActions
         };
     }
 
+    public ServiceResponse UpdateAccountAction(int id, AccountUpdateDto account)
+    {
+        if (account == null)
+        {
+            return Fail("Date invalide pentru cont.");
+        }
+
+        var role = (account.Role ?? string.Empty).Trim().ToLowerInvariant();
+        var phoneNumber = (account.PhoneNumber ?? string.Empty).Trim();
+        var packageId = (account.PackageId ?? string.Empty).Trim();
+
+        if (string.IsNullOrWhiteSpace(role) || string.IsNullOrWhiteSpace(phoneNumber) || string.IsNullOrWhiteSpace(packageId))
+        {
+            return Fail("Role, numar de telefon si package ID sunt obligatorii.");
+        }
+
+        if (!IsRoleValid(role))
+        {
+            return Fail("Role invalid.");
+        }
+
+        var entity = _db.Accounts.FirstOrDefault(a => a.Id == id);
+        if (entity == null)
+        {
+            return Fail("Contul nu a fost gasit.");
+        }
+
+        entity.Role = role;
+        entity.PhoneNumber = phoneNumber;
+        entity.PackageId = packageId;
+
+        try
+        {
+            _db.SaveChanges();
+        }
+        catch (DbUpdateException)
+        {
+            return Fail("Nu am putut actualiza contul.");
+        }
+
+        return new ServiceResponse
+        {
+            IsSuccess = true,
+            Message = "Cont actualizat cu succes.",
+            Data = MapToInfo(entity)
+        };
+    }
+
+    public ServiceResponse DeleteAccountAction(int id)
+    {
+        var entity = _db.Accounts.FirstOrDefault(a => a.Id == id);
+        if (entity == null)
+        {
+            return Fail("Contul nu a fost gasit.");
+        }
+
+        _db.Accounts.Remove(entity);
+
+        try
+        {
+            _db.SaveChanges();
+        }
+        catch (DbUpdateException)
+        {
+            return Fail("Nu am putut sterge contul.");
+        }
+
+        return new ServiceResponse
+        {
+            IsSuccess = true,
+            Message = "Cont sters cu succes."
+        };
+    }
+
     private static bool IsRoleValid(string role)
     {
         return role == "admin" || role == "business" || role == "individual";

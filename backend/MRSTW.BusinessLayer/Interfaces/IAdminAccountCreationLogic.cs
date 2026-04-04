@@ -8,4 +8,6 @@ public interface IAdminAccountCreationLogic
     ServiceResponse CreateAccount(AccountCreateDto account);
     ServiceResponse GetAccountById(int id);
     ServiceResponse GetAccountList();
+    ServiceResponse UpdateAccount(int id, AccountUpdateDto account);
+    ServiceResponse DeleteAccount(int id);
 }

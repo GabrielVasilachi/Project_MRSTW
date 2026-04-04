@@ -21,4 +21,14 @@ public class AdminAccountCreationLogic : AdminAccountCreationActions, IAdminAcco
     {
         return GetAccountListAction();
     }
+
+    public ServiceResponse UpdateAccount(int id, AccountUpdateDto account)
+    {
+        return UpdateAccountAction(id, account);
+    }
+
+    public ServiceResponse DeleteAccount(int id)
+    {
+        return DeleteAccountAction(id);
+    }
 }

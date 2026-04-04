@@ -16,4 +16,9 @@ public class BusinessLogic
     {
         return new DeclarationLogic();
     }
+
+    public IInvoiceLogic GetInvoiceLogic()
+    {
+        return new InvoiceLogic();
+    }
 }
