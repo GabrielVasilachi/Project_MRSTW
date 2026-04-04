@@ -7,8 +7,18 @@ public class BusinessLogic
 {
     public BusinessLogic() { }
 
+    public IAdminAccountCreationLogic GetAdminAccountCreationLogic()
+    {
+        return new AdminAccountCreationLogic();
+    }
+
     public IDeclarationLogic GetDeclarationLogic()
     {
         return new DeclarationLogic();
+    }
+
+    public IInvoiceLogic GetInvoiceLogic()
+    {
+        return new InvoiceLogic();
     }
 }
