@@ -5,20 +5,20 @@ namespace MRSTW.BusinessLayer;
 
 public class BusinessLogic
 {
-    public BusinessLogic() { }
-
-    public IAdminAccountCreationLogic GetAdminAccountCreationLogic()
+    public IUsersLogic GetUsersLogic()
     {
-        return new AdminAccountCreationLogic();
+        return new UsersLogic();
     }
-
-    public IDeclarationLogic GetDeclarationLogic()
+    public IPackagesLogic GetPackagesLogic()
     {
-        return new DeclarationLogic();
+        return new PackagesLogic();
     }
-
-    public IInvoiceLogic GetInvoiceLogic()
+    public IAuthLogic GetAuthLogic()
     {
-        return new InvoiceLogic();
+        return new AuthLogic();
+    }
+    public IBusinessProfilesLogic GetBusinessProfilesLogic()
+    {
+        return new BusinessProfilesLogic();
     }
 }

@@ -3,9 +3,9 @@ using MRSTW.Domain.Entities.Users;
 
 namespace MRSTW.DataAccessLayer.Context;
 
-public sealed class UsersDbContext : DbContext
+public sealed class BusinessProfilesDbContext : DbContext
 {
-    public DbSet<UserEntity> Users { get; set; }
+    public DbSet<BusinessProfileEntity> BusinessProfiles { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -16,7 +16,8 @@ public sealed class UsersDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<UserEntity>()
-            .HasIndex(u => u.PhoneNumber).IsUnique();
+        modelBuilder.Entity<BusinessProfileEntity>()
+            .HasIndex(b => b.UserId)
+            .IsUnique();
     }
 }
