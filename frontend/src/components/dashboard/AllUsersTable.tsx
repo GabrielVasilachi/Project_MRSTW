@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { PhysicalUser, JuridicalUser } from '../../types/user'
 import type { Declaration } from '../../types/declaration'
 import RowDetailModal, { ModalField, ModalBadge, ModalSection, TaxesTable } from './RowDetailModal'
-import { STATUS_COLORS } from './StatusBadge'
+import { STATUS_COLORS } from './statusColors'
 
 type Props = {
     physicalUsers: PhysicalUser[]
