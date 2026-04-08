@@ -18,7 +18,7 @@ const ACCOUNTS: (AuthSession & { label: string; redirect: string })[] = [
 export default function SwitchingUsers() {
 	function switchTo(acc: typeof ACCOUNTS[number]) {
 		setSession({ role: acc.role, userId: acc.userId, email: acc.email, loginAt: new Date().toISOString() })
-		window.location.href = acc.redirect
+		window.location.assign(acc.redirect)
 	}
 
 	return (

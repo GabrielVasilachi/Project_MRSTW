@@ -8,6 +8,43 @@ type CreateAccountResult = { ok: true } | { ok: false; error: string }
 
 const LOCAL_ACCOUNTS_KEY = 'pv.accounts'
 
+type RawAccount = {
+	role?: unknown
+	user_id?: unknown
+	packageID?: unknown
+	email?: unknown
+	password?: unknown
+	phoneNumber?: unknown
+}
+
+function mapRawAccount(value: unknown): AuthAccount | null {
+	if (!value || typeof value !== 'object') return null
+
+	const raw = value as RawAccount
+	const role = raw.role
+
+	if (role !== 'admin' && role !== 'business' && role !== 'individual') {
+		return null
+	}
+
+	const email = String(raw.email ?? '').trim()
+	const password = String(raw.password ?? raw.phoneNumber ?? '')
+
+	if (email.length === 0 || password.length === 0) {
+		return null
+	}
+
+	const rawUserId = raw.user_id ?? raw.packageID ?? null
+	const user_id = rawUserId === null ? null : String(rawUserId)
+
+	return {
+		role,
+		user_id,
+		email,
+		password,
+	}
+}
+
 // normalizeaza emailul sa fie lowercase si sa nu aiba spatii in plus
 function normalizeEmail(inputEmail: string) {
 	return inputEmail.trim().toLowerCase()
@@ -26,12 +63,7 @@ function readLocalAccounts(): AuthAccount[] {
 		const parsed = JSON.parse(raw) as unknown
 		if (!Array.isArray(parsed)) return []
 
-		return (parsed as any[]).map<AuthAccount>((a) => ({
-				role: a?.role,
-				user_id: (a?.user_id ?? a?.packageID ?? null) as string | null,
-				email: String(a?.email ?? ''),
-				password: String(a?.password ?? a?.phoneNumber ?? ''),
-			})).filter((a) => (a.role === 'admin' || a.role === 'business' || a.role === 'individual') && a.email.length > 0 && a.password.length > 0)
+		return parsed.map(mapRawAccount).filter((a): a is AuthAccount => a !== null)
 	} catch {
 		return []
 	}

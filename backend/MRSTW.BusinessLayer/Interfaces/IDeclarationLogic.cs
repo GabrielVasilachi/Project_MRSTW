@@ -8,4 +8,6 @@ public interface IDeclarationLogic
     ServiceResponse CreateDeclaration(DeclarationCreateDto declaration);
     ServiceResponse GetDeclarationById(int id);
     ServiceResponse GetDeclarationList();
+    ServiceResponse UpdateDeclaration(int id, DeclarationUpdateDto declaration);
+    ServiceResponse DeleteDeclaration(int id);
 }

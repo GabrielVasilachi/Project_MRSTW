@@ -21,4 +21,14 @@ public class DeclarationLogic:DeclarationActions, IDeclarationLogic
     {
         return GetDeclarationListAction();
     }
+
+    public ServiceResponse UpdateDeclaration(int id, DeclarationUpdateDto declaration)
+    {
+        return UpdateDeclarationAction(id, declaration);
+    }
+
+    public ServiceResponse DeleteDeclaration(int id)
+    {
+        return DeleteDeclarationAction(id);
+    }
 }

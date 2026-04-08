@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAxios } from "../api/axiosProvider";
+import { useAxios } from "../api/useAxios";
 
 export default function ApiTestPage() {
   const { api, serverErrorMessage, clearServerError } = useAxios();
