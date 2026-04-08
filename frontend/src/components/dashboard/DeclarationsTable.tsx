@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Declaration } from '../../types/declaration'
-import StatusBadge, { STATUS_COLORS } from './StatusBadge'
+import StatusBadge from './StatusBadge'
+import { STATUS_COLORS } from './statusColors'
 import RowDetailModal, { ModalField, ModalBadge, ModalSection, TaxesTable } from './RowDetailModal'
 import { fmt } from '../../utils/format'
 
