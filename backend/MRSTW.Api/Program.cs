@@ -8,10 +8,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendPolicy", policy =>
     {
-        policy.WithOrigins(
-                "http://localhost:80",
-                "http://localhost:5173",
-                "http://127.0.0.1:5173")
+        policy.WithOrigins( "http://localhost:80", "http://localhost:5173", "http://127.0.0.1:5173")
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -27,7 +24,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
 app.UseCors("FrontendPolicy");
 app.MapControllers();
 app.Run();
