@@ -1,3 +1,4 @@
+using MRSTW.BusinessLayer.Security;
 using MRSTW.DataAccessLayer.Context;
 using MRSTW.Domain.Models.Auth;
 using MRSTW.Domain.Models.Service;
@@ -55,6 +56,8 @@ public class AuthActions
             };
         }
 
+        var token = JwtTokenGenerator.Generate(user);
+
         var response = new AuthLoginResponseDto
         {
             Id = user.Id,
@@ -64,6 +67,7 @@ public class AuthActions
             RoleEnum = user.RoleEnum,
             IsTemporary = user.IsTemporary,
             IsPhoneConfirmed = user.IsPhoneConfirmed,
+            Token = token,
             Message = "Autentificare reusita."
         };
 

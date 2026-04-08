@@ -11,5 +11,6 @@ public class AuthLoginResponseDto
     public UserRoleEnum RoleEnum { get; set; }
     public bool IsTemporary { get; set; }
     public bool IsPhoneConfirmed { get; set; }
+    public string Token { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;
 }
