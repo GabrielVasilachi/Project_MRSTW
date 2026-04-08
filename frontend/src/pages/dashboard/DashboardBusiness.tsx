@@ -3,6 +3,7 @@ import { getSession } from '../../auth/auth.session'
 import type { Declaration } from '../../types/declaration'
 import type { JuridicalUser } from '../../types/user'
 import KpiCard from '../../components/dashboard/KpiCard'
+import { fmt } from '../../utils/format'
 import DeclarationsTable from '../../components/dashboard/DeclarationsTable'
 
 export default function DashboardBusiness() {
@@ -40,8 +41,8 @@ export default function DashboardBusiness() {
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <KpiCard label="Declarații" value={String(companyDeclarations.length)} />
-                <KpiCard label="Valoare vamală totală" value={`${companyDeclarations.reduce((s, d) => s + d.customs_value, 0)} MDL`} />
-                <KpiCard label="Taxe totale" value={`${companyDeclarations.reduce((s, d) => s + d.total_taxes, 0)} MDL`} />
+                <KpiCard label="Valoare vamală totală" value={fmt(companyDeclarations.reduce((s, d) => s + d.customs_value, 0))} />
+                <KpiCard label="Taxe totale" value={fmt(companyDeclarations.reduce((s, d) => s + d.total_taxes, 0))} />
             </div>
 
             <DeclarationsTable declarations={companyDeclarations} />

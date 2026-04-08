@@ -3,6 +3,7 @@ import { getSession } from '../../auth/auth.session'
 import type { Declaration } from '../../types/declaration'
 import type { PhysicalUser } from '../../types/user'
 import KpiCard from '../../components/dashboard/KpiCard'
+import { fmt } from '../../utils/format'
 import DeclarationsTable from '../../components/dashboard/DeclarationsTable'
 
 export default function DashboardIndividual() {
@@ -34,8 +35,8 @@ export default function DashboardIndividual() {
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <KpiCard label="Declarații" value={String(userDeclarations.length)} />
-                <KpiCard label="Valoare vamală totală" value={`${userDeclarations.reduce((s, d) => s + d.customs_value, 0)} MDL`} />
-                <KpiCard label="Taxe totale" value={`${userDeclarations.reduce((s, d) => s + d.total_taxes, 0)} MDL`} />
+                <KpiCard label="Valoare vamală totală" value={fmt(userDeclarations.reduce((s, d) => s + d.customs_value, 0))} />
+                <KpiCard label="Taxe totale" value={fmt(userDeclarations.reduce((s, d) => s + d.total_taxes, 0))} />
             </div>
 
             <DeclarationsTable declarations={userDeclarations} />

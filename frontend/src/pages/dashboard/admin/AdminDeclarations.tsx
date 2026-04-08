@@ -33,9 +33,9 @@ export default function AdminDeclarations() {
 
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 <KpiCard label="Total declarații" value={String(allDeclarations.length)} />
-                <KpiCard label="Aprobate" value={String(approved)} sub="status Approved" />
-                <KpiCard label="În procesare" value={String(underReview + pending)} sub="Under Review + Pending" />
-                <KpiCard label="Respinse" value={String(rejected)} sub="status Rejected" />
+                <KpiCard label="Aprobate" value={String(approved)} />
+                <KpiCard label="În procesare" value={String(underReview + pending)} />
+                <KpiCard label="Respinse" value={String(rejected)} />
             </div>
 
             <DeclarationsTable declarations={allDeclarations} resolveUser={resolveUser} />
