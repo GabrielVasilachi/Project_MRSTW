@@ -33,6 +33,7 @@ export default function AdminUsers() {
                 physicalUsers={physicalUsers}
                 juridicalUsers={juridicalUsers}
                 decCountFor={id => allDeclarations.filter(d => d.user_id === id).length}
+                declarationsFor={id => allDeclarations.filter(d => d.user_id === id)}
             />
         </div>
     )

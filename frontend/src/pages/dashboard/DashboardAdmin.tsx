@@ -2,6 +2,7 @@ import physicalData from '../../_mock/mock_persoana_fizica.json'
 import juridicalData from '../../_mock/mock_persoana_juridica.json'
 import type { Declaration } from '../../types/declaration'
 import KpiCard from '../../components/dashboard/KpiCard'
+import { fmt } from '../../utils/format'
 import DeclarationsTable from '../../components/dashboard/DeclarationsTable'
 import AllUsersTable from '../../components/dashboard/AllUsersTable'
 
@@ -30,14 +31,15 @@ export default function DashboardAdmin() {
                     value={String(physicalData.users.length + juridicalData.users.length)}
                     sub={`${physicalData.users.length} fizici · ${juridicalData.users.length} juridici`} />
                 <KpiCard label="Declarații totale" value={String(allDeclarations.length)} />
-                <KpiCard label="Valoare vamală totală" value={`${allDeclarations.reduce((s, d) => s + d.customs_value, 0)} MDL`} />
-                <KpiCard label="Taxe totale" value={`${allDeclarations.reduce((s, d) => s + d.total_taxes, 0)} MDL`} />
+                <KpiCard label="Valoare vamală totală" value={fmt(allDeclarations.reduce((s, d) => s + d.customs_value, 0))} />
+                <KpiCard label="Taxe totale" value={fmt(allDeclarations.reduce((s, d) => s + d.total_taxes, 0))} />
             </div>
 
             <AllUsersTable
                 physicalUsers={physicalData.users}
                 juridicalUsers={juridicalData.users}
                 decCountFor={id => allDeclarations.filter(d => d.user_id === id).length}
+                declarationsFor={id => allDeclarations.filter(d => d.user_id === id)}
             />
 
             <DeclarationsTable declarations={allDeclarations} resolveUser={resolveUser} />
