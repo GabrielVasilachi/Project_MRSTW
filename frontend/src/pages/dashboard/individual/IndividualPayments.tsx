@@ -6,6 +6,9 @@ import type { PhysicalUser } from '../../../types/user'
 import KpiCard from '../../../components/dashboard/KpiCard'
 import StatusBadge from '../../../components/dashboard/StatusBadge'
 import AccountVerificationBanner from '../../../components/dashboard/AccountVerificationBanner'
+import { STATUS_COLORS } from '../../../components/dashboard/statusColors'
+import RowDetailModal, { ModalField, ModalBadge, ModalSection, TaxesTable } from '../../../components/dashboard/RowDetailModal'
+import { fmt } from '../../../utils/format'
 
 function paymentStatus(status: string) {
     return status === 'Approved' ? 'Achitat' : status === 'Rejected' ? 'Anulat' : 'În așteptare'
