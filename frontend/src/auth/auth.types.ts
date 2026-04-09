@@ -12,6 +12,7 @@ export type AuthSession = {
 	userId: string | null
 	email: string
 	loginAt: string
+	setupCompleted?: boolean
 }
 
 export type AuthResult = { ok: true; session: AuthSession } | { ok: false; error: string }
