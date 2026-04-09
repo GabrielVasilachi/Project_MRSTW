@@ -4,6 +4,7 @@ import type { Declaration } from '../../../types/declaration'
 import type { PhysicalUser } from '../../../types/user'
 import KpiCard from '../../../components/dashboard/KpiCard'
 import StatusBadge from '../../../components/dashboard/StatusBadge'
+import AccountVerificationBanner from '../../../components/dashboard/AccountVerificationBanner'
 
 function paymentStatus(status: string) {
     return status === 'Approved' ? 'Achitat' : status === 'Rejected' ? 'Anulat' : 'În așteptare'
@@ -28,6 +29,8 @@ export default function IndividualPayments() {
 
     return (
         <div className="space-y-8">
+            <AccountVerificationBanner />
+
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">Plăți</h1>
                 <p className="mt-1 text-sm text-gray-500">
