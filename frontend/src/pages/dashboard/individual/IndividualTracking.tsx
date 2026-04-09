@@ -4,6 +4,7 @@ import { getSession } from '../../../auth/auth.session'
 import type { Declaration } from '../../../types/declaration'
 import type { PhysicalUser } from '../../../types/user'
 import StatusBadge from '../../../components/dashboard/StatusBadge'
+import AccountVerificationBanner from '../../../components/dashboard/AccountVerificationBanner'
 
 const TRACK_STEPS = ['Declarație creată', 'Documente încărcate', 'În verificare', 'Aprobat / Respins']
 
@@ -41,6 +42,8 @@ export default function IndividualTracking() {
 
     return (
         <div className="space-y-8">
+            <AccountVerificationBanner />
+
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">Tracking / Status</h1>
                 <p className="mt-1 text-sm text-gray-500">

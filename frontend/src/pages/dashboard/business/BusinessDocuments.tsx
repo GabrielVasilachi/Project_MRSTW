@@ -3,6 +3,7 @@ import { getSession } from '../../../auth/auth.session'
 import type { Declaration } from '../../../types/declaration'
 import type { JuridicalUser } from '../../../types/user'
 import KpiCard from '../../../components/dashboard/KpiCard'
+import BusinessVerificationBanner from '../../../components/dashboard/BusinessVerificationBanner'
 
 type DocStatus = 'Aprobat' | 'În verificare' | 'Solicitat' | 'Respins'
 const DOC_COLORS: Record<DocStatus, string> = {
@@ -50,6 +51,8 @@ export default function BusinessDocuments() {
 
     return (
         <div className="space-y-8">
+            <BusinessVerificationBanner />
+
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">Documente companie</h1>
                 <p className="mt-1 text-sm text-gray-500">

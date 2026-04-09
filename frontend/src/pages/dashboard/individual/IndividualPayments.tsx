@@ -5,9 +5,7 @@ import type { Declaration } from '../../../types/declaration'
 import type { PhysicalUser } from '../../../types/user'
 import KpiCard from '../../../components/dashboard/KpiCard'
 import StatusBadge from '../../../components/dashboard/StatusBadge'
-import { STATUS_COLORS } from '../../../components/dashboard/statusColors'
-import RowDetailModal, { ModalField, ModalBadge, ModalSection, TaxesTable } from '../../../components/dashboard/RowDetailModal'
-import { fmt } from '../../../utils/format'
+import AccountVerificationBanner from '../../../components/dashboard/AccountVerificationBanner'
 
 function paymentStatus(status: string) {
     return status === 'Approved' ? 'Achitat' : status === 'Rejected' ? 'Anulat' : 'În așteptare'
@@ -70,13 +68,26 @@ export default function IndividualPayments() {
     const pending = userDeclarations.filter(d => d.status !== 'Approved' && d.status !== 'Rejected')
 
     return (
-        <>
-            <div className="space-y-8">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Plăți</h1>
-                    <p className="mt-1 text-sm text-gray-500">
-                        Taxele calculate pentru fiecare declarație și istoricul plăților.
-                    </p>
+        <div className="space-y-8">
+            <AccountVerificationBanner />
+
+            <div>
+                <h1 className="text-2xl font-bold text-gray-900">Plăți</h1>
+                <p className="mt-1 text-sm text-gray-500">
+                    Taxele calculate pentru fiecare declarație și istoricul plăților.
+                </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <KpiCard label="Total datorat" value={`${userDeclarations.reduce((s, d) => s + d.total_taxes, 0)} MDL`} />
+                <KpiCard label="Achitat" value={`${paid.reduce((s, d) => s + d.total_taxes, 0)} MDL`} sub={`${paid.length} declarații`} />
+                <KpiCard label="În așteptare" value={`${pending.reduce((s, d) => s + d.total_taxes, 0)} MDL`} sub={`${pending.length} declarații`} />
+            </div>
+
+            <div className="rounded-lg border border-gray-200 bg-white">
+                <div className="border-b border-gray-200 px-6 py-4">
+                    <p className="text-base font-semibold text-gray-900">Istoricul plăților</p>
+                    <p className="mt-0.5 text-sm text-gray-500">{userDeclarations.length} declarații</p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
