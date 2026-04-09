@@ -2,7 +2,7 @@ import physicalData from '../../../_mock/mock_persoana_fizica.json'
 import juridicalData from '../../../_mock/mock_persoana_juridica.json'
 import type { Declaration } from '../../../types/declaration'
 import KpiCard from '../../../components/dashboard/KpiCard'
-import { STATUS_COLORS } from '../../../components/dashboard/statusColors'
+import { STATUS_COLORS, STATUS_BAR_COLORS } from '../../../components/dashboard/statusColors'
 
 const STATUSES = ['Approved', 'Under Review', 'Pending Documents', 'Rejected']
 
@@ -32,7 +32,7 @@ export default function AdminReports() {
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Rapoarte</h1>
+                <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Rapoarte</h1>
                 <p className="mt-1 text-sm text-gray-500">
                     Statistici și analize privind numărul declarațiilor, taxele colectate și activitatea utilizatorilor.
                 </p>
@@ -48,7 +48,7 @@ export default function AdminReports() {
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {/* Status breakdown */}
                 <div className="rounded-lg border border-gray-200 bg-white p-5">
-                    <p className="mb-4 text-base font-semibold text-gray-900">Distribuție după status</p>
+                    <p className="mb-4 text-base font-semibold text-gray-900">Distribuție după statut</p>
                     <div className="space-y-3">
                         {STATUSES.map(s => {
                             const count = allDeclarations.filter(d => d.status === s).length
@@ -60,7 +60,7 @@ export default function AdminReports() {
                                         <span className="text-gray-600">{count} ({pct}%)</span>
                                     </div>
                                     <div className="h-2 rounded-full bg-gray-100">
-                                        <div className="h-2 rounded-full bg-gray-900 transition-all" style={{ width: `${pct}%` }} />
+                                        <div className={`h-2 rounded-full transition-all ${STATUS_BAR_COLORS[s] ?? 'bg-gray-900'}`} style={{ width: `${pct}%` }} />
                                     </div>
                                 </div>
                             )
