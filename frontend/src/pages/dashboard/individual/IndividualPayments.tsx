@@ -149,6 +149,6 @@ export default function IndividualPayments() {
             </div>
 
             {selected && <PaymentModal row={selected} onClose={() => setSelected(null)} />}
-        </>
+        </div>
     )
 }
