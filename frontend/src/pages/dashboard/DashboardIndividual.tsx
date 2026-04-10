@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import physicalData from '../../_mock/mock_persoana_fizica.json'
 import { getSession } from '../../auth/auth.session'
 import { isSetupCompleted } from '../../auth/setup.status'
@@ -15,25 +15,16 @@ export default function DashboardIndividual() {
     const declarations = physicalData.declarations as Declaration[]
     const session = getSession()
 
-    const [showSetupModal, setShowSetupModal] = useState(false)
-    const [setupCompleted, setSetupCompleted] = useState(false)
-
     const user = users.find(u => u.id === session?.userId) ?? users[0]
-    if (!user) return null
+    const setupCompleted = user ? isSetupCompleted(user.id) : false
+    const [showSetupModal, setShowSetupModal] = useState(() => !setupCompleted)
 
-    useEffect(() => {
-        const completed = isSetupCompleted(user.id)
-        setSetupCompleted(completed)
-        if (!completed) {
-            setShowSetupModal(true)
-        }
-    }, [user.id])
+    if (!user) return null
 
     const userDeclarations = declarations.filter(d => d.user_id === user.id)
 
     const handleSetupComplete = () => {
         setShowSetupModal(false)
-        setSetupCompleted(true)
     }
 
     if (showSetupModal && !setupCompleted) {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import juridicalData from '../../_mock/mock_persoana_juridica.json'
 import { getSession } from '../../auth/auth.session'
 import { isSetupCompleted } from '../../auth/setup.status'
@@ -15,25 +15,16 @@ export default function DashboardBusiness() {
     const declarations = juridicalData.declarations as Declaration[]
     const session = getSession()
 
-    const [showSetupModal, setShowSetupModal] = useState(false)
-    const [setupCompleted, setSetupCompleted] = useState(false)
-
     const company = companies.find(u => u.id === session?.userId) ?? companies[0]
-    if (!company) return null
+    const setupCompleted = company ? isSetupCompleted(company.id) : false
+    const [showSetupModal, setShowSetupModal] = useState(() => !setupCompleted)
 
-    useEffect(() => {
-        const completed = isSetupCompleted(company.id)
-        setSetupCompleted(completed)
-        if (!completed) {
-            setShowSetupModal(true)
-        }
-    }, [company.id])
+    if (!company) return null
 
     const companyDeclarations = declarations.filter(d => d.user_id === company.id)
 
     const handleSetupComplete = () => {
         setShowSetupModal(false)
-        setSetupCompleted(true)
     }
 
     if (showSetupModal && !setupCompleted) {

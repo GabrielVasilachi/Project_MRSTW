@@ -11,19 +11,21 @@ export default function IndividualSettings() {
     const user = users.find(u => u.id === session?.userId) ?? users[0]
     const setupCompleted = isSetupCompleted(user?.id || '')
 
-    if (!user) return null
-
-    const fields: [string, string, boolean][] = [
-        ['Nume complet', user.full_name, false],
-        ['IDNP', user.idnp, true],
-        ['Email', user.email, true],
-        ['Telefon', user.phone, false],
-        ['Adresă', user.address, true],
-    ]
+    const fields: [string, string, boolean][] = user
+        ? [
+            ['Nume complet', user.full_name, false],
+            ['IDNP', user.idnp, true],
+            ['Email', user.email, true],
+            ['Telefon', user.phone, false],
+            ['Adresă', user.address, true],
+        ]
+        : []
 
     const [editValues, setEditValues] = useState<Record<string, string>>(
         fields.reduce((acc, [label, value]) => ({ ...acc, [label]: value }), {})
     )
+
+    if (!user) return null
 
     return (
         <div className="space-y-8">

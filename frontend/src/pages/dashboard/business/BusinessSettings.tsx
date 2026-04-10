@@ -8,20 +8,23 @@ export default function BusinessSettings() {
     const companies = juridicalData.users as JuridicalUser[]
     const session = getSession()
     const company = companies.find(u => u.id === session?.userId) ?? companies[0]
-    if (!company) return null
 
-    const fields: [string, string, boolean][] = [
-        ['Companie', company.company_name, false],
-        ['ID Fiscal', company.tax_id, false],
-        ['EORI', company.eori, true],
-        ['Email', company.email, true],
-        ['Telefon', company.phone, false],
-        ['Adresă', company.address, false],
-    ]
+    const fields: [string, string, boolean][] = company
+        ? [
+            ['Companie', company.company_name, false],
+            ['ID Fiscal', company.tax_id, false],
+            ['EORI', company.eori, true],
+            ['Email', company.email, true],
+            ['Telefon', company.phone, false],
+            ['Adresă', company.address, false],
+        ]
+        : []
 
     const [editValues, setEditValues] = useState<Record<string, string>>(
         fields.reduce((acc, [label, value]) => ({ ...acc, [label]: value }), {})
     )
+
+    if (!company) return null
 
     return (
         <div className="space-y-8">
