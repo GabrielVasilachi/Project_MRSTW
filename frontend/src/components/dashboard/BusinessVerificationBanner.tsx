@@ -5,7 +5,7 @@ export default function BusinessVerificationBanner() {
 	return (
 		<div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
 			<div className="flex gap-3">
-				<div className="flex-shrink-0 pt-0.5">
+				<div className="shrink-0 pt-0.5">
 					<svg
 						className="h-5 w-5 text-yellow-400"
 						fill="currentColor"
