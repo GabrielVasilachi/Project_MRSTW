@@ -1,17 +1,15 @@
 import { useState } from 'react'
-
-import { createUserAccount } from '../../../auth/auth.mock'
 import type { UserRole } from '../../../auth/auth.types'
+
+const API_URL = 'http://localhost:5242/api'
 
 export default function AdminAccountCreations() {
 	const [role, setRole] = useState<UserRole>('individual')
-	
-	// Individual fields
+
 	const [individualsPackageID, setIndividualsPackageID] = useState('')
 	const [individualFullName, setIndividualFullName] = useState('')
 	const [individualPhoneNumber, setIndividualPhoneNumber] = useState('')
 
-	// Business fields
 	const [businessPackageID, setBusinessPackageID] = useState('')
 	const [businessCompanyName, setBusinessCompanyName] = useState('')
 	const [businessFiscalCode, setBusinessFiscalCode] = useState('')
@@ -19,46 +17,112 @@ export default function AdminAccountCreations() {
 	const [businessContactPerson, setBusinessContactPerson] = useState('')
 	const [businessPhoneNumber, setBusinessPhoneNumber] = useState('')
 
-	// Admin fields
 	const [adminName, setAdminName] = useState('')
 	const [adminPhoneNumber, setAdminPhoneNumber] = useState('')
 	const [adminEmail, setAdminEmail] = useState('')
 
 	const [successMessage, setSuccessMessage] = useState<string | null>(null)
 	const [errorMessage, setErrorMessage] = useState<string | null>(null)
+	const [isSubmitting, setIsSubmitting] = useState(false)
 
-	function handleSubmit(e: React.FormEvent) {
+	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault()
 		setSuccessMessage(null)
 		setErrorMessage(null)
+		setIsSubmitting(true)
 
-		const result = createUserAccount({
-			role,
-			email: role === 'admin' ? adminEmail : role === 'business' ? businessCompanyName : individualFullName,
-			phoneNumber: role === 'individual' ? individualPhoneNumber : role === 'business' ? businessPhoneNumber : adminPhoneNumber,
-			packageID: role === 'individual' ? individualsPackageID : businessPackageID
-		})
+		try {
+			if (role === 'individual') {
+				const response = await fetch(`${API_URL}/packages/scan`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						trackingCode: individualsPackageID,
+						recipientName: individualFullName,
+						recipientPhoneNumber: individualPhoneNumber
+					})
+				})
 
-		if (!result.ok) {
-			setErrorMessage(result.error)
-			return
+				const data = await response.json()
+
+				if (!response.ok) {
+					throw new Error(typeof data === 'string' ? data : data.message || 'Nu s-a putut crea contul individual.')
+				}
+
+				setSuccessMessage(data.message || 'Contul individual a fost creat cu succes.')
+			}
+
+			if (role === 'business') {
+				const response = await fetch(`${API_URL}/packages/scan`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						trackingCode: businessPackageID,
+						recipientName: businessContactPerson,
+						recipientPhoneNumber: businessPhoneNumber,
+						companyName: businessCompanyName,
+						fiscalCode: businessFiscalCode,
+						legalAddress: businessLegalAddress,
+						contactPerson: businessContactPerson
+					})
+				})
+
+				const data = await response.json()
+
+				if (!response.ok) {
+					throw new Error(typeof data === 'string' ? data : data.message || 'Nu s-a putut crea contul business.')
+				}
+
+				setSuccessMessage(data.message || 'Contul business a fost creat cu succes.')
+			}
+
+			if (role === 'admin') {
+				const response = await fetch(`${API_URL}/users/create`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						fullName: adminName,
+						phoneNumber: adminPhoneNumber,
+						email: adminEmail
+					})
+				})
+
+				const data = await response.json()
+
+				if (!response.ok) {
+					throw new Error(typeof data === 'string' ? data : data.message || 'Nu s-a putut crea contul admin.')
+				}
+
+				setSuccessMessage('Contul admin a fost creat cu succes.')
+			}
+
+			setIndividualsPackageID('')
+			setIndividualFullName('')
+			setIndividualPhoneNumber('')
+			setBusinessPackageID('')
+			setBusinessCompanyName('')
+			setBusinessFiscalCode('')
+			setBusinessLegalAddress('')
+			setBusinessContactPerson('')
+			setBusinessPhoneNumber('')
+			setAdminName('')
+			setAdminPhoneNumber('')
+			setAdminEmail('')
+		} catch (error) {
+			if (error instanceof Error) {
+				setErrorMessage(error.message)
+			} else {
+				setErrorMessage('A aparut o eroare neasteptata.')
+			}
+		} finally {
+			setIsSubmitting(false)
 		}
-
-		setSuccessMessage('Cont creat cu succes!')
-		
-		// Reset all fields
-		setIndividualsPackageID('')
-		setIndividualFullName('')
-		setIndividualPhoneNumber('')
-		setBusinessPackageID('')
-		setBusinessCompanyName('')
-		setBusinessFiscalCode('')
-		setBusinessLegalAddress('')
-		setBusinessContactPerson('')
-		setBusinessPhoneNumber('')
-		setAdminName('')
-		setAdminPhoneNumber('')
-		setAdminEmail('')
 	}
 
 	return (
@@ -84,7 +148,6 @@ export default function AdminAccountCreations() {
 					</select>
 				</div>
 
-				{/* Individual Fields */}
 				{role === 'individual' && (
 					<>
 						<div>
@@ -117,14 +180,13 @@ export default function AdminAccountCreations() {
 								value={individualPhoneNumber}
 								onChange={(e) => setIndividualPhoneNumber(e.target.value)}
 								className="mt-2 w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
-								placeholder="+37368916121"
+								placeholder="+37368914512"
 								required
 							/>
 						</div>
 					</>
 				)}
 
-				{/* Business Fields */}
 				{role === 'business' && (
 					<>
 						<div>
@@ -200,7 +262,6 @@ export default function AdminAccountCreations() {
 					</>
 				)}
 
-				{/* Admin Fields */}
 				{role === 'admin' && (
 					<>
 						<div>
@@ -249,15 +310,15 @@ export default function AdminAccountCreations() {
 				) : null}
 
 				<div className="pt-2">
-					<button 
-						type="submit" 
-						className="rounded-lg bg-blue-700 px-6 py-3 text-base font-semibold text-white hover:bg-blue-500 transition-colors cursor-pointer"
+					<button
+						type="submit"
+						disabled={isSubmitting}
+						className="rounded-lg bg-blue-700 px-6 py-3 text-base font-semibold text-white hover:bg-blue-500 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:bg-blue-300"
 					>
-						Creează
+						{isSubmitting ? 'Se creeaza...' : 'Creează'}
 					</button>
 				</div>
 			</form>
 		</div>
 	)
 }
-
