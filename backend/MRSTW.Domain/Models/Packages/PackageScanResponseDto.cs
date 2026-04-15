@@ -8,6 +8,7 @@ public class PackageScanResponseDto
     public bool UserWasCreated { get; set; }
     public bool IsBusiness { get; set; }
     public bool BusinessProfileCreated { get; set; }
+    public bool PhysicalProfileCreated { get; set; }
     public string? ActivationToken { get; set; }
     public string? ActivationLink { get; set; }
     public string Message { get; set; } = string.Empty;

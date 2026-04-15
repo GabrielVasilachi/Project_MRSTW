@@ -3,17 +3,20 @@ using System;
 using MRSTW.DataAccessLayer.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace MRSTW.DataAccessLayer.Migrations.ActivationTokensMigrations
+namespace MRSTW.DataAccessLayer.Migrations.UserMigrations
 {
-    [DbContext(typeof(ActivationTokensDbContext))]
-    partial class ActivationTokensDbContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(UsersDbContext))]
+    [Migration("20260415124735_InitialUsersSetup")]
+    partial class InitialUsersSetup
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,38 +24,6 @@ namespace MRSTW.DataAccessLayer.Migrations.ActivationTokensMigrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("MRSTW.Domain.Entities.ActivationTokens.ActivationTokenEntity", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsUsed")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("ActivationTokens");
-                });
 
             modelBuilder.Entity("MRSTW.Domain.Entities.Users.UserEntity", b =>
                 {
@@ -94,21 +65,10 @@ namespace MRSTW.DataAccessLayer.Migrations.ActivationTokensMigrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
-                });
+                    b.HasIndex("PhoneNumber")
+                        .IsUnique();
 
-            modelBuilder.Entity("MRSTW.Domain.Entities.ActivationTokens.ActivationTokenEntity", b =>
-                {
-                    b.HasOne("MRSTW.Domain.Entities.Users.UserEntity", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
+                    b.ToTable("Users");
                 });
 #pragma warning restore 612, 618
         }

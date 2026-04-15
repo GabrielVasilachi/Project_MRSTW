@@ -1,6 +1,8 @@
 using MRSTW.DataAccessLayer.Context;
 using MRSTW.Domain.Entities.ActivationTokens;
+using MRSTW.Domain.Entities.BusinessProfiles;
 using MRSTW.Domain.Entities.Packages;
+using MRSTW.Domain.Entities.PhysicalProfiles;
 using MRSTW.Domain.Entities.Users;
 using MRSTW.Domain.Enums;
 using MRSTW.Domain.Models.Packages;
@@ -14,6 +16,7 @@ public class PackagesActions
     private readonly PackagesDbContext _packagesContext;
     private readonly ActivationTokensDbContext _activationTokensContext;
     private readonly BusinessProfilesDbContext _businessProfilesContext;
+    private readonly PhysicalProfilesDbContext _physicalProfilesContext;
 
     public PackagesActions()
     {
@@ -21,6 +24,7 @@ public class PackagesActions
         _packagesContext = new PackagesDbContext();
         _activationTokensContext = new ActivationTokensDbContext();
         _businessProfilesContext = new BusinessProfilesDbContext();
+        _physicalProfilesContext = new PhysicalProfilesDbContext();
     }
 
     public ServiceResponse ScanPackageAction(PackageScanRequestDto request)
@@ -52,6 +56,15 @@ public class PackagesActions
             };
         }
 
+        if (string.IsNullOrWhiteSpace(request.LocationAddress))
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "LocationAddress este obligatoriu."
+            };
+        }
+
         var existingPackage = _packagesContext.Packages.FirstOrDefault(p => p.TrackingCode == request.TrackingCode);
 
         if (existingPackage != null)
@@ -71,6 +84,7 @@ public class PackagesActions
 
         var userWasCreated = false;
         var businessProfileCreated = false;
+        var physicalProfileCreated = false;
         string? activationTokenValue = null;
         string? activationLink = null;
 
@@ -219,6 +233,7 @@ public class PackagesActions
             TrackingCode = request.TrackingCode,
             RecipientName = request.RecipientName,
             RecipientPhoneNumber = request.RecipientPhoneNumber,
+            LocationAddress = request.LocationAddress,
             UserId = existingUser.Id,
             Status = PackageStatusEnum.Pending
         };
@@ -237,6 +252,58 @@ public class PackagesActions
             };
         }
 
+        if (!isBusiness)
+        {
+            var existingPhysicalProfile = _physicalProfilesContext.PhysicalProfiles.FirstOrDefault(p => p.UserId == existingUser.Id);
+
+            if (existingPhysicalProfile == null)
+            {
+                var physicalProfile = new PhysicalProfileEntity
+                {
+                    UserId = existingUser.Id,
+                    FullName = package.RecipientName,
+                    PhoneNumber = package.RecipientPhoneNumber,
+                    LocationAddress = package.LocationAddress,
+                    Idnp = null,
+                    Email = null
+                };
+
+                try
+                {
+                    _physicalProfilesContext.PhysicalProfiles.Add(physicalProfile);
+                    _physicalProfilesContext.SaveChanges();
+                    physicalProfileCreated = true;
+                }
+                catch (Exception e)
+                {
+                    return new ServiceResponse
+                    {
+                        IsSuccess = false,
+                        Message = e.Message
+                    };
+                }
+            }
+            else
+            {
+                existingPhysicalProfile.FullName = package.RecipientName;
+                existingPhysicalProfile.PhoneNumber = package.RecipientPhoneNumber;
+                existingPhysicalProfile.LocationAddress = package.LocationAddress;
+
+                try
+                {
+                    _physicalProfilesContext.SaveChanges();
+                }
+                catch (Exception e)
+                {
+                    return new ServiceResponse
+                    {
+                        IsSuccess = false,
+                        Message = e.Message
+                    };
+                }
+            }
+        }
+
         var response = new PackageScanResponseDto
         {
             PackageId = package.Id,
@@ -245,6 +312,7 @@ public class PackagesActions
             UserWasCreated = userWasCreated,
             IsBusiness = isBusiness,
             BusinessProfileCreated = businessProfileCreated,
+            PhysicalProfileCreated = physicalProfileCreated,
             ActivationToken = activationTokenValue,
             ActivationLink = activationLink,
             Message = userWasCreated

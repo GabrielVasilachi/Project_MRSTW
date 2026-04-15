@@ -1,7 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MRSTW.Domain.Entities.Users;
 
-namespace MRSTW.Domain.Entities.Users;
+namespace MRSTW.Domain.Entities.BusinessProfiles;
 
 public class BusinessProfileEntity
 {

@@ -5,6 +5,7 @@ public class PackageScanRequestDto
     public string TrackingCode { get; set; } = string.Empty;
     public string RecipientName { get; set; } = string.Empty;
     public string RecipientPhoneNumber { get; set; } = string.Empty;
+    public string LocationAddress { get; set; } = string.Empty;
 
     public string? CompanyName { get; set; }
     public string? FiscalCode { get; set; }

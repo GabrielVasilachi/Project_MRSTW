@@ -22,7 +22,7 @@ namespace MRSTW.DataAccessLayer.Migrations.BusinessProfilesMigrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("MRSTW.Domain.Entities.Users.BusinessProfileEntity", b =>
+            modelBuilder.Entity("MRSTW.Domain.Entities.BusinessProfiles.BusinessProfileEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -102,10 +102,13 @@ namespace MRSTW.DataAccessLayer.Migrations.BusinessProfilesMigrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserEntity");
+                    b.ToTable("Users", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
                 });
 
-            modelBuilder.Entity("MRSTW.Domain.Entities.Users.BusinessProfileEntity", b =>
+            modelBuilder.Entity("MRSTW.Domain.Entities.BusinessProfiles.BusinessProfileEntity", b =>
                 {
                     b.HasOne("MRSTW.Domain.Entities.Users.UserEntity", "User")
                         .WithMany()

@@ -21,4 +21,9 @@ public class BusinessLogic
     {
         return new BusinessProfilesLogic();
     }
+
+    public IPhysicalProfilesLogic GetPhysicalProfilesLogic()
+    {
+        return new PhysicalProfilesLogic();
+    }
 }

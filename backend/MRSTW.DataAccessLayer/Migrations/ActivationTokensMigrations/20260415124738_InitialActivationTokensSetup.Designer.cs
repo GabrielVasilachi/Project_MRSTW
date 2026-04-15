@@ -9,11 +9,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace MRSTW.DataAccessLayer.Migrations.BusinessProfilesMigrations
+namespace MRSTW.DataAccessLayer.Migrations.ActivationTokensMigrations
 {
-    [DbContext(typeof(BusinessProfilesDbContext))]
-    [Migration("20260408124608_InitialBusinessProfilesSetup")]
-    partial class InitialBusinessProfilesSetup
+    [DbContext(typeof(ActivationTokensDbContext))]
+    [Migration("20260415124738_InitialActivationTokensSetup")]
+    partial class InitialActivationTokensSetup
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,7 @@ namespace MRSTW.DataAccessLayer.Migrations.BusinessProfilesMigrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("MRSTW.Domain.Entities.Users.BusinessProfileEntity", b =>
+            modelBuilder.Entity("MRSTW.Domain.Entities.ActivationTokens.ActivationTokenEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -33,36 +33,28 @@ namespace MRSTW.DataAccessLayer.Migrations.BusinessProfilesMigrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("CompanyName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("ContactPerson")
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("FiscalCode")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("LegalAddress")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId")
-                        .IsUnique();
+                    b.HasIndex("UserId");
 
-                    b.ToTable("BusinessProfiles");
+                    b.ToTable("ActivationTokens");
                 });
 
             modelBuilder.Entity("MRSTW.Domain.Entities.Users.UserEntity", b =>
@@ -105,10 +97,13 @@ namespace MRSTW.DataAccessLayer.Migrations.BusinessProfilesMigrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserEntity");
+                    b.ToTable("Users", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
                 });
 
-            modelBuilder.Entity("MRSTW.Domain.Entities.Users.BusinessProfileEntity", b =>
+            modelBuilder.Entity("MRSTW.Domain.Entities.ActivationTokens.ActivationTokenEntity", b =>
                 {
                     b.HasOne("MRSTW.Domain.Entities.Users.UserEntity", "User")
                         .WithMany()

@@ -9,11 +9,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace MRSTW.DataAccessLayer.Migrations.ActivationTokensMigrations
+namespace MRSTW.DataAccessLayer.Migrations.PackagesMigrations
 {
-    [DbContext(typeof(ActivationTokensDbContext))]
-    [Migration("20260408124601_InitialActivationTokensSetup")]
-    partial class InitialActivationTokensSetup
+    [DbContext(typeof(PackagesDbContext))]
+    [Migration("20260415124743_InitialPackagesSetup")]
+    partial class InitialPackagesSetup
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,7 @@ namespace MRSTW.DataAccessLayer.Migrations.ActivationTokensMigrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("MRSTW.Domain.Entities.ActivationTokens.ActivationTokenEntity", b =>
+            modelBuilder.Entity("MRSTW.Domain.Entities.Packages.PackageEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -36,25 +36,39 @@ namespace MRSTW.DataAccessLayer.Migrations.ActivationTokensMigrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsUsed")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Token")
+                    b.Property<string>("LocationAddress")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
-                    b.Property<int>("UserId")
+                    b.Property<string>("RecipientName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("RecipientPhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("TrackingCode")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int?>("UserId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ActivationTokens");
+                    b.ToTable("Packages");
                 });
 
             modelBuilder.Entity("MRSTW.Domain.Entities.Users.UserEntity", b =>
@@ -97,16 +111,17 @@ namespace MRSTW.DataAccessLayer.Migrations.ActivationTokensMigrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserEntity");
+                    b.ToTable("Users", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
                 });
 
-            modelBuilder.Entity("MRSTW.Domain.Entities.ActivationTokens.ActivationTokenEntity", b =>
+            modelBuilder.Entity("MRSTW.Domain.Entities.Packages.PackageEntity", b =>
                 {
                     b.HasOne("MRSTW.Domain.Entities.Users.UserEntity", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.Navigation("User");
                 });

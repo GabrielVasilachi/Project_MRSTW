@@ -13,26 +13,6 @@ namespace MRSTW.DataAccessLayer.Migrations.BusinessProfilesMigrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "UserEntity",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    FullName = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
-                    PhoneNumber = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
-                    Email = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: true),
-                    PasswordHash = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    RoleEnum = table.Column<int>(type: "integer", nullable: false),
-                    IsTemporary = table.Column<bool>(type: "boolean", nullable: false),
-                    IsPhoneConfirmed = table.Column<bool>(type: "boolean", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_UserEntity", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "BusinessProfiles",
                 columns: table => new
                 {
@@ -49,9 +29,9 @@ namespace MRSTW.DataAccessLayer.Migrations.BusinessProfilesMigrations
                 {
                     table.PrimaryKey("PK_BusinessProfiles", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_BusinessProfiles_UserEntity_UserId",
+                        name: "FK_BusinessProfiles_Users_UserId",
                         column: x => x.UserId,
-                        principalTable: "UserEntity",
+                        principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -68,9 +48,6 @@ namespace MRSTW.DataAccessLayer.Migrations.BusinessProfilesMigrations
         {
             migrationBuilder.DropTable(
                 name: "BusinessProfiles");
-
-            migrationBuilder.DropTable(
-                name: "UserEntity");
         }
     }
 }

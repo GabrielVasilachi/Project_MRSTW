@@ -10,6 +10,7 @@
       <Folder Include="Migrations\ActivationTokensMigrations\" />
       <Folder Include="Migrations\BusinessProfilesMigrations\" />
       <Folder Include="Migrations\PackagesMigrations\" />
+      <Folder Include="Migrations\PhysicalProfilesMigrations\" />
       <Folder Include="Migrations\UserMigrations\" />
     </ItemGroup>
 
