@@ -26,4 +26,9 @@ public class BusinessLogic
     {
         return new PhysicalProfilesLogic();
     }
+
+    public IDocumentLogic GetDocumentLogic()
+    {
+        return new DocumentLogic();
+    }
 }
