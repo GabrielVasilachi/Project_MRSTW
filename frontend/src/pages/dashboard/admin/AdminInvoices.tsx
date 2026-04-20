@@ -93,7 +93,7 @@ export default function AdminInvoices() {
         <>
             <div className="space-y-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Invoice-uri</h1>
+                    <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Invoice-uri</h1>
                     <p className="mt-1 text-sm text-gray-500">
                         Lista facturilor generate pentru declarații – verificați statusul plăților și confirmați încasările.
                     </p>

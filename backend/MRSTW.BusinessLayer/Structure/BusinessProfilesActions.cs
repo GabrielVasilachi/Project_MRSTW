@@ -63,7 +63,9 @@ public class BusinessProfilesActions
 
         profile.CompanyName = request.CompanyName;
         profile.PhoneNumber = request.PhoneNumber;
-        profile.IdnoCode = request.IdnoCode;
+        profile.IdnoCode = string.IsNullOrWhiteSpace(request.IdnoCode)
+            ? null
+            : request.IdnoCode.Trim();
         profile.LocationAdress = request.LocationAdress;
         profile.TvaCode = request.TvaCode;
         profile.Email = request.Email;

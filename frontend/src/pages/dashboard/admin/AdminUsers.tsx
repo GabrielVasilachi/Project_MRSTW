@@ -16,7 +16,7 @@ export default function AdminUsers() {
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Utilizatori</h1>
+                <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Utilizatori</h1>
                 <p className="mt-1 text-sm text-gray-500">
                     Gestionați toate conturile (persoane fizice și juridice) – modificați roluri sau suspendați conturi.
                 </p>

@@ -24,7 +24,7 @@ export default function BusinessImportsHistory() {
             <BusinessVerificationBanner />
 
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Importuri / Istoric</h1>
+                <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Importuri / Istoric</h1>
                 <p className="mt-1 text-sm text-gray-500">
                     Istoricul complet al importurilor și declarațiilor finalizate ale firmei <strong>{company.company_name}</strong>.
                 </p>

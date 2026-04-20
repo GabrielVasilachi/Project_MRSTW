@@ -17,7 +17,7 @@ export default function IndividualSettings() {
             ['IDNP', user.idnp, true],
             ['Email', user.email, true],
             ['Telefon', user.phone, false],
-            ['Adresă', user.address, true],
+            ['Adresă', user.address, false],
         ]
         : []
 
@@ -32,7 +32,7 @@ export default function IndividualSettings() {
             <AccountVerificationBanner />
 
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Setări cont</h1>
+                <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Setări cont</h1>
                 <p className="mt-1 text-sm text-gray-500">
                     Informațiile personale asociate contului tău.
                 </p>

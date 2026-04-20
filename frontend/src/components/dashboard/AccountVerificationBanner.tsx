@@ -23,7 +23,9 @@ export default function AccountVerificationBanner() {
 						Date importante neconfirmate
 					</p>
 					<p className="mt-1 text-sm text-yellow-700">
-						Vă rugăm să completaţi și să confirmaţi datele obligatorii (IDNP, Email și Adresă) din{' '}
+						Vă rugăm să completaţi și să confirmaţi datele obligatorii (
+							<span className="font-semibold text-red-700">Email</span> și <span className="font-semibold text-red-700">IDNP</span>
+						) din{' '}
 						<Link
 							to={paths.Individual_Settings}
 							className="font-semibold underline hover:text-yellow-900"

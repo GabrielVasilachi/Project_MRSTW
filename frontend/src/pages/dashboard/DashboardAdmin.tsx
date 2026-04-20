@@ -22,7 +22,7 @@ export default function DashboardAdmin() {
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Panou de administrare</h1>
+                <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Panou de administrare</h1>
                 <p className="mt-1 text-sm text-gray-500">Vizualizare completă a utilizatorilor și declarațiilor vamale</p>
             </div>
 

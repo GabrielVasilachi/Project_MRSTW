@@ -43,7 +43,7 @@ export default function DashboardBusiness() {
             <BusinessVerificationBanner />
 
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">{company.company_name}</h1>
+                <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>{company.company_name}</h1>
                 <p className="mt-1 text-sm text-gray-500">Persoană juridică · {company.email}</p>
             </div>
 

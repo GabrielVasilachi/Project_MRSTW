@@ -108,7 +108,7 @@ export default function IndividualDocuments() {
             <AccountVerificationBanner />
 
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Documentele mele</h1>
+                <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Documentele mele</h1>
                 <p className="mt-1 text-sm text-gray-500">
                     Încărcați și gestionați documentele pentru declarațiile vamale (facturi, dovezi de plată etc.).
                 </p>

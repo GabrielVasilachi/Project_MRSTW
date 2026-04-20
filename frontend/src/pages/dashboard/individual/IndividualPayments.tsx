@@ -75,7 +75,7 @@ export default function IndividualPayments() {
             <AccountVerificationBanner />
 
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Plăți</h1>
+                <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Plăți</h1>
                 <p className="mt-1 text-sm text-gray-500">
                     Taxele calculate pentru fiecare declarație și istoricul plăților.
                 </p>

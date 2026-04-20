@@ -45,7 +45,7 @@ export default function IndividualTracking() {
             <AccountVerificationBanner />
 
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Tracking / Status</h1>
+                <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Tracking / Status</h1>
                 <p className="mt-1 text-sm text-gray-500">
                     Verifică rapid stadiul unei declarații sau al unui colet folosind numărul AWB sau ID-ul declarației.
                 </p>

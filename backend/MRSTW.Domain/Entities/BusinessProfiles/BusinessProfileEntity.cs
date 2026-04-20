@@ -24,9 +24,8 @@ public class BusinessProfileEntity
     [StringLength(30)]
     public string PhoneNumber { get; set; } = string.Empty;
 
-    [Required]
     [StringLength(50)]
-    public string IdnoCode { get; set; } = string.Empty;
+    public string? IdnoCode { get; set; }
 
     [StringLength(200)]
     public string? LocationAdress { get; set; }

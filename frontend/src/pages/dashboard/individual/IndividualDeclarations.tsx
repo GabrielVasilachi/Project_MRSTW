@@ -22,7 +22,7 @@ export default function IndividualDeclarations() {
             <AccountVerificationBanner />
 
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Declarațiile mele</h1>
+                <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Declarațiile mele</h1>
                 <p className="mt-1 text-sm text-gray-500">
                     Vizualizează toate declarațiile create și accesează detaliile fiecăreia.
                 </p>

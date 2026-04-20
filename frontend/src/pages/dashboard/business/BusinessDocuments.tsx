@@ -54,7 +54,7 @@ export default function BusinessDocuments() {
             <BusinessVerificationBanner />
 
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Documente companie</h1>
+                <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Documente companie</h1>
                 <p className="mt-1 text-sm text-gray-500">
                     Documentele oficiale ale firmei <strong>{company.company_name}</strong> necesare procesării declarațiilor vamale.
                 </p>

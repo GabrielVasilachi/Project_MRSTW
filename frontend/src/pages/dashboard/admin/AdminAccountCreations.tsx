@@ -8,14 +8,14 @@ export default function AdminAccountCreations() {
 
 	const [individualsPackageID, setIndividualsPackageID] = useState('')
 	const [individualFullName, setIndividualFullName] = useState('')
+	const [individualAddress, setIndividualAddress] = useState('')
 	const [individualPhoneNumber, setIndividualPhoneNumber] = useState('')
 
 	const [businessPackageID, setBusinessPackageID] = useState('')
 	const [businessCompanyName, setBusinessCompanyName] = useState('')
-	const [businessFiscalCode, setBusinessFiscalCode] = useState('')
 	const [businessLegalAddress, setBusinessLegalAddress] = useState('')
-	const [businessContactPerson, setBusinessContactPerson] = useState('')
 	const [businessPhoneNumber, setBusinessPhoneNumber] = useState('')
+	const [businessContactPerson, setBusinessContactPerson] = useState('')
 
 	const [adminName, setAdminName] = useState('')
 	const [adminPhoneNumber, setAdminPhoneNumber] = useState('')
@@ -41,6 +41,7 @@ export default function AdminAccountCreations() {
 					body: JSON.stringify({
 						trackingCode: individualsPackageID,
 						recipientName: individualFullName,
+						recipientAddress: individualAddress,
 						recipientPhoneNumber: individualPhoneNumber
 					})
 				})
@@ -65,7 +66,6 @@ export default function AdminAccountCreations() {
 						recipientName: businessContactPerson,
 						recipientPhoneNumber: businessPhoneNumber,
 						companyName: businessCompanyName,
-						fiscalCode: businessFiscalCode,
 						legalAddress: businessLegalAddress,
 						contactPerson: businessContactPerson
 					})
@@ -104,13 +104,13 @@ export default function AdminAccountCreations() {
 
 			setIndividualsPackageID('')
 			setIndividualFullName('')
+			setIndividualAddress('')
 			setIndividualPhoneNumber('')
 			setBusinessPackageID('')
 			setBusinessCompanyName('')
-			setBusinessFiscalCode('')
 			setBusinessLegalAddress('')
-			setBusinessContactPerson('')
 			setBusinessPhoneNumber('')
+			setBusinessContactPerson('')
 			setAdminName('')
 			setAdminPhoneNumber('')
 			setAdminEmail('')
@@ -128,7 +128,7 @@ export default function AdminAccountCreations() {
 	return (
 		<div className="space-y-6">
 			<div>
-				<h1 className="text-2xl font-bold text-gray-900">Creare cont</h1>
+				<h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Creare cont</h1>
 				<p className="mt-1 text-sm text-gray-500">
 					Creaza cont pentru utilizatorii mentionati de pe coletul vamal.
 				</p>
@@ -173,8 +173,20 @@ export default function AdminAccountCreations() {
 							/>
 						</div>
 
+							<div>
+								<label className="block text-sm font-medium text-gray-700">Location Address</label>
+								<input
+									type="text"
+									value={individualAddress}
+									onChange={(e) => setIndividualAddress(e.target.value)}
+									className="mt-2 w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
+									placeholder="ex: Str. Dacia 20, Chisinau"
+									required
+								/>
+							</div>
+
 						<div>
-							<label className="block text-sm font-medium text-gray-700">Număr de telefon</label>
+							<label className="block text-sm font-medium text-gray-700">Phone Number</label>
 							<input
 								type="tel"
 								value={individualPhoneNumber}
@@ -213,19 +225,7 @@ export default function AdminAccountCreations() {
 						</div>
 
 						<div>
-							<label className="block text-sm font-medium text-gray-700">Fiscal Code</label>
-							<input
-								type="text"
-								value={businessFiscalCode}
-								onChange={(e) => setBusinessFiscalCode(e.target.value)}
-								className="mt-2 w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
-								placeholder="ex: 1234567890"
-								required
-							/>
-						</div>
-
-						<div>
-							<label className="block text-sm font-medium text-gray-700">Legal Address</label>
+							<label className="block text-sm font-medium text-gray-700">Location Address</label>
 							<input
 								type="text"
 								value={businessLegalAddress}
@@ -237,19 +237,7 @@ export default function AdminAccountCreations() {
 						</div>
 
 						<div>
-							<label className="block text-sm font-medium text-gray-700">Persoana de contact</label>
-							<input
-								type="text"
-								value={businessContactPerson}
-								onChange={(e) => setBusinessContactPerson(e.target.value)}
-								className="mt-2 w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
-								placeholder="ex: Ionescu Maria"
-								required
-							/>
-						</div>
-
-						<div>
-							<label className="block text-sm font-medium text-gray-700">Număr de telefon</label>
+							<label className="block text-sm font-medium text-gray-700">Phone Number</label>
 							<input
 								type="tel"
 								value={businessPhoneNumber}
@@ -257,6 +245,17 @@ export default function AdminAccountCreations() {
 								className="mt-2 w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
 								placeholder="+37368916121"
 								required
+							/>
+						</div>
+
+						<div>
+							<label className="block text-sm font-medium text-gray-700">Contact Person</label>
+							<input
+								type="text"
+								value={businessContactPerson}
+								onChange={(e) => setBusinessContactPerson(e.target.value)}
+								className="mt-2 w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
+								placeholder="ex: Ionescu Maria"
 							/>
 						</div>
 					</>

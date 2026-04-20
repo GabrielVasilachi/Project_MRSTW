@@ -10,10 +10,9 @@ namespace MRSTW.DataAccessLayer.Migrations.PackagesMigrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameColumn(
+            migrationBuilder.DropColumn(
                 name: "RecipientName",
-                table: "Packages",
-                newName: "FullName");
+                table: "Packages");
 
             migrationBuilder.RenameColumn(
                 name: "RecipientPhoneNumber",
@@ -38,6 +37,13 @@ namespace MRSTW.DataAccessLayer.Migrations.PackagesMigrations
                 type: "character varying(150)",
                 maxLength: 150,
                 nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "FullName",
+                table: "Packages",
+                type: "character varying(150)",
+                maxLength: 150,
+                nullable: true);
         }
 
         /// <inheritdoc />
@@ -51,6 +57,10 @@ namespace MRSTW.DataAccessLayer.Migrations.PackagesMigrations
                 name: "ContactPerson",
                 table: "Packages");
 
+            migrationBuilder.DropColumn(
+                name: "FullName",
+                table: "Packages");
+
             migrationBuilder.RenameColumn(
                 name: "PhoneNumber",
                 table: "Packages",
@@ -61,10 +71,13 @@ namespace MRSTW.DataAccessLayer.Migrations.PackagesMigrations
                 table: "Packages",
                 newName: "LocationAddress");
 
-            migrationBuilder.RenameColumn(
-                name: "FullName",
+            migrationBuilder.AddColumn<string>(
+                name: "RecipientName",
                 table: "Packages",
-                newName: "RecipientName");
+                type: "character varying(150)",
+                maxLength: 150,
+                nullable: false,
+                defaultValue: "");
         }
     }
 }

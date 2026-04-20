@@ -31,7 +31,7 @@ export default function BusinessSettings() {
             <BusinessVerificationBanner />
 
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Setări companie</h1>
+                <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Setări companie</h1>
                 <p className="mt-1 text-sm text-gray-500">
                     Informațiile firmei, datele de contact și credențialele contului.
                 </p>

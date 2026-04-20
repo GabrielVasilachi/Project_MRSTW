@@ -94,7 +94,7 @@ export default function AdminAuditLog() {
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-2xl font-bold text-gray-900">Audit Log</h1>
+                <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Audit Log</h1>
                 <p className="mt-1 text-sm text-gray-500">
                     Istoricul tuturor acțiunilor importante din sistem – cine a făcut o modificare și la ce moment.
                 </p>

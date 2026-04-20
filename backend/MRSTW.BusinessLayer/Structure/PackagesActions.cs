@@ -336,7 +336,7 @@ public class PackagesActions
                 UserId = existingUser.Id,
                 CompanyName = request.CompanyName,
                 PhoneNumber = request.PhoneNumber,
-                IdnoCode = string.Empty,
+                IdnoCode = null,
                 LocationAdress = request.LocationAdress,
                 TvaCode = null,
                 Email = null,
