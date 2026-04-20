@@ -13,4 +13,14 @@ public sealed class BusinessProfilesDbContext : DbContext
         optionsBuilder.UseNpgsql(DbSession.ConnectionString);
     }
 
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<UserEntity>()
+            .ToTable("Users", tableBuilder => tableBuilder.ExcludeFromMigrations());
+
+        modelBuilder.Entity<BusinessProfileEntity>()
+            .HasIndex(profile => profile.UserId)
+            .IsUnique();
+    }
+
 }

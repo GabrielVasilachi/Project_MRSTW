@@ -7,8 +7,13 @@ namespace MRSTW.BusinessLayer.Core;
 
 public class PackagesLogic : PackagesActions, IPackagesLogic
 {
-    public ServiceResponse ScanPackage(PackageScanRequestDto request)
+    public ServiceResponse ScanPhysicalProfiles(PackageScanPhysicalProfilesRequestDto request)
     {
-        return ScanPackageAction(request);
+        return ScanPhysicalProfilesAction(request);
+    }
+
+    public ServiceResponse ScanBusinessProfiles(PackageScanBusinessProfilesRequestDto request)
+    {
+        return ScanBusinessProfilesAction(request);
     }
 }

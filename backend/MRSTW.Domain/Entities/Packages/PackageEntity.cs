@@ -16,16 +16,21 @@ public class PackageEntity
     public string TrackingCode { get; set; } = string.Empty;
 
     [Required]
-    [StringLength(150)]
-    public string RecipientName { get; set; } = string.Empty;
-
-    [Required]
     [StringLength(30)]
-    public string RecipientPhoneNumber { get; set; } = string.Empty;
+    public string PhoneNumber { get; set; } = string.Empty;
 
     [Required]
     [StringLength(200)]
-    public string LocationAddress { get; set; } = string.Empty;
+    public string LocationAdress { get; set; } = string.Empty;
+
+    [StringLength(150)]
+    public string? FullName { get; set; }
+
+    [StringLength(200)]
+    public string? CompanyName { get; set; }
+
+    [StringLength(150)]
+    public string? ContactPerson { get; set; }
 
     [Required]
     [StringLength(50)]

@@ -31,9 +31,14 @@ public class BusinessProfilesActions
             Id = profile.Id,
             UserId = profile.UserId,
             CompanyName = profile.CompanyName,
-            FiscalCode = profile.FiscalCode,
-            LegalAddress = profile.LegalAddress,
-            ContactPerson = profile.ContactPerson
+            PhoneNumber = profile.PhoneNumber,
+            IdnoCode = profile.IdnoCode,
+            LocationAdress = profile.LocationAdress,
+            TvaCode = profile.TvaCode,
+            Email = profile.Email,
+            ContactPerson = profile.ContactPerson,
+            ResponsiblePerson = profile.ResponsiblePerson,
+            EoriCode = profile.EoriCode
         };
 
         return new ServiceResponse
@@ -57,9 +62,14 @@ public class BusinessProfilesActions
         }
 
         profile.CompanyName = request.CompanyName;
-        profile.FiscalCode = request.FiscalCode;
-        profile.LegalAddress = request.LegalAddress;
+        profile.PhoneNumber = request.PhoneNumber;
+        profile.IdnoCode = request.IdnoCode;
+        profile.LocationAdress = request.LocationAdress;
+        profile.TvaCode = request.TvaCode;
+        profile.Email = request.Email;
         profile.ContactPerson = request.ContactPerson;
+        profile.ResponsiblePerson = request.ResponsiblePerson;
+        profile.EoriCode = request.EoriCode;
 
         try
         {

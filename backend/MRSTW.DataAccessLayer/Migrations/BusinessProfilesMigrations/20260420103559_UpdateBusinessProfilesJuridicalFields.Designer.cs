@@ -3,17 +3,20 @@ using System;
 using MRSTW.DataAccessLayer.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace MRSTW.DataAccessLayer.Migrations.PackagesMigrations
+namespace MRSTW.DataAccessLayer.Migrations.BusinessProfilesMigrations
 {
-    [DbContext(typeof(PackagesDbContext))]
-    partial class PackagesDbContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(BusinessProfilesDbContext))]
+    [Migration("20260420103559_UpdateBusinessProfilesJuridicalFields")]
+    partial class UpdateBusinessProfilesJuridicalFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,7 +25,7 @@ namespace MRSTW.DataAccessLayer.Migrations.PackagesMigrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("MRSTW.Domain.Entities.Packages.PackageEntity", b =>
+            modelBuilder.Entity("MRSTW.Domain.Entities.BusinessProfiles.BusinessProfileEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -31,48 +34,48 @@ namespace MRSTW.DataAccessLayer.Migrations.PackagesMigrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CompanyName")
+                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
-
-                    b.Property<string>("ContactPerson")
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("FullName")
+                    b.Property<string>("Email")
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
 
-                    b.Property<string>("LocationAdress")
+                    b.Property<string>("Eori")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Idno")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
+                    b.Property<string>("ResponsiblePerson")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("Tva")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<string>("TrackingCode")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<int?>("UserId")
+                    b.Property<int>("UserId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId")
+                        .IsUnique();
 
-                    b.ToTable("Packages");
+                    b.ToTable("BusinessProfiles");
                 });
 
             modelBuilder.Entity("MRSTW.Domain.Entities.Users.UserEntity", b =>
@@ -121,11 +124,13 @@ namespace MRSTW.DataAccessLayer.Migrations.PackagesMigrations
                         });
                 });
 
-            modelBuilder.Entity("MRSTW.Domain.Entities.Packages.PackageEntity", b =>
+            modelBuilder.Entity("MRSTW.Domain.Entities.BusinessProfiles.BusinessProfileEntity", b =>
                 {
                     b.HasOne("MRSTW.Domain.Entities.Users.UserEntity", "User")
                         .WithMany()
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });

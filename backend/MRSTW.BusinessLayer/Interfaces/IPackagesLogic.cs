@@ -5,5 +5,6 @@ namespace MRSTW.BusinessLayer.Interfaces;
 
 public interface IPackagesLogic
 {
-    ServiceResponse ScanPackage(PackageScanRequestDto request);
+    ServiceResponse ScanPhysicalProfiles(PackageScanPhysicalProfilesRequestDto request);
+    ServiceResponse ScanBusinessProfiles(PackageScanBusinessProfilesRequestDto request);
 }

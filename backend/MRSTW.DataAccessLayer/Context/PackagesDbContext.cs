@@ -13,4 +13,15 @@ public sealed class PackagesDbContext : DbContext
         optionsBuilder.UseNpgsql(DbSession.ConnectionString);
     }
 
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<UserEntity>()
+            .ToTable("Users", tableBuilder => tableBuilder.ExcludeFromMigrations());
+
+        modelBuilder.Entity<PackageEntity>()
+            .Property(package => package.Status)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+    }
+
 }

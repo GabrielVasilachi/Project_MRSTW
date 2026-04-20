@@ -17,10 +17,23 @@ public class PackagesController : ControllerBase
         _packagesLogic = bl.GetPackagesLogic();
     }
 
-    [HttpPost("scan")]
-    public IActionResult ScanPackage([FromBody] PackageScanRequestDto request)
+    [HttpPost("scan-physical-profiles")]
+    public IActionResult ScanPhysicalProfiles([FromBody] PackageScanPhysicalProfilesRequestDto request)
     {
-        var response = _packagesLogic.ScanPackage(request);
+        var response = _packagesLogic.ScanPhysicalProfiles(request);
+
+        if (!response.IsSuccess)
+        {
+            return BadRequest(response.Message);
+        }
+
+        return Ok(response.Data);
+    }
+
+    [HttpPost("scan-business-profiles")]
+    public IActionResult ScanBusinessProfiles([FromBody] PackageScanBusinessProfilesRequestDto request)
+    {
+        var response = _packagesLogic.ScanBusinessProfiles(request);
 
         if (!response.IsSuccess)
         {
