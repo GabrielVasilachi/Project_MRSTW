@@ -1,19 +1,32 @@
-export type PackageScanRequest = {
+export type PackageScanPhysicalProfilesRequest = {
     trackingCode: string;
-    recipientName: string;
-    recipientPhoneNumber: string;
-    companyName?: string;
-    fiscalCode?: string;
-    legalAddress?: string;
-    contactPerson?: string;
+    fullName: string;
+    phoneNumber: string;
+    locationAdress: string;
 };
 
-export type PackageScanResponse = {
-    packageId: number;
-    userId: number;
+export type PackageScanBusinessProfilesRequest = {
     trackingCode: string;
+    companyName: string;
+    locationAdress: string;
+    phoneNumber: string;
+    contactPerson?: string | null;
+};
+
+export type PackageScanPhysicalProfilesResponse = {
+    trackingCode: string;
+    userId: number;
     userWasCreated: boolean;
-    isBusiness: boolean;
+    physicalProfileCreated: boolean;
+    activationToken?: string | null;
+    activationLink?: string | null;
+    message: string;
+};
+
+export type PackageScanBusinessProfilesResponse = {
+    trackingCode: string;
+    userId: number;
+    userWasCreated: boolean;
     businessProfileCreated: boolean;
     activationToken?: string | null;
     activationLink?: string | null;

@@ -1,7 +1,37 @@
 import { useState } from 'react'
 import type { UserRole } from '../../../auth/auth.types'
 
-const API_URL = 'http://localhost:5242/api'
+const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:5242/api'
+
+function getApiMessage(payload: unknown, fallback: string): string {
+	if (typeof payload === 'string' && payload.trim().length > 0) {
+		return payload
+	}
+
+	if (payload && typeof payload === 'object' && 'message' in payload) {
+		const message = (payload as { message?: unknown }).message
+
+		if (typeof message === 'string' && message.trim().length > 0) {
+			return message
+		}
+	}
+
+	return fallback
+}
+
+async function readApiPayload(response: Response): Promise<unknown> {
+	const rawText = await response.text()
+
+	if (!rawText) {
+		return null
+	}
+
+	try {
+		return JSON.parse(rawText)
+	} catch {
+		return rawText
+	}
+}
 
 export default function AdminAccountCreations() {
 	const [role, setRole] = useState<UserRole>('individual')
@@ -33,73 +63,68 @@ export default function AdminAccountCreations() {
 
 		try {
 			if (role === 'individual') {
-				const response = await fetch(`${API_URL}/packages/scan`, {
+				const response = await fetch(`${API_URL}/packages/scan-physical-profiles`, {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json'
 					},
 					body: JSON.stringify({
-						trackingCode: individualsPackageID,
-						recipientName: individualFullName,
-						recipientAddress: individualAddress,
-						recipientPhoneNumber: individualPhoneNumber
+						trackingCode: individualsPackageID.trim(),
+						fullName: individualFullName.trim(),
+						locationAdress: individualAddress.trim(),
+						phoneNumber: individualPhoneNumber.trim()
 					})
 				})
 
-				const data = await response.json()
+				const data = await readApiPayload(response)
 
 				if (!response.ok) {
-					throw new Error(typeof data === 'string' ? data : data.message || 'Nu s-a putut crea contul individual.')
+					throw new Error(getApiMessage(data, 'Nu s-a putut crea contul individual.'))
 				}
 
-				setSuccessMessage(data.message || 'Contul individual a fost creat cu succes.')
-			}
-
-			if (role === 'business') {
-				const response = await fetch(`${API_URL}/packages/scan`, {
+				setSuccessMessage(getApiMessage(data, 'Contul individual a fost creat cu succes.'))
+			} else if (role === 'business') {
+				const response = await fetch(`${API_URL}/packages/scan-business-profiles`, {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json'
 					},
 					body: JSON.stringify({
-						trackingCode: businessPackageID,
-						recipientName: businessContactPerson,
-						recipientPhoneNumber: businessPhoneNumber,
-						companyName: businessCompanyName,
-						legalAddress: businessLegalAddress,
-						contactPerson: businessContactPerson
+						trackingCode: businessPackageID.trim(),
+						companyName: businessCompanyName.trim(),
+						locationAdress: businessLegalAddress.trim(),
+						phoneNumber: businessPhoneNumber.trim(),
+						contactPerson: businessContactPerson.trim() || null
 					})
 				})
 
-				const data = await response.json()
+				const data = await readApiPayload(response)
 
 				if (!response.ok) {
-					throw new Error(typeof data === 'string' ? data : data.message || 'Nu s-a putut crea contul business.')
+					throw new Error(getApiMessage(data, 'Nu s-a putut crea contul business.'))
 				}
 
-				setSuccessMessage(data.message || 'Contul business a fost creat cu succes.')
-			}
-
-			if (role === 'admin') {
-				const response = await fetch(`${API_URL}/users/create`, {
+				setSuccessMessage(getApiMessage(data, 'Contul business a fost creat cu succes.'))
+			} else if (role === 'admin') {
+				const response = await fetch(`${API_URL}/users`, {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json'
 					},
 					body: JSON.stringify({
-						fullName: adminName,
-						phoneNumber: adminPhoneNumber,
-						email: adminEmail
+						fullName: adminName.trim(),
+						phoneNumber: adminPhoneNumber.trim(),
+						email: adminEmail.trim()
 					})
 				})
 
-				const data = await response.json()
+				const data = await readApiPayload(response)
 
 				if (!response.ok) {
-					throw new Error(typeof data === 'string' ? data : data.message || 'Nu s-a putut crea contul admin.')
+					throw new Error(getApiMessage(data, 'Nu s-a putut crea contul admin.'))
 				}
 
-				setSuccessMessage('Contul admin a fost creat cu succes.')
+				setSuccessMessage(getApiMessage(data, 'Contul admin a fost creat cu succes.'))
 			}
 
 			setIndividualsPackageID('')
@@ -116,7 +141,11 @@ export default function AdminAccountCreations() {
 			setAdminEmail('')
 		} catch (error) {
 			if (error instanceof Error) {
-				setErrorMessage(error.message)
+				if (error.message.toLowerCase().includes('failed to fetch')) {
+					setErrorMessage(`Nu s-a putut realiza conexiunea cu serverul API (${API_URL}). Verifica daca backend-ul ruleaza.`)
+				} else {
+					setErrorMessage(error.message)
+				}
 			} else {
 				setErrorMessage('A aparut o eroare neasteptata.')
 			}

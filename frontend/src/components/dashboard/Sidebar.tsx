@@ -13,6 +13,11 @@ function linkClass(isActive: boolean) {
 
 type NavItem = { label: string; to?: string; showBadge?: boolean }
 
+type SidebarProps = {
+	onNavigate?: () => void
+	className?: string
+}
+
 const NAV_ITEMS: Record<string, NavItem[]> = {
 	admin: [
 		{ label: 'Dashboard',          to: paths.Dashboard_Admin },
@@ -42,7 +47,7 @@ const NAV_ITEMS: Record<string, NavItem[]> = {
 	],
 }
 
-export default function Sidebar() {
+export default function Sidebar({ onNavigate, className = '' }: SidebarProps) {
 	const session = getSession()
 	const role = session?.role ?? 'individual'
 	const items = NAV_ITEMS[role] ?? []
@@ -67,7 +72,7 @@ export default function Sidebar() {
 		}
 
 		return (
-			<NavLink key={label} to={to} className={({ isActive }) => linkClass(isActive)}>
+			<NavLink key={label} to={to} onClick={onNavigate} className={({ isActive }) => linkClass(isActive)}>
 				<span>{label}</span>
 				{hasBadge && (
 					<span className="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></span>
@@ -77,7 +82,7 @@ export default function Sidebar() {
 	}
 
 	return (
-		<aside className="w-64 shrink-0 border-r border-gray-200 bg-white">
+		<aside className={`w-64 shrink-0 border-r border-gray-200 bg-white ${className}`}>
 			<div className="flex h-full min-h-0 flex-col p-4">
 				<div className="mb-4 text-base font-semibold text-gray-900">MRSTW</div>
 
@@ -86,7 +91,14 @@ export default function Sidebar() {
 				</nav>
 
 				<div className="mt-4 border-t border-gray-200 pt-4 space-y-1">
-					<NavLink to={paths.LandingPage} onClick={clearSession} className={({ isActive }) => linkClass(isActive)}>
+					<NavLink
+						to={paths.LandingPage}
+						onClick={() => {
+							clearSession()
+							onNavigate?.()
+						}}
+						className={({ isActive }) => linkClass(isActive)}
+					>
 						<span>Deconectare</span>
 					</NavLink>
 				</div>

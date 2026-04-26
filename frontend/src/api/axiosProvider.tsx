@@ -2,13 +2,15 @@ import axios from "axios";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { AxiosContext } from "./axiosContext";
 
+const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? "http://localhost:5242/api";
+
 export function AxiosProvider({ children }: { children: ReactNode }) {
   const [serverErrorMessage, setServerErrorMessage] = useState<string | null>(null);
 
   const api = useMemo(
     () =>
     axios.create({
-      baseURL: "http://localhost:5242/api",
+      baseURL: API_URL,
       timeout: 10000,
     }),
     [],

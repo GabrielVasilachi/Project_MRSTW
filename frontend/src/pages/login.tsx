@@ -76,10 +76,6 @@ export default function LoginPage() {
 						Autentificare
 					</button>
 				</form>
-
-				<div className="mt-6 text-center text-sm text-slate-600">
-					Nu aveți cont? <Link to="#" className="text-sky-600 hover:underline">Înregistrați-vă</Link>
-				</div>
 			</div>
 		</div>
 	);
