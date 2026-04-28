@@ -13,4 +13,10 @@ public sealed class ActivationTokensDbContext : DbContext
         optionsBuilder.UseNpgsql(DbSession.ConnectionString);
     }
 
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<UserEntity>()
+            .ToTable("Users", tableBuilder => tableBuilder.ExcludeFromMigrations());
+    }
+
 }

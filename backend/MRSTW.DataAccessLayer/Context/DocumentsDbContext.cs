@@ -11,4 +11,10 @@ public sealed class DocumentsDbContext : DbContext
     {
         optionsBuilder.UseNpgsql(DbSession.ConnectionString);
     }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<DocumentEntity>()
+            .HasIndex(document => document.UserId);
+    }
 }

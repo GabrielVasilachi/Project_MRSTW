@@ -19,9 +19,11 @@ namespace MRSTW.DataAccessLayer.Migrations.PackagesMigrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     TrackingCode = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    RecipientName = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
-                    RecipientPhoneNumber = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
-                    LocationAddress = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    PhoneNumber = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    LocationAdress = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    FullName = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: true),
+                    CompanyName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    ContactPerson = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: true),
                     Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     UserId = table.Column<int>(type: "integer", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)

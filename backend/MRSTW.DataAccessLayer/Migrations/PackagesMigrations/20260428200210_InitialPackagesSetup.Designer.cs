@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MRSTW.DataAccessLayer.Migrations.PackagesMigrations
 {
     [DbContext(typeof(PackagesDbContext))]
-    [Migration("20260420113728_UpdatePackagesProfileColumns")]
-    partial class UpdatePackagesProfileColumns
+    [Migration("20260428200210_InitialPackagesSetup")]
+    partial class InitialPackagesSetup
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -20,9 +20,14 @@ namespace MRSTW.DataAccessLayer.Migrations.BusinessProfilesMigrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     UserId = table.Column<int>(type: "integer", nullable: false),
                     CompanyName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                    FiscalCode = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    LegalAddress = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    PhoneNumber = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    IdnoCode = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    LocationAdress = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    TvaCode = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    Email = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: true),
                     ContactPerson = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: true),
+                    ResponsiblePerson = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: true),
+                    EoriCode = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>

@@ -12,4 +12,14 @@ public sealed class PhysicalProfilesDbContext : DbContext
     {
         optionsBuilder.UseNpgsql(DbSession.ConnectionString);
     }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<UserEntity>()
+            .ToTable("Users", tableBuilder => tableBuilder.ExcludeFromMigrations());
+
+        modelBuilder.Entity<PhysicalProfileEntity>()
+            .HasIndex(profile => profile.UserId)
+            .IsUnique();
+    }
 }

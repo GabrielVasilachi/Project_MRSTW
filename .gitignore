@@ -36,4 +36,6 @@ appsettings.Local.json
 .DS_Store
 Thumbs.db
 
+*.md
+
 coverage/
