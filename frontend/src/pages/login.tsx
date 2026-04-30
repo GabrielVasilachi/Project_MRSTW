@@ -1,28 +1,53 @@
 import React from "react";
+import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import Logo from "../../public/images/Logo.svg";
 
-import { getDashboardPathByRole, loginMock } from "../auth/auth.mock";
+import { login } from "../api/authApi";
 import { setSession } from "../auth/auth.session";
+import { getDashboardPathByRole, mapRoleEnumToUserRole } from "../auth/auth.utils";
 
 export default function LoginPage() {
 	const navigate = useNavigate()
-	const [email, setEmail] = React.useState('')
+	const [phoneNumber, setPhoneNumber] = React.useState('')
 	const [password, setPassword] = React.useState('')
 	const [error, setError] = React.useState<string | null>(null)
+	const [isSubmitting, setIsSubmitting] = React.useState(false)
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setError(null)
+		setIsSubmitting(true)
 
-		const result = await loginMock(email, password)
-		if (!result.ok) {
-			setError(result.error)
-			return
+		try {
+			const response = await login({
+				phoneNumber: phoneNumber.trim(),
+				password: password.trim(),
+			})
+			const role = mapRoleEnumToUserRole(response.roleEnum)
+			const session = {
+				role,
+				userId: String(response.id),
+				email: response.email ?? null,
+				phoneNumber: response.phoneNumber,
+				fullName: response.fullName,
+				token: response.token,
+				loginAt: new Date().toISOString(),
+				isTemporary: response.isTemporary,
+				isPhoneConfirmed: response.isPhoneConfirmed,
+			}
+
+			setSession(session)
+			navigate(getDashboardPathByRole(role), { replace: true })
+		} catch (err: unknown) {
+			if (axios.isAxiosError(err) && typeof err.response?.data === 'string') {
+				setError(err.response.data)
+			} else {
+				setError('Număr de telefon sau parolă invalidă')
+			}
+		} finally {
+			setIsSubmitting(false)
 		}
-
-		setSession(result.session)
-		navigate(getDashboardPathByRole(result.session.role), { replace: true })
 	};
 
 	return (
@@ -39,13 +64,13 @@ export default function LoginPage() {
 				</div>
 
 				<form onSubmit={handleSubmit} className="mt-6">
-					<label className="block text-sm font-medium text-slate-700">Email</label>
+					<label className="block text-sm font-medium text-slate-700">Număr de telefon</label>
 					<input
-						type="email"
-						placeholder="exemplu@email.com"
+						type="tel"
+						placeholder="+373 6X XXX XXX"
 						required
-						value={email}
-						onChange={(e) => setEmail(e.target.value)}
+						value={phoneNumber}
+						onChange={(e) => setPhoneNumber(e.target.value)}
 						className="mt-2 w-full px-3 py-2 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
 					/>
 
@@ -71,13 +96,13 @@ export default function LoginPage() {
 
 					<button
 						type="submit"
-						className="mt-6 w-full bg-sky-600 hover:bg-sky-700 text-white font-medium py-2 rounded-md shadow-sm cursor-pointer"
+						disabled={isSubmitting}
+						className="mt-6 w-full bg-sky-600 hover:bg-sky-700 text-white font-medium py-2 rounded-md shadow-sm cursor-pointer disabled:cursor-not-allowed disabled:bg-sky-300"
 					>
-						Autentificare
+						{isSubmitting ? 'Se autentifică...' : 'Autentificare'}
 					</button>
 				</form>
 			</div>
 		</div>
 	);
 };
-

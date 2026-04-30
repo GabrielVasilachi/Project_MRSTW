@@ -1,9 +1,9 @@
 import { Navigate, useLocation } from 'react-router-dom'
 
 import { paths } from '../routes/paths'
-import { getDashboardPathByRole } from './auth.mock'
 import { getSession } from './auth.session'
 import type { UserRole } from './auth.types'
+import { getDashboardPathByRole } from './auth.utils'
 
 type Props = {
 	allowedRoles?: UserRole[]

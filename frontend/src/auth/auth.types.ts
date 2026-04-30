@@ -10,9 +10,14 @@ export type AuthAccount = {
 export type AuthSession = {
 	role: UserRole
 	userId: string | null
-	email: string
+	email: string | null
+	phoneNumber?: string
+	fullName?: string
+	token?: string
 	loginAt: string
 	setupCompleted?: boolean
+	isTemporary?: boolean
+	isPhoneConfirmed?: boolean
 }
 
 export type AuthResult = { ok: true; session: AuthSession } | { ok: false; error: string }
