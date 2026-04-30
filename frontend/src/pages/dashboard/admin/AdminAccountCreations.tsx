@@ -19,6 +19,15 @@ function getApiMessage(payload: unknown, fallback: string): string {
 	return fallback
 }
 
+function getApiString(payload: unknown, key: string): string | null {
+	if (!payload || typeof payload !== 'object' || !(key in payload)) {
+		return null
+	}
+
+	const value = (payload as Record<string, unknown>)[key]
+	return typeof value === 'string' && value.trim().length > 0 ? value : null
+}
+
 async function readApiPayload(response: Response): Promise<unknown> {
 	const rawText = await response.text()
 
@@ -53,12 +62,14 @@ export default function AdminAccountCreations() {
 
 	const [successMessage, setSuccessMessage] = useState<string | null>(null)
 	const [errorMessage, setErrorMessage] = useState<string | null>(null)
+	const [activationLink, setActivationLink] = useState<string | null>(null)
 	const [isSubmitting, setIsSubmitting] = useState(false)
 
 	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault()
 		setSuccessMessage(null)
 		setErrorMessage(null)
+		setActivationLink(null)
 		setIsSubmitting(true)
 
 		try {
@@ -83,6 +94,7 @@ export default function AdminAccountCreations() {
 				}
 
 				setSuccessMessage(getApiMessage(data, 'Contul individual a fost creat cu succes.'))
+				setActivationLink(getApiString(data, 'activationLink'))
 			} else if (role === 'business') {
 				const response = await fetch(`${API_URL}/packages/scan-business-profiles`, {
 					method: 'POST',
@@ -105,6 +117,7 @@ export default function AdminAccountCreations() {
 				}
 
 				setSuccessMessage(getApiMessage(data, 'Contul business a fost creat cu succes.'))
+				setActivationLink(getApiString(data, 'activationLink'))
 			} else if (role === 'admin') {
 				const response = await fetch(`${API_URL}/users`, {
 					method: 'POST',
@@ -335,6 +348,14 @@ export default function AdminAccountCreations() {
 				) : null}
 				{successMessage ? (
 					<div className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">{successMessage}</div>
+				) : null}
+				{activationLink ? (
+					<div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
+						<p className="font-medium">Link activare cont:</p>
+						<a href={activationLink} target="_blank" rel="noreferrer" className="mt-1 block break-all underline">
+							{activationLink}
+						</a>
+					</div>
 				) : null}
 
 				<div className="pt-2">

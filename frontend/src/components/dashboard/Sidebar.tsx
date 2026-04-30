@@ -1,8 +1,10 @@
+import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 
+import { getBusinessProfileByUserId, getPhysicalProfileByPhoneNumber } from '../../api/profilesApi'
 import { clearSession, getSession } from '../../auth/auth.session'
-import { isSetupCompleted } from '../../auth/setup.status'
 import { paths } from '../../routes/paths'
+import { hasMissingBusinessProfileData, hasMissingPhysicalProfileData } from '../../utils/profileValidation'
 
 function linkClass(isActive: boolean) {
 	return [
@@ -43,22 +45,68 @@ const NAV_ITEMS: Record<string, NavItem[]> = {
 		{ label: 'Plăți & Facturi',      to: paths.Business_Payments },
 		{ label: 'Documente companie',   to: paths.Business_Documents },
 		{ label: 'Importuri / Istoric',  to: paths.Business_Imports },
-		{ label: 'Setări companie',      to: paths.Business_Settings },
+		{ label: 'Setări companie',      to: paths.Business_Settings, showBadge: true },
 	],
 }
 
 export default function Sidebar({ onNavigate, className = '' }: SidebarProps) {
 	const session = getSession()
 	const role = session?.role ?? 'individual'
+	const phoneNumber = session?.phoneNumber ?? null
+	const parsedUserId = session?.userId ? Number(session.userId) : null
+	const userId = parsedUserId && Number.isFinite(parsedUserId) ? parsedUserId : null
 	const items = NAV_ITEMS[role] ?? []
+	const profileStatusKey = `${role}:${phoneNumber ?? userId ?? ''}`
+	const [profileStatus, setProfileStatus] = useState<{ key: string; hasMissingProfileData: boolean } | null>(null)
+	const hasMissingProfileData = profileStatus?.key === profileStatusKey
+		? profileStatus.hasMissingProfileData
+		: false
+
+	useEffect(() => {
+		let ignore = false
+
+		async function loadProfileStatus() {
+			try {
+				if (role === 'individual' && phoneNumber) {
+					const profile = await getPhysicalProfileByPhoneNumber(phoneNumber)
+
+					if (!ignore) {
+						setProfileStatus({
+							key: profileStatusKey,
+							hasMissingProfileData: hasMissingPhysicalProfileData(profile),
+						})
+					}
+				}
+
+				if (role === 'business' && userId) {
+					const profile = await getBusinessProfileByUserId(userId)
+
+					if (!ignore) {
+						setProfileStatus({
+							key: profileStatusKey,
+							hasMissingProfileData: hasMissingBusinessProfileData(profile),
+						})
+					}
+				}
+			} catch {
+				if (!ignore) {
+					setProfileStatus({
+						key: profileStatusKey,
+						hasMissingProfileData: false,
+					})
+				}
+			}
+		}
+
+		loadProfileStatus()
+
+		return () => {
+			ignore = true
+		}
+	}, [phoneNumber, profileStatusKey, role, userId])
 
 	const renderNavItem = ({ label, to, showBadge }: NavItem) => {
-		const userId = session?.userId
-		let hasBadge = false
-
-		if (showBadge && role === 'individual' && userId) {
-			hasBadge = !isSetupCompleted(userId)
-		}
+		const hasBadge = Boolean(showBadge && hasMissingProfileData)
 
 		if (!to) {
 			return (
@@ -106,4 +154,3 @@ export default function Sidebar({ onNavigate, className = '' }: SidebarProps) {
 		</aside>
 	)
 }
-

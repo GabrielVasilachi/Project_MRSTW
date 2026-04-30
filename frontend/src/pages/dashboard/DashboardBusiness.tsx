@@ -1,71 +1,107 @@
-import { useState } from 'react'
-import juridicalData from '../../_mock/mock_persoana_juridica.json'
+import { useEffect, useState } from 'react'
+import axios from 'axios'
+import { getBusinessProfileByUserId } from '../../api/profilesApi'
+import type { BusinessProfileResponse } from '../../api/types/profile'
 import { getSession } from '../../auth/auth.session'
-import { isSetupCompleted } from '../../auth/setup.status'
 import type { Declaration } from '../../types/declaration'
-import type { JuridicalUser } from '../../types/user'
 import KpiCard from '../../components/dashboard/KpiCard'
 import { fmt } from '../../utils/format'
 import DeclarationsTable from '../../components/dashboard/DeclarationsTable'
-import BusinessSetupModal from '../../components/dashboard/BusinessSetupModal'
 import BusinessVerificationBanner from '../../components/dashboard/BusinessVerificationBanner'
+import ProfileInfoRow from '../../components/dashboard/ProfileInfoRow'
+import { hasMissingBusinessProfileData } from '../../utils/profileValidation'
 
 export default function DashboardBusiness() {
-    const companies = juridicalData.users as JuridicalUser[]
-    const declarations = juridicalData.declarations as Declaration[]
     const session = getSession()
+    const userId = session?.userId ? Number(session.userId) : null
+    const [profile, setProfile] = useState<BusinessProfileResponse | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
-    const company = companies.find(u => u.id === session?.userId) ?? companies[0]
-    const setupCompleted = company ? isSetupCompleted(company.id) : false
-    const [showSetupModal, setShowSetupModal] = useState(() => !setupCompleted)
+    useEffect(() => {
+        if (!userId) {
+            setLoading(false)
+            setError('Sesiunea nu conține id-ul utilizatorului.')
+            return
+        }
 
-    if (!company) return null
+        const currentUserId = userId
+        let ignore = false
 
-    const companyDeclarations = declarations.filter(d => d.user_id === company.id)
+        async function loadProfile() {
+            try {
+                const response = await getBusinessProfileByUserId(currentUserId)
 
-    const handleSetupComplete = () => {
-        setShowSetupModal(false)
-    }
+                if (!ignore) {
+                    setProfile(response)
+                    setError(null)
+                }
+            } catch (err: unknown) {
+                if (!ignore) {
+                    if (axios.isAxiosError(err) && typeof err.response?.data === 'string') {
+                        setError(err.response.data)
+                    } else {
+                        setError('Nu s-a putut încărca profilul business.')
+                    }
+                }
+            } finally {
+                if (!ignore) {
+                    setLoading(false)
+                }
+            }
+        }
 
-    if (showSetupModal && !setupCompleted) {
+        loadProfile()
+
+        return () => {
+            ignore = true
+        }
+    }, [userId])
+
+    if (loading) {
         return (
-            <div className="w-full h-full flex items-center justify-center">
-                <BusinessSetupModal 
-                    userId={company.id} 
-                    onComplete={handleSetupComplete}
-                />
+            <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-500">
+                Se încarcă profilul...
             </div>
         )
     }
 
+    if (error || !profile) {
+        return (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-sm text-red-700">
+                {error ?? 'Profilul business nu a fost găsit.'}
+            </div>
+        )
+    }
+
+    const companyDeclarations: Declaration[] = []
+    const needsVerification = hasMissingBusinessProfileData(profile)
+    const fields: [string, string | null | undefined, boolean][] = [
+        ['Companie', profile.companyName, true],
+        ['IDNO', profile.idnoCode, false],
+        ['EORI', profile.eoriCode, true],
+        ['Email', profile.email, true],
+        ['Telefon', profile.phoneNumber, true],
+        ['Adresă', profile.locationAdress, false],
+        ['Cod TVA', profile.tvaCode, false],
+        ['Persoană contact', profile.contactPerson, false],
+        ['Persoană responsabilă', profile.responsiblePerson, false],
+    ]
+
     return (
         <div className="space-y-6">
-            <BusinessVerificationBanner />
+            {needsVerification ? <BusinessVerificationBanner /> : null}
 
             <div>
-                <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>{company.company_name}</h1>
-                <p className="mt-1 text-sm text-gray-500">Persoană juridică · {company.email}</p>
+                <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>{profile.companyName}</h1>
+                <p className="mt-1 text-sm text-gray-500">Persoană juridică · {profile.email ?? 'email necompletat'}</p>
             </div>
 
             <div className="rounded-lg border border-gray-200 bg-white p-6 divide-y divide-gray-100">
                 <p className="pb-3 text-base font-semibold text-gray-900">Date companie</p>
-                {([['ID fiscal', company.tax_id, false], ['EORI', company.eori, true], ['Email', company.email, true], ['Telefon', company.phone, false], ['Adresă', company.address, false]] as [string, string, boolean][]).map(([label, value, isRequired]) => (
-                    <div key={label} className={`flex justify-between py-3 text-sm ${isRequired ? 'bg-red-50' : ''}`}>
-                        <div className="flex items-center gap-2">
-                            <span className={isRequired ? 'text-red-700 font-medium' : 'text-gray-600'}>{label}</span>
-                            {isRequired && (
-                                <span className="text-red-500 text-xs font-bold">*</span>
-                            )}
-                        </div>
-                        <span className={`font-medium ${isRequired ? 'text-red-700' : 'text-gray-900'}`}>{value}</span>
-                    </div>
+                {fields.map(([label, value, isRequired]) => (
+                    <ProfileInfoRow key={label} label={label} value={value} required={isRequired} labelClassName="w-40" />
                 ))}
-                <div className="flex justify-between py-3 text-sm">
-                    <span className="text-gray-600">Plătitor TVA</span>
-                    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${company.vat_registered ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
-                        {company.vat_registered ? 'Da' : 'Nu'}
-                    </span>
-                </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

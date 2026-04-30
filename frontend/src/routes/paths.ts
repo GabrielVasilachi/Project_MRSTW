@@ -10,6 +10,7 @@ export const paths = {
     Dashboard_Individual: "/dashboard/individual",
     DashboardSettings: "/dashboard/settings",
     LoginPage: "/login",
+    ActivateAccount: "/activate-account",
     // Admin
     Admin_Declarations: "/declarations",
     Admin_Invoices: "/invoices",

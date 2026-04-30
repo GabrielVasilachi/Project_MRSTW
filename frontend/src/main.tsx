@@ -8,6 +8,7 @@ import { paths } from './routes/paths.ts'
 import LandingPage from "./pages/landing";
 import HowItWorksStep from "./pages/guide";
 import LoginPage from "./pages/login.tsx";
+import ActivateAccountPage from "./pages/activateAccount.tsx";
 // import SignupPage from "./pages/signup.tsx";
 import FrequentlyAskedQuestions from './pages/faq.tsx'
 import ApiTestPage from './pages/apiTest.tsx'
@@ -48,6 +49,8 @@ createRoot(document.getElementById('root')!).render(
     <AxiosProvider>
       <BrowserRouter>
         <Routes>
+
+          <Route path={paths.ActivateAccount} element={<ActivateAccountPage />} />
 
           <Route element={<LandingApp />}>
             <Route path={paths.LandingPage} element={<LandingPage />} />

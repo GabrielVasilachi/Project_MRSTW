@@ -1,64 +1,101 @@
-import { useState } from 'react'
-import physicalData from '../../_mock/mock_persoana_fizica.json'
+import { useEffect, useState } from 'react'
+import axios from 'axios'
+import { getPhysicalProfileByPhoneNumber } from '../../api/profilesApi'
+import type { PhysicalProfileResponse } from '../../api/types/profile'
 import { getSession } from '../../auth/auth.session'
-import { isSetupCompleted } from '../../auth/setup.status'
 import type { Declaration } from '../../types/declaration'
-import type { PhysicalUser } from '../../types/user'
 import KpiCard from '../../components/dashboard/KpiCard'
 import { fmt } from '../../utils/format'
 import DeclarationsTable from '../../components/dashboard/DeclarationsTable'
-import AccountSetupModal from '../../components/dashboard/AccountSetupModal'
 import AccountVerificationBanner from '../../components/dashboard/AccountVerificationBanner'
+import ProfileInfoRow from '../../components/dashboard/ProfileInfoRow'
+import { hasMissingPhysicalProfileData } from '../../utils/profileValidation'
 
 export default function DashboardIndividual() {
-    const users = physicalData.users as PhysicalUser[]
-    const declarations = physicalData.declarations as Declaration[]
     const session = getSession()
+    const phoneNumber = session?.phoneNumber ?? null
+    const [profile, setProfile] = useState<PhysicalProfileResponse | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
-    const user = users.find(u => u.id === session?.userId) ?? users[0]
-    const setupCompleted = user ? isSetupCompleted(user.id) : false
-    const [showSetupModal, setShowSetupModal] = useState(() => !setupCompleted)
+    useEffect(() => {
+        if (!phoneNumber) {
+            setLoading(false)
+            setError('Sesiunea nu conține numărul de telefon al utilizatorului.')
+            return
+        }
 
-    if (!user) return null
+        const currentPhoneNumber = phoneNumber
+        let ignore = false
 
-    const userDeclarations = declarations.filter(d => d.user_id === user.id)
+        async function loadProfile() {
+            try {
+                const response = await getPhysicalProfileByPhoneNumber(currentPhoneNumber)
 
-    const handleSetupComplete = () => {
-        setShowSetupModal(false)
-    }
+                if (!ignore) {
+                    setProfile(response)
+                    setError(null)
+                }
+            } catch (err: unknown) {
+                if (!ignore) {
+                    if (axios.isAxiosError(err) && typeof err.response?.data === 'string') {
+                        setError(err.response.data)
+                    } else {
+                        setError('Nu s-a putut încărca profilul fizic.')
+                    }
+                }
+            } finally {
+                if (!ignore) {
+                    setLoading(false)
+                }
+            }
+        }
 
-    if (showSetupModal && !setupCompleted) {
+        loadProfile()
+
+        return () => {
+            ignore = true
+        }
+    }, [phoneNumber])
+
+    if (loading) {
         return (
-            <div className="w-full h-full flex items-center justify-center">
-                <AccountSetupModal 
-                    userId={user.id} 
-                    onComplete={handleSetupComplete}
-                />
+            <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-500">
+                Se încarcă profilul...
             </div>
         )
     }
 
+    if (error || !profile) {
+        return (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-sm text-red-700">
+                {error ?? 'Profilul fizic nu a fost găsit.'}
+            </div>
+        )
+    }
+
+    const userDeclarations: Declaration[] = []
+    const needsVerification = hasMissingPhysicalProfileData(profile)
+    const fields: [string, string | null | undefined, boolean][] = [
+        ['IDNP', profile.idnp, true],
+        ['Email', profile.email, true],
+        ['Telefon', profile.phoneNumber, true],
+        ['Adresă', profile.locationAddress, true],
+    ]
+
     return (
         <div className="space-y-6">
-            <AccountVerificationBanner />
+            {needsVerification ? <AccountVerificationBanner /> : null}
 
             <div>
-                <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>{user.full_name}</h1>
-                <p className="mt-1 text-sm text-gray-500">Persoană fizică · {user.email}</p>
+                <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>{profile.fullName}</h1>
+                <p className="mt-1 text-sm text-gray-500">Persoană fizică · {profile.email ?? 'email necompletat'}</p>
             </div>
 
             <div className="rounded-lg border border-gray-200 bg-white p-6 divide-y divide-gray-100">
                 <p className="pb-3 text-base font-semibold text-gray-900">Date personale</p>
-                {([['IDNP', user.idnp, true], ['Email', user.email, true], ['Telefon', user.phone, false], ['Adresă', user.address, false]] as [string, string, boolean][]).map(([label, value, isRequired]) => (
-                    <div key={label} className={`flex justify-between py-3 text-sm ${isRequired ? 'bg-red-50' : ''}`}>
-                        <div className="flex items-center gap-2">
-                            <span className={isRequired ? 'text-red-700 font-medium' : 'text-gray-600'}>{label}</span>
-                            {isRequired && (
-                                <span className="text-red-500 text-xs font-bold">*</span>
-                            )}
-                        </div>
-                        <span className={`font-medium ${isRequired ? 'text-red-700' : 'text-gray-900'}`}>{value}</span>
-                    </div>
+                {fields.map(([label, value, isRequired]) => (
+                    <ProfileInfoRow key={label} label={label} value={value} required={isRequired} />
                 ))}
             </div>
 
