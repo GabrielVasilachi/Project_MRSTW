@@ -1,7 +1,7 @@
 import Footer from './components/footer'
 import Header from './components/header'
 import { Outlet } from 'react-router-dom'
-import SwitchingUsers from './test/SwitchingUsers'
+// import SwitchingUsers from './test/SwitchingUsers'
 
 function LandingApp() { 
   return (
@@ -11,7 +11,7 @@ function LandingApp() {
       <Outlet />
     </main>
     <Footer/>
-    <SwitchingUsers />
+    {/* <SwitchingUsers /> */}
     </>
   )
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import Sidebar from './components/dashboard/Sidebar'
-import SwitchingUsers from './test/SwitchingUsers'
+// import SwitchingUsers from './test/SwitchingUsers'
 
 function DashboardApp() {
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -68,7 +68,7 @@ function DashboardApp() {
 				</div>
 			) : null}
 
-			<SwitchingUsers />
+			{/* <SwitchingUsers /> */}
 		</div>
   )
 }
