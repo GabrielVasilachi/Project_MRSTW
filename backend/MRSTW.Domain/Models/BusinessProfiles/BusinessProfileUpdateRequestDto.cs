@@ -2,6 +2,7 @@ namespace MRSTW.Domain.Models.BusinessProfiles;
 
 public class BusinessProfileUpdateRequestDto
 {
+    public string Password { get; set; } = string.Empty;
     public string CompanyName { get; set; } = string.Empty;
     public string PhoneNumber { get; set; } = string.Empty;
     public string? IdnoCode { get; set; }

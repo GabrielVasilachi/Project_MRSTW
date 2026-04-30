@@ -94,6 +94,24 @@ public class PhysicalProfilesActions
             };
         }
 
+        if (string.IsNullOrWhiteSpace(request.Password))
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Password este obligatorie."
+            };
+        }
+
+        if (user.PasswordHash != request.Password)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Parola este incorecta."
+            };
+        }
+
         var profile = _physicalProfilesContext.PhysicalProfiles.FirstOrDefault(p => p.UserId == user.Id);
 
         if (profile == null)
@@ -105,11 +123,59 @@ public class PhysicalProfilesActions
             };
         }
 
+        if (string.IsNullOrWhiteSpace(request.FullName))
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "FullName este obligatoriu."
+            };
+        }
+
+        if (string.IsNullOrWhiteSpace(request.PhoneNumber))
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "PhoneNumber este obligatoriu."
+            };
+        }
+
+        if (string.IsNullOrWhiteSpace(request.LocationAddress))
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "LocationAddress este obligatoriu."
+            };
+        }
+
+        var updatedPhoneNumber = request.PhoneNumber.Trim();
+        var existingUserWithPhoneNumber = _usersContext.Users
+            .FirstOrDefault(u => u.PhoneNumber == updatedPhoneNumber && u.Id != user.Id);
+
+        if (existingUserWithPhoneNumber != null)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Un utilizator cu acest numar de telefon deja exista."
+            };
+        }
+
+        var normalizedFullName = request.FullName.Trim();
+        var normalizedLocationAddress = request.LocationAddress.Trim();
         var normalizedEmail = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim();
         var normalizedIdnp = string.IsNullOrWhiteSpace(request.Idnp) ? null : request.Idnp.Trim();
 
+        profile.FullName = normalizedFullName;
+        profile.PhoneNumber = updatedPhoneNumber;
+        profile.LocationAddress = normalizedLocationAddress;
         profile.Idnp = normalizedIdnp;
         profile.Email = normalizedEmail;
+
+        user.FullName = normalizedFullName;
+        user.PhoneNumber = updatedPhoneNumber;
         user.Email = normalizedEmail;
 
         try
