@@ -36,7 +36,9 @@ public class AuthActions
             };
         }
 
-        var user = _usersContext.Users.FirstOrDefault(u => u.PhoneNumber == request.PhoneNumber);
+        var normalizedPhoneNumber = request.PhoneNumber.Trim();
+
+        var user = _usersContext.Users.FirstOrDefault(u => u.PhoneNumber == normalizedPhoneNumber);
 
         if (user == null)
         {
