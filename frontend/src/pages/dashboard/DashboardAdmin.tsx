@@ -1,48 +1,46 @@
-import physicalData from '../../_mock/mock_persoana_fizica.json'
-import juridicalData from '../../_mock/mock_persoana_juridica.json'
-import type { Declaration } from '../../types/declaration'
 import KpiCard from '../../components/dashboard/KpiCard'
-import { fmt } from '../../utils/format'
-import DeclarationsTable from '../../components/dashboard/DeclarationsTable'
 import AllUsersTable from '../../components/dashboard/AllUsersTable'
+import { formatBytes } from '../../utils/format'
+import { useAdminDashboardData } from './admin/adminData'
 
 export default function DashboardAdmin() {
-    const allDeclarations = [
-        ...physicalData.declarations as Declaration[],
-        ...juridicalData.declarations as Declaration[],
-    ]
+    const { users, documents, loading, error } = useAdminDashboardData()
+    const individualUsers = users.filter(user => user.role === 'individual')
+    const businessUsers = users.filter(user => user.role === 'business')
+    const adminUsers = users.filter(user => user.role === 'admin')
+    const totalDocumentSize = documents.reduce((sum, document) => sum + document.fileSize, 0)
 
-    function resolveUser(userId: string) {
-        const physical = physicalData.users.find(u => u.id === userId)
-        if (physical) return { name: physical.full_name, type: 'Fizică' }
-        const juridical = juridicalData.users.find(u => u.id === userId)
-        return { name: juridical?.company_name ?? userId, type: 'Juridică' }
+    if (loading) {
+        return (
+            <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-500">
+                Se încarcă datele din backend...
+            </div>
+        )
     }
 
     return (
         <div className="space-y-8">
             <div>
                 <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Panou de administrare</h1>
-                <p className="mt-1 text-sm text-gray-500">Vizualizare completă a utilizatorilor și declarațiilor vamale</p>
+                <p className="mt-1 text-sm text-gray-500">Vizualizare completă a utilizatorilor și documentelor din backend</p>
             </div>
+
+            {error ? (
+                <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+                    {error}
+                </div>
+            ) : null}
 
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 <KpiCard label="Utilizatori totali"
-                    value={String(physicalData.users.length + juridicalData.users.length)}
-                    sub={`${physicalData.users.length} fizici · ${juridicalData.users.length} juridici`} />
-                <KpiCard label="Declarații totale" value={String(allDeclarations.length)} />
-                <KpiCard label="Valoare vamală totală" value={fmt(allDeclarations.reduce((s, d) => s + d.customs_value, 0))} />
-                <KpiCard label="Taxe totale" value={fmt(allDeclarations.reduce((s, d) => s + d.total_taxes, 0))} />
+                    value={String(users.length)}
+                    sub={`${individualUsers.length} fizici · ${businessUsers.length} juridici · ${adminUsers.length} admin`} />
+                <KpiCard label="Documente totale" value={String(documents.length)} />
+                <KpiCard label="Spațiu documente" value={formatBytes(totalDocumentSize)} />
+                <KpiCard label="Conturi active" value={String(users.filter(user => !user.isTemporary).length)} />
             </div>
 
-            <AllUsersTable
-                physicalUsers={physicalData.users}
-                juridicalUsers={juridicalData.users}
-                decCountFor={id => allDeclarations.filter(d => d.user_id === id).length}
-                declarationsFor={id => allDeclarations.filter(d => d.user_id === id)}
-            />
-
-            <DeclarationsTable declarations={allDeclarations} resolveUser={resolveUser} />
+            <AllUsersTable users={users} />
         </div>
     )
 }

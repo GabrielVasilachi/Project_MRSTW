@@ -1,22 +1,9 @@
-import physicalData from '../../../_mock/mock_persoana_fizica.json'
-import juridicalData from '../../../_mock/mock_persoana_juridica.json'
 import type { Declaration } from '../../../types/declaration'
 import KpiCard from '../../../components/dashboard/KpiCard'
 import DeclarationsTable from '../../../components/dashboard/DeclarationsTable'
 
 export default function AdminDeclarations() {
-    const allDeclarations = [
-        ...physicalData.declarations as Declaration[],
-        ...juridicalData.declarations as Declaration[],
-    ]
-
-    function resolveUser(userId: string) {
-        const physical = physicalData.users.find(u => u.id === userId)
-        if (physical) return { name: physical.full_name, type: 'Fizică' }
-        const juridical = juridicalData.users.find(u => u.id === userId)
-        return { name: juridical?.company_name ?? userId, type: 'Juridică' }
-    }
-
+    const allDeclarations: Declaration[] = []
     const pending = allDeclarations.filter(d => d.status === 'Pending Documents').length
     const underReview = allDeclarations.filter(d => d.status === 'Under Review').length
     const approved = allDeclarations.filter(d => d.status === 'Approved').length
@@ -27,7 +14,7 @@ export default function AdminDeclarations() {
             <div>
                 <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Declarații vamale</h1>
                 <p className="mt-1 text-sm text-gray-500">
-                    Vizualizați și gestionați toate declarațiile vamale – aprobare, respingere sau modificare status.
+                    Declarațiile vor fi afișate aici când backend-ul va expune datele pentru această resursă.
                 </p>
             </div>
 
@@ -38,7 +25,7 @@ export default function AdminDeclarations() {
                 <KpiCard label="Respinse" value={String(rejected)} />
             </div>
 
-            <DeclarationsTable declarations={allDeclarations} resolveUser={resolveUser} />
+            <DeclarationsTable declarations={allDeclarations} />
         </div>
     )
 }

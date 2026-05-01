@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import axios from 'axios'
+import { useState, type FormEvent } from 'react'
+import { createAdminProfile } from '../../../api/adminProfilesApi'
 import type { UserRole } from '../../../auth/auth.types'
 
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:5242/api'
@@ -56,16 +58,15 @@ export default function AdminAccountCreations() {
 	const [businessPhoneNumber, setBusinessPhoneNumber] = useState('')
 	const [businessContactPerson, setBusinessContactPerson] = useState('')
 
-	const [adminName, setAdminName] = useState('')
 	const [adminPhoneNumber, setAdminPhoneNumber] = useState('')
-	const [adminEmail, setAdminEmail] = useState('')
+	const [adminPassword, setAdminPassword] = useState('')
 
 	const [successMessage, setSuccessMessage] = useState<string | null>(null)
 	const [errorMessage, setErrorMessage] = useState<string | null>(null)
 	const [activationLink, setActivationLink] = useState<string | null>(null)
 	const [isSubmitting, setIsSubmitting] = useState(false)
 
-	async function handleSubmit(e: React.FormEvent) {
+	async function handleSubmit(e: FormEvent) {
 		e.preventDefault()
 		setSuccessMessage(null)
 		setErrorMessage(null)
@@ -119,25 +120,12 @@ export default function AdminAccountCreations() {
 				setSuccessMessage(getApiMessage(data, 'Contul business a fost creat cu succes.'))
 				setActivationLink(getApiString(data, 'activationLink'))
 			} else if (role === 'admin') {
-				const response = await fetch(`${API_URL}/users`, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify({
-						fullName: adminName.trim(),
-						phoneNumber: adminPhoneNumber.trim(),
-						email: adminEmail.trim()
-					})
+				await createAdminProfile({
+					phoneNumber: adminPhoneNumber.trim(),
+					password: adminPassword.trim()
 				})
 
-				const data = await readApiPayload(response)
-
-				if (!response.ok) {
-					throw new Error(getApiMessage(data, 'Nu s-a putut crea contul admin.'))
-				}
-
-				setSuccessMessage(getApiMessage(data, 'Contul admin a fost creat cu succes.'))
+				setSuccessMessage('Contul admin a fost creat cu succes. Te poți autentifica folosind numărul de telefon și parola setată.')
 			}
 
 			setIndividualsPackageID('')
@@ -149,11 +137,12 @@ export default function AdminAccountCreations() {
 			setBusinessLegalAddress('')
 			setBusinessPhoneNumber('')
 			setBusinessContactPerson('')
-			setAdminName('')
 			setAdminPhoneNumber('')
-			setAdminEmail('')
+			setAdminPassword('')
 		} catch (error) {
-			if (error instanceof Error) {
+			if (axios.isAxiosError(error) && typeof error.response?.data === 'string') {
+				setErrorMessage(error.response.data)
+			} else if (error instanceof Error) {
 				if (error.message.toLowerCase().includes('failed to fetch')) {
 					setErrorMessage(`Nu s-a putut realiza conexiunea cu serverul API (${API_URL}). Verifica daca backend-ul ruleaza.`)
 				} else {
@@ -306,18 +295,6 @@ export default function AdminAccountCreations() {
 				{role === 'admin' && (
 					<>
 						<div>
-							<label className="block text-sm font-medium text-gray-700">Name</label>
-							<input
-								type="text"
-								value={adminName}
-								onChange={(e) => setAdminName(e.target.value)}
-								className="mt-2 w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
-								placeholder="ex: Popescu Adrian"
-								required
-							/>
-						</div>
-
-						<div>
 							<label className="block text-sm font-medium text-gray-700">Număr de telefon</label>
 							<input
 								type="tel"
@@ -330,13 +307,13 @@ export default function AdminAccountCreations() {
 						</div>
 
 						<div>
-							<label className="block text-sm font-medium text-gray-700">Email</label>
+							<label className="block text-sm font-medium text-gray-700">Parolă admin</label>
 							<input
-								type="email"
-								value={adminEmail}
-								onChange={(e) => setAdminEmail(e.target.value)}
+								type="password"
+								value={adminPassword}
+								onChange={(e) => setAdminPassword(e.target.value)}
 								className="mt-2 w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
-								placeholder="exemplu@email.com"
+								placeholder="Setează parola contului admin"
 								required
 							/>
 						</div>

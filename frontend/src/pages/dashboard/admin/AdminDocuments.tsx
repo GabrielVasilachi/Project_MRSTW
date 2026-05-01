@@ -1,71 +1,55 @@
 import { useState } from 'react'
-import physicalData from '../../../_mock/mock_persoana_fizica.json'
-import juridicalData from '../../../_mock/mock_persoana_juridica.json'
-import type { Declaration } from '../../../types/declaration'
 import KpiCard from '../../../components/dashboard/KpiCard'
+import { formatBytes } from '../../../utils/format'
+import { useAdminDashboardData } from './adminData'
 
-type DocStatus = 'Aprobat' | 'În verificare' | 'Solicitat' | 'Respins'
+const ALL_DOC_TYPES = ['Toate', 'PDF', 'Imagine', 'Document', 'Alt tip'] as const
+type DocTypeFilter = typeof ALL_DOC_TYPES[number]
 
-const DOC_COLORS: Record<DocStatus, string> = {
-    'Aprobat': 'bg-green-100 text-green-800',
-    'În verificare': 'bg-blue-100 text-blue-800',
-    'Solicitat': 'bg-yellow-100 text-yellow-800',
-    'Respins': 'bg-red-100 text-red-800',
+function getDocumentType(contentType: string): DocTypeFilter {
+    if (contentType.includes('pdf')) return 'PDF'
+    if (contentType.includes('image')) return 'Imagine'
+    if (contentType.includes('word') || contentType.includes('document') || contentType.includes('sheet')) return 'Document'
+    return 'Alt tip'
 }
-
-function docStatusFromDecl(status: string, index: number): DocStatus {
-    if (status === 'Approved') return 'Aprobat'
-    if (status === 'Rejected') return index === 0 ? 'Respins' : 'Solicitat'
-    if (status === 'Under Review') return 'În verificare'
-    return index === 0 ? 'Solicitat' : 'În verificare'
-}
-
-const DOC_TYPES = ['Factură comercială', 'Dovadă de plată', 'Declarație vamală', 'Certificat de origine', 'Listă de ambalaj']
-const ALL_DOC_STATUSES: (DocStatus | 'Toate')[] = ['Toate', 'Aprobat', 'În verificare', 'Solicitat', 'Respins']
 
 export default function AdminDocuments() {
-    const [filter, setFilter] = useState<DocStatus | 'Toate'>('Toate')
+    const [filter, setFilter] = useState<DocTypeFilter>('Toate')
+    const { documents, loading, error } = useAdminDashboardData()
+    const filtered = filter === 'Toate' ? documents : documents.filter(document => getDocumentType(document.contentType) === filter)
+    const totalSize = documents.reduce((sum, document) => sum + document.fileSize, 0)
+    const lastUpload = documents
+        .map(document => document.uploadedAt)
+        .sort((a, b) => b.localeCompare(a))[0]
 
-    const allDeclarations = [
-        ...physicalData.declarations as Declaration[],
-        ...juridicalData.declarations as Declaration[],
-    ]
-
-    function resolveUser(userId: string) {
-        const ph = physicalData.users.find(u => u.id === userId)
-        if (ph) return { name: ph.full_name, type: 'Fizică' }
-        const ju = juridicalData.users.find(u => u.id === userId)
-        return { name: ju?.company_name ?? userId, type: 'Juridică' }
+    if (loading) {
+        return (
+            <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-500">
+                Se încarcă documentele...
+            </div>
+        )
     }
-
-    const documents = allDeclarations.flatMap((d, di) =>
-        DOC_TYPES.slice(0, di % 2 === 0 ? 3 : 2).map((docType, idx) => ({
-            id: `${d.id}-doc-${idx}`,
-            decl_id: d.id,
-            awb: d.awb_number,
-            user_id: d.user_id,
-            type: docType,
-            filename: `${docType.toLowerCase().replace(/ /g, '_')}_${d.awb_number}.pdf`,
-            status: docStatusFromDecl(d.status, idx) as DocStatus,
-        }))
-    )
-
-    const filtered = filter === 'Toate' ? documents : documents.filter(doc => doc.status === filter)
 
     return (
         <div className="space-y-8">
             <div>
                 <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Documente</h1>
                 <p className="mt-1 text-sm text-gray-500">
-                    Documentele încărcate de utilizatori – verificați, aprobați sau solicitați completări.
+                    Documentele încărcate de utilizatori și returnate de backend.
                 </p>
             </div>
 
+            {error ? (
+                <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+                    {error}
+                </div>
+            ) : null}
+
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 <KpiCard label="Total documente" value={String(documents.length)} />
-                <KpiCard label="Aprobate" value={String(documents.filter(d => d.status === 'Aprobat').length)} />
-                <KpiCard label="În verificare" value={String(documents.filter(d => d.status === 'În verificare').length)} />
-                <KpiCard label="Solicitate / Respinse" value={String(documents.filter(d => d.status === 'Solicitat' || d.status === 'Respins').length)} />
+                <KpiCard label="Utilizatori cu documente" value={String(new Set(documents.map(document => document.userId)).size)} />
+                <KpiCard label="Spațiu utilizat" value={formatBytes(totalSize)} />
+                <KpiCard label="Ultimul upload" value={lastUpload ? new Date(lastUpload).toLocaleDateString('ro-RO') : '—'} />
             </div>
 
             <div className="rounded-lg border border-gray-200 bg-white">
@@ -75,12 +59,12 @@ export default function AdminDocuments() {
                         <p className="mt-0.5 text-sm text-gray-500">{filtered.length} din {documents.length} înregistrări</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        {ALL_DOC_STATUSES.map(s => (
-                            <button key={s} onClick={() => setFilter(s)}
+                        {ALL_DOC_TYPES.map(type => (
+                            <button key={type} onClick={() => setFilter(type)}
                                 className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                                    filter === s ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    filter === type ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}>
-                                {s}
+                                {type}
                             </button>
                         ))}
                     </div>
@@ -93,29 +77,22 @@ export default function AdminDocuments() {
                         <table className="min-w-full text-left text-sm">
                             <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-600">
                                 <tr>
-                                    {['Fișier', 'Tip document', 'AWB', 'Utilizator', 'Tip cont', 'Status'].map(h => (
+                                    {['Fișier', 'Tip', 'Utilizator', 'Rol', 'Dimensiune', 'Data'].map(h => (
                                         <th key={h} className="px-6 py-3 font-medium">{h}</th>
                                     ))}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {filtered.map(doc => {
-                                    const user = resolveUser(doc.user_id)
-                                    return (
-                                        <tr key={doc.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-3 font-mono text-xs text-gray-700">{doc.filename}</td>
-                                            <td className="px-6 py-3 text-gray-900">{doc.type}</td>
-                                            <td className="px-6 py-3 font-mono text-xs text-gray-600">{doc.awb}</td>
-                                            <td className="px-6 py-3 font-medium text-gray-900">{user.name}</td>
-                                            <td className="px-6 py-3 text-gray-500">{user.type}</td>
-                                            <td className="px-6 py-3">
-                                                <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${DOC_COLORS[doc.status]}`}>
-                                                    {doc.status}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    )
-                                })}
+                                {filtered.map(document => (
+                                    <tr key={document.id} className="hover:bg-gray-50">
+                                        <td className="px-6 py-3 font-mono text-xs text-gray-700">{document.fileName}</td>
+                                        <td className="px-6 py-3 text-gray-900">{document.contentType}</td>
+                                        <td className="px-6 py-3 font-medium text-gray-900">{document.userName}</td>
+                                        <td className="px-6 py-3 text-gray-500">{document.userRole}</td>
+                                        <td className="px-6 py-3 text-gray-600">{formatBytes(document.fileSize)}</td>
+                                        <td className="px-6 py-3 text-gray-600">{new Date(document.uploadedAt).toLocaleDateString('ro-RO')}</td>
+                                    </tr>
+                                ))}
                             </tbody>
                         </table>
                     </div>

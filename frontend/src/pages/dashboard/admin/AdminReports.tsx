@@ -1,66 +1,64 @@
-import physicalData from '../../../_mock/mock_persoana_fizica.json'
-import juridicalData from '../../../_mock/mock_persoana_juridica.json'
-import type { Declaration } from '../../../types/declaration'
 import KpiCard from '../../../components/dashboard/KpiCard'
-import { STATUS_COLORS, STATUS_BAR_COLORS } from '../../../components/dashboard/statusColors'
-
-const STATUSES = ['Approved', 'Under Review', 'Pending Documents', 'Rejected']
+import { formatBytes } from '../../../utils/format'
+import { useAdminDashboardData } from './adminData'
 
 export default function AdminReports() {
-    const physicalDeclarations = physicalData.declarations as Declaration[]
-    const juridicalDeclarations = juridicalData.declarations as Declaration[]
-    const allDeclarations = [...physicalDeclarations, ...juridicalDeclarations]
+    const { users, documents, loading, error } = useAdminDashboardData()
+    const physicalUsers = users.filter(user => user.role === 'individual')
+    const juridicalUsers = users.filter(user => user.role === 'business')
+    const adminUsers = users.filter(user => user.role === 'admin')
+    const usersByActivity = [...users].sort((a, b) => b.documents.length - a.documents.length)
+    const totalDocumentSize = documents.reduce((sum, document) => sum + document.fileSize, 0)
 
-    const totalCustomsValue = allDeclarations.reduce((s, d) => s + d.customs_value, 0)
-    const totalTaxes = allDeclarations.reduce((s, d) => s + d.total_taxes, 0)
-    const totalVat = allDeclarations.reduce((s, d) => s + d.vat, 0)
-    const totalDuty = allDeclarations.reduce((s, d) => s + d.customs_duty, 0)
-
-    const topUsers = [
-        ...physicalData.users.map(u => ({
-            name: u.full_name, type: 'Fizică',
-            count: allDeclarations.filter(d => d.user_id === u.id).length,
-            taxes: allDeclarations.filter(d => d.user_id === u.id).reduce((s, d) => s + d.total_taxes, 0),
-        })),
-        ...juridicalData.users.map(u => ({
-            name: u.company_name, type: 'Juridică',
-            count: allDeclarations.filter(d => d.user_id === u.id).length,
-            taxes: allDeclarations.filter(d => d.user_id === u.id).reduce((s, d) => s + d.total_taxes, 0),
-        })),
-    ].sort((a, b) => b.count - a.count)
+    if (loading) {
+        return (
+            <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-500">
+                Se încarcă rapoartele...
+            </div>
+        )
+    }
 
     return (
         <div className="space-y-8">
             <div>
                 <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Rapoarte</h1>
                 <p className="mt-1 text-sm text-gray-500">
-                    Statistici și analize privind numărul declarațiilor, taxele colectate și activitatea utilizatorilor.
+                    Statistici construite din utilizatorii și documentele returnate de backend.
                 </p>
             </div>
 
+            {error ? (
+                <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+                    {error}
+                </div>
+            ) : null}
+
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                <KpiCard label="Total declarații" value={String(allDeclarations.length)} sub={`${physicalDeclarations.length} fizice · ${juridicalDeclarations.length} juridice`} />
-                <KpiCard label="Valoare vamală totală" value={`${totalCustomsValue.toLocaleString()} MDL`} />
-                <KpiCard label="TVA total colectat" value={`${totalVat.toLocaleString()} MDL`} />
-                <KpiCard label="Taxe vamale totale" value={`${totalDuty.toLocaleString()} MDL`} />
+                <KpiCard label="Total utilizatori" value={String(users.length)} sub={`${physicalUsers.length} fizici · ${juridicalUsers.length} juridici`} />
+                <KpiCard label="Administratori" value={String(adminUsers.length)} />
+                <KpiCard label="Total documente" value={String(documents.length)} />
+                <KpiCard label="Spațiu documente" value={formatBytes(totalDocumentSize)} />
             </div>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                {/* Status breakdown */}
                 <div className="rounded-lg border border-gray-200 bg-white p-5">
-                    <p className="mb-4 text-base font-semibold text-gray-900">Distribuție după statut</p>
-                    <div className="space-y-3">
-                        {STATUSES.map(s => {
-                            const count = allDeclarations.filter(d => d.status === s).length
-                            const pct = allDeclarations.length ? Math.round((count / allDeclarations.length) * 100) : 0
+                    <p className="mb-4 text-base font-semibold text-gray-900">Distribuție utilizatori</p>
+                    <div className="space-y-4">
+                        {[
+                            { label: 'Persoane fizice', count: physicalUsers.length },
+                            { label: 'Persoane juridice', count: juridicalUsers.length },
+                            { label: 'Administratori', count: adminUsers.length },
+                        ].map(row => {
+                            const pct = users.length ? Math.round((row.count / users.length) * 100) : 0
+
                             return (
-                                <div key={s}>
+                                <div key={row.label}>
                                     <div className="flex justify-between text-sm mb-1">
-                                        <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[s] ?? 'bg-gray-100 text-gray-700'}`}>{s}</span>
-                                        <span className="text-gray-600">{count} ({pct}%)</span>
+                                        <span className="text-gray-700">{row.label}</span>
+                                        <span className="text-gray-600">{row.count} ({pct}%)</span>
                                     </div>
                                     <div className="h-2 rounded-full bg-gray-100">
-                                        <div className={`h-2 rounded-full transition-all ${STATUS_BAR_COLORS[s] ?? 'bg-gray-900'}`} style={{ width: `${pct}%` }} />
+                                        <div className="h-2 rounded-full bg-gray-900 transition-all" style={{ width: `${pct}%` }} />
                                     </div>
                                 </div>
                             )
@@ -68,69 +66,72 @@ export default function AdminReports() {
                     </div>
                 </div>
 
-                {/* Tip utilizator breakdown */}
                 <div className="rounded-lg border border-gray-200 bg-white p-5">
-                    <p className="mb-4 text-base font-semibold text-gray-900">Declarații pe tip de utilizator</p>
+                    <p className="mb-4 text-base font-semibold text-gray-900">Documente pe tip de cont</p>
                     <div className="space-y-4">
                         {[
-                            { label: 'Persoane fizice', declarations: physicalDeclarations, users: physicalData.users.length },
-                            { label: 'Persoane juridice', declarations: juridicalDeclarations, users: juridicalData.users.length },
-                        ].map(row => (
-                            <div key={row.label} className="rounded-lg bg-gray-50 p-4">
-                                <p className="text-sm font-semibold text-gray-900">{row.label}</p>
-                                <div className="mt-2 grid grid-cols-3 gap-2 text-center text-xs text-gray-600">
-                                    <div>
-                                        <p className="text-lg font-bold text-gray-900">{row.users}</p>
-                                        <p>Utilizatori</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-lg font-bold text-gray-900">{row.declarations.length}</p>
-                                        <p>Declarații</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-lg font-bold text-gray-900">{row.declarations.reduce((s, d) => s + d.total_taxes, 0).toLocaleString()}</p>
-                                        <p>MDL taxe</p>
+                            { label: 'Persoane fizice', users: physicalUsers },
+                            { label: 'Persoane juridice', users: juridicalUsers },
+                            { label: 'Administratori', users: adminUsers },
+                        ].map(row => {
+                            const count = row.users.reduce((sum, user) => sum + user.documents.length, 0)
+                            const size = row.users.flatMap(user => user.documents).reduce((sum, document) => sum + document.fileSize, 0)
+
+                            return (
+                                <div key={row.label} className="rounded-lg bg-gray-50 p-4">
+                                    <p className="text-sm font-semibold text-gray-900">{row.label}</p>
+                                    <div className="mt-2 grid grid-cols-3 gap-2 text-center text-xs text-gray-600">
+                                        <div>
+                                            <p className="text-lg font-bold text-gray-900">{row.users.length}</p>
+                                            <p>Utilizatori</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-lg font-bold text-gray-900">{count}</p>
+                                            <p>Documente</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-lg font-bold text-gray-900">{formatBytes(size)}</p>
+                                            <p>Spațiu</p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            )
+                        })}
                     </div>
                 </div>
             </div>
 
-            {/* Top users table */}
             <div className="rounded-lg border border-gray-200 bg-white">
                 <div className="border-b border-gray-200 px-6 py-4">
                     <p className="text-base font-semibold text-gray-900">Activitate utilizatori</p>
-                    <p className="mt-0.5 text-sm text-gray-500">Ordonat după numărul de declarații</p>
+                    <p className="mt-0.5 text-sm text-gray-500">Ordonat după numărul de documente încărcate</p>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="min-w-full text-left text-sm">
                         <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-600">
                             <tr>
-                                {['#', 'Utilizator', 'Tip cont', 'Declarații', 'Total taxe (MDL)'].map(h => (
+                                {['#', 'Utilizator', 'Tip cont', 'Documente', 'Spațiu utilizat'].map(h => (
                                     <th key={h} className="px-6 py-3 font-medium">{h}</th>
                                 ))}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {topUsers.map((u, i) => (
-                                <tr key={u.name} className="hover:bg-gray-50">
-                                    <td className="px-6 py-3 text-gray-400">{i + 1}</td>
-                                    <td className="px-6 py-3 font-medium text-gray-900">{u.name}</td>
-                                    <td className="px-6 py-3 text-gray-500">{u.type}</td>
-                                    <td className="px-6 py-3 font-semibold text-gray-900">{u.count}</td>
-                                    <td className="px-6 py-3 text-gray-700">{u.taxes.toLocaleString()} MDL</td>
+                            {usersByActivity.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-400">Nu există utilizatori returnați de backend.</td>
+                                </tr>
+                            ) : usersByActivity.map((user, index) => (
+                                <tr key={user.id} className="hover:bg-gray-50">
+                                    <td className="px-6 py-3 text-gray-400">{index + 1}</td>
+                                    <td className="px-6 py-3 font-medium text-gray-900">{user.name}</td>
+                                    <td className="px-6 py-3 text-gray-500">{user.roleLabel}</td>
+                                    <td className="px-6 py-3 font-semibold text-gray-900">{user.documents.length}</td>
+                                    <td className="px-6 py-3 text-gray-700">
+                                        {formatBytes(user.documents.reduce((sum, document) => sum + document.fileSize, 0))}
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
-                        <tfoot className="border-t-2 border-gray-200 bg-gray-50 text-sm font-semibold text-gray-800">
-                            <tr>
-                                <td colSpan={3} className="px-6 py-3 text-right text-xs uppercase tracking-wide text-gray-500">Total:</td>
-                                <td className="px-6 py-3">{allDeclarations.length}</td>
-                                <td className="px-6 py-3">{totalTaxes.toLocaleString()} MDL</td>
-                            </tr>
-                        </tfoot>
                     </table>
                 </div>
             </div>
