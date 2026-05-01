@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using MRSTW.BusinessLayer;
 using MRSTW.BusinessLayer.Interfaces;
-using MRSTW.Domain.Models.Users;
 
 namespace MRSTW.Api.Controllers;
 
@@ -17,10 +16,10 @@ public class UsersController : ControllerBase
         _usersLogic = bl.GetUsersLogic();
     }
 
-    [HttpPost]
-    public IActionResult CreateUser([FromBody] UserCreateRequestDto request)
+    [HttpGet]
+    public IActionResult GetUsers()
     {
-        var response = _usersLogic.CreateUser(request);
+        var response = _usersLogic.GetUsers();
 
         if (!response.IsSuccess)
         {

@@ -10,4 +10,6 @@ public class UserResponseDto
     public string? Email { get; set; }
     public UserRoleEnum RoleEnum { get; set; }
     public bool IsTemporary { get; set; }
+    public bool IsPhoneConfirmed { get; set; }
+    public DateTime CreatedAt { get; set; }
 }
