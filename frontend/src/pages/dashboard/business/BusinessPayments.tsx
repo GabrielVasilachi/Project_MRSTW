@@ -1,14 +1,12 @@
 import { useState } from 'react'
-import juridicalData from '../../../_mock/mock_persoana_juridica.json'
-import { getSession } from '../../../auth/auth.session'
 import type { Declaration } from '../../../types/declaration'
-import type { JuridicalUser } from '../../../types/user'
 import KpiCard from '../../../components/dashboard/KpiCard'
 import StatusBadge from '../../../components/dashboard/StatusBadge'
 import BusinessVerificationBanner from '../../../components/dashboard/BusinessVerificationBanner'
 import { STATUS_COLORS } from '../../../components/dashboard/statusColors'
 import RowDetailModal, { ModalField, ModalBadge, ModalSection, TaxesTable } from '../../../components/dashboard/RowDetailModal'
 import { fmt } from '../../../utils/format'
+import { useBusinessProfileName } from './businessProfileData'
 
 function paymentStatus(status: string) {
     return status === 'Approved' ? 'Achitat' : status === 'Rejected' ? 'Anulat' : 'În așteptare'
@@ -53,20 +51,13 @@ function PaymentModal({ row, onClose }: { row: PaymentRow; onClose: () => void }
 }
 
 export default function BusinessPayments() {
-    const companies = juridicalData.users as JuridicalUser[]
-    const declarations = juridicalData.declarations as Declaration[]
+    const companyName = useBusinessProfileName()
     const [selected, setSelected] = useState<PaymentRow | null>(null)
-
-    const session = getSession()
-    const company = companies.find(u => u.id === session?.userId) ?? companies[0]
-    if (!company) return null
-
-    const companyDeclarations = declarations.filter(d => d.user_id === company.id)
+    const companyDeclarations: Declaration[] = []
     const rows: PaymentRow[] = companyDeclarations.map((d, i) => ({
         ...d,
-        invoice_no: `INV-2025-${String(100 + i + 1).padStart(4, '0')}`,
+        invoice_no: `INV-${String(100 + i + 1).padStart(4, '0')}`,
     }))
-
     const paid = companyDeclarations.filter(d => d.status === 'Approved')
     const pending = companyDeclarations.filter(d => d.status !== 'Approved' && d.status !== 'Rejected')
 
@@ -77,33 +68,25 @@ export default function BusinessPayments() {
             <div>
                 <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Plăți & Facturi</h1>
                 <p className="mt-1 text-sm text-gray-500">
-                    Taxele datorate, facturile emise și istoricul plăților companiei <strong>{company.company_name}</strong>.
+                    Plățile firmei <strong>{companyName}</strong> vor apărea când backend-ul va expune facturile.
                 </p>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <KpiCard label="Total datorat" value={`${companyDeclarations.reduce((s, d) => s + d.total_taxes, 0).toLocaleString()} MDL`} />
-                <KpiCard label="Achitat" value={`${paid.reduce((s, d) => s + d.total_taxes, 0).toLocaleString()} MDL`} sub={`${paid.length} declarații`} />
-                <KpiCard label="În așteptare" value={`${pending.reduce((s, d) => s + d.total_taxes, 0).toLocaleString()} MDL`} sub={`${pending.length} declarații`} />
+                <KpiCard label="Total datorat" value={fmt(companyDeclarations.reduce((s, d) => s + d.total_taxes, 0))} />
+                <KpiCard label="Achitat" value={fmt(paid.reduce((s, d) => s + d.total_taxes, 0))} sub={`${paid.length} declarații`} />
+                <KpiCard label="În așteptare" value={fmt(pending.reduce((s, d) => s + d.total_taxes, 0))} sub={`${pending.length} declarații`} />
             </div>
 
             <div className="rounded-lg border border-gray-200 bg-white">
                 <div className="border-b border-gray-200 px-6 py-4">
                     <p className="text-base font-semibold text-gray-900">Facturi emise</p>
-                    <p className="mt-0.5 text-sm text-gray-500">{companyDeclarations.length} facturi</p>
+                    <p className="mt-0.5 text-sm text-gray-500">{rows.length} facturi</p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    <KpiCard label="Total datorat" value={fmt(companyDeclarations.reduce((s, d) => s + d.total_taxes, 0))} />
-                    <KpiCard label="Achitat" value={fmt(paid.reduce((s, d) => s + d.total_taxes, 0))} sub={`${paid.length} declarații`} />
-                    <KpiCard label="În așteptare" value={fmt(pending.reduce((s, d) => s + d.total_taxes, 0))} sub={`${pending.length} declarații`} />
-                </div>
-
-                <div className="rounded-lg border border-gray-200 bg-white">
-                    <div className="border-b border-gray-200 px-6 py-4">
-                        <p className="text-base font-semibold text-gray-900">Facturi emise</p>
-                        <p className="mt-0.5 text-sm text-gray-500">{rows.length} facturi</p>
-                    </div>
+                {rows.length === 0 ? (
+                    <p className="px-6 py-8 text-center text-sm text-gray-400">Nu există facturi returnate de backend.</p>
+                ) : (
                     <div className="overflow-x-auto">
                         <table className="min-w-full text-left text-sm">
                             <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-600">
@@ -136,19 +119,9 @@ export default function BusinessPayments() {
                                     </tr>
                                 ))}
                             </tbody>
-                            <tfoot className="border-t-2 border-gray-200 bg-gray-50 text-sm font-semibold text-gray-800">
-                                <tr>
-                                    <td colSpan={3} className="px-6 py-3 text-right text-xs uppercase tracking-wide text-gray-500">Total:</td>
-                                    <td className="px-6 py-3">{fmt(companyDeclarations.reduce((s, d) => s + d.customs_value, 0))}</td>
-                                    <td className="px-6 py-3">{fmt(companyDeclarations.reduce((s, d) => s + d.vat, 0))}</td>
-                                    <td className="px-6 py-3">{fmt(companyDeclarations.reduce((s, d) => s + d.customs_duty, 0))}</td>
-                                    <td className="px-6 py-3">{fmt(companyDeclarations.reduce((s, d) => s + d.total_taxes, 0))}</td>
-                                    <td /><td />
-                                </tr>
-                            </tfoot>
                         </table>
                     </div>
-                </div>
+                )}
             </div>
 
             {selected && <PaymentModal row={selected} onClose={() => setSelected(null)} />}

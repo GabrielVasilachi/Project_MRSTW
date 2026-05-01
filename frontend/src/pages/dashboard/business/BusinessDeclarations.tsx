@@ -1,21 +1,13 @@
-import juridicalData from '../../../_mock/mock_persoana_juridica.json'
-import { getSession } from '../../../auth/auth.session'
 import type { Declaration } from '../../../types/declaration'
-import type { JuridicalUser } from '../../../types/user'
 import KpiCard from '../../../components/dashboard/KpiCard'
 import { fmt } from '../../../utils/format'
 import DeclarationsTable from '../../../components/dashboard/DeclarationsTable'
 import BusinessVerificationBanner from '../../../components/dashboard/BusinessVerificationBanner'
+import { useBusinessProfileName } from './businessProfileData'
 
 export default function BusinessDeclarations() {
-    const companies = juridicalData.users as JuridicalUser[]
-    const declarations = juridicalData.declarations as Declaration[]
-
-    const session = getSession()
-    const company = companies.find(u => u.id === session?.userId) ?? companies[0]
-    if (!company) return null
-
-    const companyDeclarations = declarations.filter(d => d.user_id === company.id)
+    const companyName = useBusinessProfileName()
+    const companyDeclarations: Declaration[] = []
 
     return (
         <div className="space-y-8">
@@ -24,7 +16,7 @@ export default function BusinessDeclarations() {
             <div>
                 <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Declarații companie</h1>
                 <p className="mt-1 text-sm text-gray-500">
-                    Toate declarațiile vamale create în numele firmei <strong>{company.company_name}</strong>.
+                    Declarațiile firmei <strong>{companyName}</strong> vor apărea aici când backend-ul le va expune.
                 </p>
             </div>
 

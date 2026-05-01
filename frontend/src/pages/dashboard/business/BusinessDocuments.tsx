@@ -1,53 +1,63 @@
-import juridicalData from '../../../_mock/mock_persoana_juridica.json'
+import { useEffect, useState } from 'react'
+import { getDocumentFileUrl, getDocumentsByUserId } from '../../../api/documentsApi'
+import type { DocumentInfo } from '../../../api/types/document'
 import { getSession } from '../../../auth/auth.session'
-import type { Declaration } from '../../../types/declaration'
-import type { JuridicalUser } from '../../../types/user'
 import KpiCard from '../../../components/dashboard/KpiCard'
 import BusinessVerificationBanner from '../../../components/dashboard/BusinessVerificationBanner'
-
-type DocStatus = 'Aprobat' | 'În verificare' | 'Solicitat' | 'Respins'
-const DOC_COLORS: Record<DocStatus, string> = {
-    'Aprobat': 'bg-green-100 text-green-800',
-    'În verificare': 'bg-blue-100 text-blue-800',
-    'Solicitat': 'bg-yellow-100 text-yellow-800',
-    'Respins': 'bg-red-100 text-red-800',
-}
-function docStatus(declStatus: string, idx: number): DocStatus {
-    if (declStatus === 'Approved') return 'Aprobat'
-    if (declStatus === 'Rejected') return idx === 0 ? 'Respins' : 'Solicitat'
-    if (declStatus === 'Under Review') return 'În verificare'
-    return idx === 0 ? 'Solicitat' : 'În verificare'
-}
-
-const COMPANY_DOC_TYPES = ['Factură comercială', 'Certificate of Origin', 'Packing List', 'EORI', 'Certificat de înregistrare']
+import { formatBytes } from '../../../utils/format'
+import { useBusinessProfileName } from './businessProfileData'
 
 export default function BusinessDocuments() {
-    const companies = juridicalData.users as JuridicalUser[]
-    const declarations = juridicalData.declarations as Declaration[]
-
+    const companyName = useBusinessProfileName()
     const session = getSession()
-    const company = companies.find(u => u.id === session?.userId) ?? companies[0]
-    if (!company) return null
+    const parsedUserId = session?.userId ? Number(session.userId) : null
+    const userId = parsedUserId && Number.isFinite(parsedUserId) ? parsedUserId : null
+    const [documents, setDocuments] = useState<DocumentInfo[]>([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
-    const companyDeclarations = declarations.filter(d => d.user_id === company.id)
+    useEffect(() => {
+        if (!userId) {
+            setLoading(false)
+            setError('Sesiunea nu conține id-ul utilizatorului.')
+            return
+        }
 
-    // Corporate-level docs (EORI, reg cert) + per-declaration docs
-    const corpDocs = [
-        { id: 'corp-eori', awb: '—', type: 'EORI', filename: `eori_${company.eori}.pdf`, status: 'Aprobat' as DocStatus },
-        { id: 'corp-reg', awb: '—', type: 'Certificat de înregistrare', filename: `certificat_${company.tax_id}.pdf`, status: 'Aprobat' as DocStatus },
-    ]
+        const currentUserId = userId
+        let ignore = false
 
-    const declDocs = companyDeclarations.flatMap((d, di) =>
-        COMPANY_DOC_TYPES.slice(0, di % 2 === 0 ? 3 : 2).map((type, idx) => ({
-            id: `${d.id}-doc-${idx}`,
-            awb: d.awb_number,
-            type,
-            filename: `${type.toLowerCase().replace(/ /g, '_')}_${d.awb_number}.pdf`,
-            status: docStatus(d.status, idx),
-        }))
-    )
+        async function loadDocuments() {
+            try {
+                const response = await getDocumentsByUserId(currentUserId)
 
-    const documents = [...corpDocs, ...declDocs]
+                if (!ignore) {
+                    setDocuments(response ?? [])
+                    setError(null)
+                }
+            } catch {
+                if (!ignore) {
+                    setError('Nu s-au putut încărca documentele companiei.')
+                }
+            } finally {
+                if (!ignore) {
+                    setLoading(false)
+                }
+            }
+        }
+
+        loadDocuments()
+
+        return () => {
+            ignore = true
+        }
+    }, [userId])
+
+    function downloadDocument(id: number, fileName: string) {
+        const a = document.createElement('a')
+        a.href = getDocumentFileUrl(id)
+        a.download = fileName
+        a.click()
+    }
 
     return (
         <div className="space-y-8">
@@ -56,14 +66,24 @@ export default function BusinessDocuments() {
             <div>
                 <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Documente companie</h1>
                 <p className="mt-1 text-sm text-gray-500">
-                    Documentele oficiale ale firmei <strong>{company.company_name}</strong> necesare procesării declarațiilor vamale.
+                    Documentele firmei <strong>{companyName}</strong> încărcate în backend.
                 </p>
             </div>
 
+            {error ? (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {error}
+                </div>
+            ) : null}
+
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <KpiCard label="Total documente" value={String(documents.length)} />
-                <KpiCard label="Aprobate" value={String(documents.filter(d => d.status === 'Aprobat').length)} />
-                <KpiCard label="În așteptare" value={String(documents.filter(d => d.status !== 'Aprobat').length)} />
+                <KpiCard label="Spațiu utilizat" value={formatBytes(documents.reduce((sum, document) => sum + document.fileSize, 0))} />
+                <KpiCard label="Ultimul upload" value={
+                    documents.length > 0
+                        ? new Date(documents[0].uploadedAt).toLocaleDateString('ro-RO')
+                        : '—'
+                } />
             </div>
 
             <div className="rounded-lg border border-gray-200 bg-white">
@@ -71,31 +91,41 @@ export default function BusinessDocuments() {
                     <p className="text-base font-semibold text-gray-900">Documente încărcate</p>
                     <p className="mt-0.5 text-sm text-gray-500">{documents.length} fișiere</p>
                 </div>
-                <div className="overflow-x-auto">
-                    <table className="min-w-full text-left text-sm">
-                        <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-600">
-                            <tr>
-                                {['Fișier', 'Tip document', 'AWB / Referință', 'Status'].map(h => (
-                                    <th key={h} className="px-6 py-3 font-medium">{h}</th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {documents.map(doc => (
-                                <tr key={doc.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-3 font-mono text-xs text-gray-700">{doc.filename}</td>
-                                    <td className="px-6 py-3 text-gray-900">{doc.type}</td>
-                                    <td className="px-6 py-3 font-mono text-xs text-gray-600">{doc.awb}</td>
-                                    <td className="px-6 py-3">
-                                        <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${DOC_COLORS[doc.status as DocStatus]}`}>
-                                            {doc.status}
-                                        </span>
-                                    </td>
+                {loading ? (
+                    <p className="px-6 py-8 text-center text-sm text-gray-400">Se încarcă...</p>
+                ) : documents.length === 0 ? (
+                    <p className="px-6 py-8 text-center text-sm text-gray-400">Nu există documente încărcate pentru companie.</p>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full text-left text-sm">
+                            <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-600">
+                                <tr>
+                                    {['Fișier', 'Tip', 'Dimensiune', 'Data', 'Acțiuni'].map(h => (
+                                        <th key={h} className="px-6 py-3 font-medium">{h}</th>
+                                    ))}
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {documents.map(document => (
+                                    <tr key={document.id} className="hover:bg-gray-50">
+                                        <td className="px-6 py-3 font-mono text-xs text-gray-700">{document.fileName}</td>
+                                        <td className="px-6 py-3 text-gray-500 text-xs">{document.contentType}</td>
+                                        <td className="px-6 py-3 text-gray-600">{formatBytes(document.fileSize)}</td>
+                                        <td className="px-6 py-3 text-gray-600">{new Date(document.uploadedAt).toLocaleDateString('ro-RO')}</td>
+                                        <td className="px-6 py-3">
+                                            <button
+                                                onClick={() => downloadDocument(document.id, document.fileName)}
+                                                className="text-blue-600 hover:underline text-xs font-medium"
+                                            >
+                                                Descarcă
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
         </div>
     )
