@@ -8,6 +8,7 @@
 
     <ItemGroup>
       <Folder Include="Migrations\ActivationTokensMigrations\" />
+      <Folder Include="Migrations\AdminProfilesMigrations\" />
       <Folder Include="Migrations\BusinessProfilesMigrations\" />
       <Folder Include="Migrations\PackagesMigrations\" />
       <Folder Include="Migrations\PhysicalProfilesMigrations\" />

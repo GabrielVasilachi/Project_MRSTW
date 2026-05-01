@@ -7,13 +7,13 @@ namespace MRSTW.BusinessLayer.Core;
 
 public class PhysicalProfilesLogic : PhysicalProfilesActions, IPhysicalProfilesLogic
 {
-    public ServiceResponse GetPhysicalProfileByPhoneNumber(string phoneNumber)
+    public ServiceResponse GetPhysicalProfileByUserId(int userId)
     {
-        return GetPhysicalProfileByPhoneNumberAction(phoneNumber);
+        return GetPhysicalProfileByUserIdAction(userId);
     }
 
-    public ServiceResponse UpdatePhysicalProfileByPhoneNumber(string phoneNumber, PhysicalProfileUpdateRequestDto request)
+    public ServiceResponse UpdatePhysicalProfile(int userId, PhysicalProfileUpdateRequestDto request)
     {
-        return UpdatePhysicalProfileByPhoneNumberAction(phoneNumber, request);
+        return UpdatePhysicalProfileAction(userId, request);
     }
 }

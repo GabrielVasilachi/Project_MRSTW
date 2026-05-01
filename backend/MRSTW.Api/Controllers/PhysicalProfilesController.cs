@@ -17,10 +17,10 @@ public class PhysicalProfilesController : ControllerBase
         _physicalProfilesLogic = bl.GetPhysicalProfilesLogic();
     }
 
-    [HttpGet("{phoneNumber}")]
-    public IActionResult GetPhysicalProfileByPhoneNumber([FromRoute] string phoneNumber)
+    [HttpGet("{userId}")]
+    public IActionResult GetPhysicalProfileByUserId([FromRoute] int userId)
     {
-        var response = _physicalProfilesLogic.GetPhysicalProfileByPhoneNumber(phoneNumber);
+        var response = _physicalProfilesLogic.GetPhysicalProfileByUserId(userId);
 
         if (!response.IsSuccess)
         {
@@ -30,10 +30,10 @@ public class PhysicalProfilesController : ControllerBase
         return Ok(response.Data);
     }
 
-    [HttpPut("{phoneNumber}")]
-    public IActionResult UpdatePhysicalProfileByPhoneNumber([FromRoute] string phoneNumber, [FromBody] PhysicalProfileUpdateRequestDto request)
+    [HttpPut("{userId}")]
+    public IActionResult UpdatePhysicalProfile([FromRoute] int userId, [FromBody] PhysicalProfileUpdateRequestDto request)
     {
-        var response = _physicalProfilesLogic.UpdatePhysicalProfileByPhoneNumber(phoneNumber, request);
+        var response = _physicalProfilesLogic.UpdatePhysicalProfile(userId, request);
 
         if (!response.IsSuccess)
         {

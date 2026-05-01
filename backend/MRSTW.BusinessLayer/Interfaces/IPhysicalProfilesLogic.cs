@@ -5,6 +5,6 @@ namespace MRSTW.BusinessLayer.Interfaces;
 
 public interface IPhysicalProfilesLogic
 {
-    ServiceResponse GetPhysicalProfileByPhoneNumber(string phoneNumber);
-    ServiceResponse UpdatePhysicalProfileByPhoneNumber(string phoneNumber, PhysicalProfileUpdateRequestDto request);
+    ServiceResponse GetPhysicalProfileByUserId(int userId);
+    ServiceResponse UpdatePhysicalProfile(int userId, PhysicalProfileUpdateRequestDto request);
 }

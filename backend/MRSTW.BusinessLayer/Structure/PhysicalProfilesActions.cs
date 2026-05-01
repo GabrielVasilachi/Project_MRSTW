@@ -15,33 +15,9 @@ public class PhysicalProfilesActions
         _usersContext = new UsersDbContext();
     }
 
-    public ServiceResponse GetPhysicalProfileByPhoneNumberAction(string phoneNumber)
+    public ServiceResponse GetPhysicalProfileByUserIdAction(int userId)
     {
-        if (string.IsNullOrWhiteSpace(phoneNumber))
-        {
-            return new ServiceResponse
-            {
-                IsSuccess = false,
-                Message = "PhoneNumber este obligatoriu."
-            };
-        }
-
-        var normalizedPhoneNumber = phoneNumber.Trim();
-
-        var user = _usersContext.Users.FirstOrDefault(u => u.PhoneNumber == normalizedPhoneNumber);
-
-        if (user == null)
-        {
-            return new ServiceResponse
-            {
-                IsSuccess = false,
-                Message = "PhysicalProfile nu a fost gasit."
-            };
-        }
-
-        var profile = _physicalProfilesContext.PhysicalProfiles
-            .Where(p => p.UserId == user.Id)
-            .FirstOrDefault();
+        var profile = _physicalProfilesContext.PhysicalProfiles.FirstOrDefault(p => p.UserId == userId);
 
         if (profile == null)
         {
@@ -70,49 +46,9 @@ public class PhysicalProfilesActions
         };
     }
 
-    public ServiceResponse UpdatePhysicalProfileByPhoneNumberAction(string phoneNumber, PhysicalProfileUpdateRequestDto request)
+    public ServiceResponse UpdatePhysicalProfileAction(int userId, PhysicalProfileUpdateRequestDto request)
     {
-        if (string.IsNullOrWhiteSpace(phoneNumber))
-        {
-            return new ServiceResponse
-            {
-                IsSuccess = false,
-                Message = "PhoneNumber este obligatoriu."
-            };
-        }
-
-        var normalizedPhoneNumber = phoneNumber.Trim();
-
-        var user = _usersContext.Users.FirstOrDefault(u => u.PhoneNumber == normalizedPhoneNumber);
-
-        if (user == null)
-        {
-            return new ServiceResponse
-            {
-                IsSuccess = false,
-                Message = "PhysicalProfile nu a fost gasit."
-            };
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Password))
-        {
-            return new ServiceResponse
-            {
-                IsSuccess = false,
-                Message = "Password este obligatorie."
-            };
-        }
-
-        if (user.PasswordHash != request.Password)
-        {
-            return new ServiceResponse
-            {
-                IsSuccess = false,
-                Message = "Parola este incorecta."
-            };
-        }
-
-        var profile = _physicalProfilesContext.PhysicalProfiles.FirstOrDefault(p => p.UserId == user.Id);
+        var profile = _physicalProfilesContext.PhysicalProfiles.FirstOrDefault(p => p.UserId == userId);
 
         if (profile == null)
         {
@@ -147,6 +83,35 @@ public class PhysicalProfilesActions
             {
                 IsSuccess = false,
                 Message = "LocationAddress este obligatoriu."
+            };
+        }
+
+        var user = _usersContext.Users.FirstOrDefault(u => u.Id == userId);
+
+        if (user == null)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Utilizatorul nu a fost gasit."
+            };
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Password))
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Password este obligatorie."
+            };
+        }
+
+        if (user.PasswordHash != request.Password)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Parola este incorecta."
             };
         }
 
