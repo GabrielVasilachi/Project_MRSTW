@@ -1,8 +1,5 @@
-import { useState } from 'react'
-import physicalData from '../../../_mock/mock_persoana_fizica.json'
-import { getSession } from '../../../auth/auth.session'
+import { useState, type FormEvent } from 'react'
 import type { Declaration } from '../../../types/declaration'
-import type { PhysicalUser } from '../../../types/user'
 import StatusBadge from '../../../components/dashboard/StatusBadge'
 import AccountVerificationBanner from '../../../components/dashboard/AccountVerificationBanner'
 
@@ -16,13 +13,7 @@ function stepIndex(status: string): number {
 }
 
 export default function IndividualTracking() {
-    const users = physicalData.users as PhysicalUser[]
-    const declarations = physicalData.declarations as Declaration[]
-
-    const session = getSession()
-    const user = users.find(u => u.id === session?.userId) ?? users[0]
-    const userDeclarations = user ? declarations.filter(d => d.user_id === user.id) : []
-
+    const userDeclarations: Declaration[] = []
     const [query, setQuery] = useState('')
     const [searched, setSearched] = useState(false)
 
@@ -33,7 +24,7 @@ export default function IndividualTracking() {
         )
         : undefined
 
-    function handleSearch(e: React.FormEvent) {
+    function handleSearch(e: FormEvent) {
         e.preventDefault()
         setSearched(true)
     }
@@ -47,14 +38,14 @@ export default function IndividualTracking() {
             <div>
                 <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Tracking / Status</h1>
                 <p className="mt-1 text-sm text-gray-500">
-                    Verifică rapid stadiul unei declarații sau al unui colet folosind numărul AWB sau ID-ul declarației.
+                    Tracking-ul va folosi declarațiile returnate de backend pentru contul autentificat.
                 </p>
             </div>
 
             <form onSubmit={handleSearch} className="flex gap-3">
                 <input
                     type="text"
-                    placeholder="Introduceți AWB sau ID declarație (ex: 176-55554444)"
+                    placeholder="Introduceți AWB sau ID declarație"
                     value={query}
                     onChange={e => { setQuery(e.target.value); setSearched(false) }}
                     className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-gray-500 focus:outline-none"
@@ -97,7 +88,6 @@ export default function IndividualTracking() {
                         </div>
                     </div>
 
-                    {/* Timeline */}
                     <div className="rounded-lg border border-gray-200 bg-white p-6">
                         <p className="mb-6 text-base font-semibold text-gray-900">Progres declarație</p>
                         <div className="relative">
@@ -129,20 +119,9 @@ export default function IndividualTracking() {
                 </div>
             )}
 
-            {!searched && userDeclarations.length > 0 && (
-                <div className="rounded-lg border border-gray-200 bg-white p-5">
-                    <p className="mb-3 text-sm font-semibold text-gray-700">Declarațiile tale recente</p>
-                    <div className="space-y-2">
-                        {userDeclarations.map(d => (
-                            <button key={d.id} type="button"
-                                onClick={() => { setQuery(d.awb_number); setSearched(false) }}
-                                className="flex w-full items-center justify-between rounded-lg bg-gray-50 px-4 py-3 text-sm hover:bg-gray-100 transition-colors">
-                                <span className="font-mono text-gray-900">{d.awb_number}</span>
-                                <span className="text-gray-500">{d.description}</span>
-                                <StatusBadge status={d.status} />
-                            </button>
-                        ))}
-                    </div>
+            {!searched && userDeclarations.length === 0 && (
+                <div className="rounded-lg border border-gray-200 bg-white p-8 text-center text-sm text-gray-400">
+                    Nu există declarații returnate de backend pentru tracking.
                 </div>
             )}
         </div>

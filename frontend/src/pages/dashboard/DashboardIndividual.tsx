@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
-import { getPhysicalProfileByPhoneNumber } from '../../api/profilesApi'
+import { getPhysicalProfileByUserId } from '../../api/profilesApi'
 import type { PhysicalProfileResponse } from '../../api/types/profile'
 import { getSession } from '../../auth/auth.session'
 import type { Declaration } from '../../types/declaration'
@@ -13,24 +13,25 @@ import { hasMissingPhysicalProfileData } from '../../utils/profileValidation'
 
 export default function DashboardIndividual() {
     const session = getSession()
-    const phoneNumber = session?.phoneNumber ?? null
+    const parsedUserId = session?.userId ? Number(session.userId) : null
+    const userId = parsedUserId && Number.isFinite(parsedUserId) ? parsedUserId : null
     const [profile, setProfile] = useState<PhysicalProfileResponse | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
-        if (!phoneNumber) {
+        if (!userId) {
             setLoading(false)
-            setError('Sesiunea nu conține numărul de telefon al utilizatorului.')
+            setError('Sesiunea nu conține id-ul utilizatorului.')
             return
         }
 
-        const currentPhoneNumber = phoneNumber
+        const currentUserId = userId
         let ignore = false
 
         async function loadProfile() {
             try {
-                const response = await getPhysicalProfileByPhoneNumber(currentPhoneNumber)
+                const response = await getPhysicalProfileByUserId(currentUserId)
 
                 if (!ignore) {
                     setProfile(response)
@@ -56,7 +57,7 @@ export default function DashboardIndividual() {
         return () => {
             ignore = true
         }
-    }, [phoneNumber])
+    }, [userId])
 
     if (loading) {
         return (

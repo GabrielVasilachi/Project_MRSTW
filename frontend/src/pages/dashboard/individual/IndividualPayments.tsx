@@ -1,8 +1,5 @@
 import { useState } from 'react'
-import physicalData from '../../../_mock/mock_persoana_fizica.json'
-import { getSession } from '../../../auth/auth.session'
 import type { Declaration } from '../../../types/declaration'
-import type { PhysicalUser } from '../../../types/user'
 import KpiCard from '../../../components/dashboard/KpiCard'
 import StatusBadge from '../../../components/dashboard/StatusBadge'
 import AccountVerificationBanner from '../../../components/dashboard/AccountVerificationBanner'
@@ -53,20 +50,12 @@ function PaymentModal({ row, onClose }: { row: PaymentRow; onClose: () => void }
 }
 
 export default function IndividualPayments() {
-    const users = physicalData.users as PhysicalUser[]
-    const declarations = physicalData.declarations as Declaration[]
     const [selected, setSelected] = useState<PaymentRow | null>(null)
-
-    const session = getSession()
-    const user = users.find(u => u.id === session?.userId) ?? users[0]
-    if (!user) return null
-
-    const userDeclarations = declarations.filter(d => d.user_id === user.id)
+    const userDeclarations: Declaration[] = []
     const rows: PaymentRow[] = userDeclarations.map((d, i) => ({
         ...d,
-        invoice_no: `INV-2025-${String(i + 1).padStart(4, '0')}`,
+        invoice_no: `INV-${String(i + 1).padStart(4, '0')}`,
     }))
-
     const paid = userDeclarations.filter(d => d.status === 'Approved')
     const pending = userDeclarations.filter(d => d.status !== 'Approved' && d.status !== 'Rejected')
 
@@ -77,33 +66,25 @@ export default function IndividualPayments() {
             <div>
                 <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Plăți</h1>
                 <p className="mt-1 text-sm text-gray-500">
-                    Taxele calculate pentru fiecare declarație și istoricul plăților.
+                    Plățile vor fi afișate aici când backend-ul va returna declarațiile și facturile contului.
                 </p>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <KpiCard label="Total datorat" value={`${userDeclarations.reduce((s, d) => s + d.total_taxes, 0)} MDL`} />
-                <KpiCard label="Achitat" value={`${paid.reduce((s, d) => s + d.total_taxes, 0)} MDL`} sub={`${paid.length} declarații`} />
-                <KpiCard label="În așteptare" value={`${pending.reduce((s, d) => s + d.total_taxes, 0)} MDL`} sub={`${pending.length} declarații`} />
+                <KpiCard label="Total datorat" value={fmt(userDeclarations.reduce((s, d) => s + d.total_taxes, 0))} />
+                <KpiCard label="Achitat" value={fmt(paid.reduce((s, d) => s + d.total_taxes, 0))} sub={`${paid.length} declarații`} />
+                <KpiCard label="În așteptare" value={fmt(pending.reduce((s, d) => s + d.total_taxes, 0))} sub={`${pending.length} declarații`} />
             </div>
 
             <div className="rounded-lg border border-gray-200 bg-white">
                 <div className="border-b border-gray-200 px-6 py-4">
                     <p className="text-base font-semibold text-gray-900">Istoricul plăților</p>
-                    <p className="mt-0.5 text-sm text-gray-500">{userDeclarations.length} declarații</p>
+                    <p className="mt-0.5 text-sm text-gray-500">{rows.length} declarații</p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    <KpiCard label="Total datorat" value={fmt(userDeclarations.reduce((s, d) => s + d.total_taxes, 0))} />
-                    <KpiCard label="Achitat" value={fmt(paid.reduce((s, d) => s + d.total_taxes, 0))} sub={`${paid.length} declarații`} />
-                    <KpiCard label="În așteptare" value={fmt(pending.reduce((s, d) => s + d.total_taxes, 0))} sub={`${pending.length} declarații`} />
-                </div>
-
-                <div className="rounded-lg border border-gray-200 bg-white">
-                    <div className="border-b border-gray-200 px-6 py-4">
-                        <p className="text-base font-semibold text-gray-900">Istoricul plăților</p>
-                        <p className="mt-0.5 text-sm text-gray-500">{rows.length} declarații</p>
-                    </div>
+                {rows.length === 0 ? (
+                    <p className="px-6 py-8 text-center text-sm text-gray-400">Nu există plăți returnate de backend.</p>
+                ) : (
                     <div className="overflow-x-auto">
                         <table className="min-w-full text-left text-sm">
                             <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-600">
@@ -136,19 +117,9 @@ export default function IndividualPayments() {
                                     </tr>
                                 ))}
                             </tbody>
-                            <tfoot className="border-t-2 border-gray-200 bg-gray-50 text-sm font-semibold text-gray-800">
-                                <tr>
-                                    <td colSpan={3} className="px-6 py-3 text-right text-xs uppercase tracking-wide text-gray-500">Total:</td>
-                                    <td className="px-6 py-3">{fmt(userDeclarations.reduce((s, d) => s + d.customs_value, 0))}</td>
-                                    <td className="px-6 py-3">{fmt(userDeclarations.reduce((s, d) => s + d.vat, 0))}</td>
-                                    <td className="px-6 py-3">{fmt(userDeclarations.reduce((s, d) => s + d.customs_duty, 0))}</td>
-                                    <td className="px-6 py-3">{fmt(userDeclarations.reduce((s, d) => s + d.total_taxes, 0))}</td>
-                                    <td /><td />
-                                </tr>
-                            </tfoot>
                         </table>
                     </div>
-                </div>
+                )}
             </div>
 
             {selected && <PaymentModal row={selected} onClose={() => setSelected(null)} />}

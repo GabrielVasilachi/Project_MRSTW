@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 
-import { getBusinessProfileByUserId, getPhysicalProfileByPhoneNumber } from '../../api/profilesApi'
+import { getBusinessProfileByUserId, getPhysicalProfileByUserId } from '../../api/profilesApi'
 import { clearSession, getSession } from '../../auth/auth.session'
 import { paths } from '../../routes/paths'
 import { hasMissingBusinessProfileData, hasMissingPhysicalProfileData } from '../../utils/profileValidation'
@@ -52,11 +52,10 @@ const NAV_ITEMS: Record<string, NavItem[]> = {
 export default function Sidebar({ onNavigate, className = '' }: SidebarProps) {
 	const session = getSession()
 	const role = session?.role ?? 'individual'
-	const phoneNumber = session?.phoneNumber ?? null
 	const parsedUserId = session?.userId ? Number(session.userId) : null
 	const userId = parsedUserId && Number.isFinite(parsedUserId) ? parsedUserId : null
 	const items = NAV_ITEMS[role] ?? []
-	const profileStatusKey = `${role}:${phoneNumber ?? userId ?? ''}`
+	const profileStatusKey = `${role}:${userId ?? ''}`
 	const [profileStatus, setProfileStatus] = useState<{ key: string; hasMissingProfileData: boolean } | null>(null)
 	const hasMissingProfileData = profileStatus?.key === profileStatusKey
 		? profileStatus.hasMissingProfileData
@@ -67,8 +66,8 @@ export default function Sidebar({ onNavigate, className = '' }: SidebarProps) {
 
 		async function loadProfileStatus() {
 			try {
-				if (role === 'individual' && phoneNumber) {
-					const profile = await getPhysicalProfileByPhoneNumber(phoneNumber)
+				if (role === 'individual' && userId) {
+					const profile = await getPhysicalProfileByUserId(userId)
 
 					if (!ignore) {
 						setProfileStatus({
@@ -103,7 +102,7 @@ export default function Sidebar({ onNavigate, className = '' }: SidebarProps) {
 		return () => {
 			ignore = true
 		}
-	}, [phoneNumber, profileStatusKey, role, userId])
+	}, [profileStatusKey, role, userId])
 
 	const renderNavItem = ({ label, to, showBadge }: NavItem) => {
 		const hasBadge = Boolean(showBadge && hasMissingProfileData)

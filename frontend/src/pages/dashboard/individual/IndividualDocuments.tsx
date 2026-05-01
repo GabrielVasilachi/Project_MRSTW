@@ -1,26 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
 import { getSession } from '../../../auth/auth.session'
-import { useAxios } from '../../../api/useAxios'
+import { deleteDocument as deleteDocumentRequest, getDocumentFileUrl, getDocumentsByUserId, uploadDocument } from '../../../api/documentsApi'
+import type { DocumentInfo } from '../../../api/types/document'
 import KpiCard from '../../../components/dashboard/KpiCard'
 import AccountVerificationBanner from '../../../components/dashboard/AccountVerificationBanner'
-
-type DocumentInfo = {
-    id: number
-    userId: number
-    fileName: string
-    contentType: string
-    fileSize: number
-    uploadedAt: string
-}
-
-function formatBytes(bytes: number) {
-    if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
+import { formatBytes } from '../../../utils/format'
 
 export default function IndividualDocuments() {
-    const { api } = useAxios()
     const session = getSession()
     const userId = session?.userId
         ? (parseInt(session.userId) || parseInt(session.userId.replace(/\D/g, '')) || null)
@@ -34,19 +20,23 @@ export default function IndividualDocuments() {
     const [dragOver, setDragOver] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
-    async function loadDocuments() {
-        if (!userId) return
+    const loadDocuments = useCallback(async () => {
+        if (!userId) {
+            setLoading(false)
+            return
+        }
+
         try {
-            const res = await api.get<DocumentInfo[]>(`/documents/by-user/${userId}`)
-            setDocuments(res.data ?? [])
+            const response = await getDocumentsByUserId(userId)
+            setDocuments(response ?? [])
         } catch {
             setError('Nu s-au putut încărca documentele.')
         } finally {
             setLoading(false)
         }
-    }
+    }, [userId])
 
-    useEffect(() => { loadDocuments() }, [userId])
+    useEffect(() => { loadDocuments() }, [loadDocuments])
 
     async function uploadFile(file: File) {
         if (!userId) { setError('Sesiune invalidă.'); return }
@@ -55,30 +45,27 @@ export default function IndividualDocuments() {
         setError(null)
         setSuccessMsg(null)
 
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('userId', String(userId))
-
         try {
-            await api.post('/documents/upload', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            })
+            await uploadDocument(userId, file)
             setSuccessMsg(`"${file.name}" a fost încărcat cu succes.`)
             await loadDocuments()
-        } catch (e: any) {
-            setError(e?.response?.data ?? 'Eroare la încărcare.')
+        } catch (error: unknown) {
+            const message = error && typeof error === 'object' && 'response' in error
+                ? (error as { response?: { data?: unknown } }).response?.data
+                : null
+            setError(typeof message === 'string' ? message : 'Eroare la încărcare.')
         } finally {
             setUploading(false)
         }
     }
 
-    function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    function onFileChange(e: ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0]
         if (file) uploadFile(file)
         e.target.value = ''
     }
 
-    function onDrop(e: React.DragEvent) {
+    function onDrop(e: DragEvent) {
         e.preventDefault()
         setDragOver(false)
         const file = e.dataTransfer.files?.[0]
@@ -88,7 +75,7 @@ export default function IndividualDocuments() {
     async function deleteDocument(id: number) {
         if (!userId) return
         try {
-            await api.delete(`/documents/${id}?userId=${userId}`)
+            await deleteDocumentRequest(id, userId)
             setDocuments(prev => prev.filter(d => d.id !== id))
         } catch {
             setError('Eroare la ștergere.')
@@ -96,9 +83,8 @@ export default function IndividualDocuments() {
     }
 
     function downloadDocument(id: number, fileName: string) {
-        const url = `${api.defaults.baseURL}/documents/${id}/file`
         const a = document.createElement('a')
-        a.href = url
+        a.href = getDocumentFileUrl(id)
         a.download = fileName
         a.click()
     }

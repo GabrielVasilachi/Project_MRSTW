@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
-import { getPhysicalProfileByPhoneNumber, updatePhysicalProfileByPhoneNumber } from '../../../api/profilesApi'
+import { getPhysicalProfileByUserId, updatePhysicalProfile } from '../../../api/profilesApi'
 import type { PhysicalProfileResponse } from '../../../api/types/profile'
 import { getSession, setSession } from '../../../auth/auth.session'
 import AccountVerificationBanner from '../../../components/dashboard/AccountVerificationBanner'
@@ -17,7 +17,8 @@ type EditValues = {
 
 export default function IndividualSettings() {
     const session = getSession()
-    const phoneNumber = session?.phoneNumber ?? null
+    const parsedUserId = session?.userId ? Number(session.userId) : null
+    const userId = parsedUserId && Number.isFinite(parsedUserId) ? parsedUserId : null
     const [profile, setProfile] = useState<PhysicalProfileResponse | null>(null)
     const [editValues, setEditValues] = useState<EditValues>({
         fullName: '',
@@ -33,18 +34,18 @@ export default function IndividualSettings() {
     const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
     useEffect(() => {
-        if (!phoneNumber) {
+        if (!userId) {
             setLoading(false)
-            setError('Sesiunea nu conține numărul de telefon al utilizatorului.')
+            setError('Sesiunea nu conține id-ul utilizatorului.')
             return
         }
 
-        const currentPhoneNumber = phoneNumber
+        const currentUserId = userId
         let ignore = false
 
         async function loadProfile() {
             try {
-                const response = await getPhysicalProfileByPhoneNumber(currentPhoneNumber)
+                const response = await getPhysicalProfileByUserId(currentUserId)
 
                 if (!ignore) {
                     setProfile(response)
@@ -77,10 +78,10 @@ export default function IndividualSettings() {
         return () => {
             ignore = true
         }
-    }, [phoneNumber])
+    }, [userId])
 
     async function handleSave() {
-        if (!phoneNumber || !profile) {
+        if (!userId || !profile) {
             return
         }
 
@@ -120,7 +121,7 @@ export default function IndividualSettings() {
         }
 
         try {
-            const message = await updatePhysicalProfileByPhoneNumber(phoneNumber, {
+            const message = await updatePhysicalProfile(userId, {
                 password: enteredPassword,
                 fullName,
                 phoneNumber: updatedPhoneNumber,
