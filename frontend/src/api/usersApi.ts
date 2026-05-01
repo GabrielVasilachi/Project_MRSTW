@@ -1,7 +1,7 @@
 import { api } from "./axios";
-import type { UserCreateRequest, UserResponse } from "./types/user";
+import type { UserResponse } from "./types/user";
 
-export async function createUser(data: UserCreateRequest) {
-    const response = await api.post<UserResponse>("/users", data);
+export async function getUsers() {
+    const response = await api.get<UserResponse[]>("/users");
     return response.data;
 }

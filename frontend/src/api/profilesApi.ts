@@ -6,13 +6,13 @@ import type {
     PhysicalProfileUpdateRequest,
 } from "./types/profile";
 
-export async function getPhysicalProfileByPhoneNumber(phoneNumber: string) {
-    const response = await api.get<PhysicalProfileResponse>(`/physical-profiles/${encodeURIComponent(phoneNumber)}`);
+export async function getPhysicalProfileByUserId(userId: number) {
+    const response = await api.get<PhysicalProfileResponse>(`/physical-profiles/${userId}`);
     return response.data;
 }
 
-export async function updatePhysicalProfileByPhoneNumber(phoneNumber: string, data: PhysicalProfileUpdateRequest) {
-    const response = await api.put<string>(`/physical-profiles/${encodeURIComponent(phoneNumber)}`, data);
+export async function updatePhysicalProfile(userId: number, data: PhysicalProfileUpdateRequest) {
+    const response = await api.put<string>(`/physical-profiles/${userId}`, data);
     return response.data;
 }
 

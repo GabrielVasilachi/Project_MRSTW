@@ -13,11 +13,13 @@ export function getDashboardPathByRole(role: UserRole) {
 }
 
 export function mapRoleEnumToUserRole(roleEnum: number | string): UserRole {
-	if (roleEnum === 2 || roleEnum === 'Admin') {
+	const normalizedRole = String(roleEnum).toLowerCase()
+
+	if (roleEnum === 2 || normalizedRole === '2' || normalizedRole === 'admin') {
 		return 'admin'
 	}
 
-	if (roleEnum === 1 || roleEnum === 'Business') {
+	if (roleEnum === 1 || normalizedRole === '1' || normalizedRole === 'business') {
 		return 'business'
 	}
 
