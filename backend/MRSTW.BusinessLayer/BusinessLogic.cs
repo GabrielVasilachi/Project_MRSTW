@@ -5,6 +5,11 @@ namespace MRSTW.BusinessLayer;
 
 public class BusinessLogic
 {
+    public IAuditLogsLogic GetAuditLogsLogic()
+    {
+        return new AuditLogsLogic();
+    }
+
     public IAdminProfilesLogic GetAdminProfilesLogic()
     {
         return new AdminProfilesLogic();
