@@ -42,6 +42,11 @@ public class BusinessLogic
         return new PhysicalDeclarationsLogic();
     }
 
+    public IBusinessDeclarationsLogic GetBusinessDeclarationsLogic()
+    {
+        return new BusinessDeclarationsLogic();
+    }
+
     public IDocumentLogic GetDocumentLogic()
     {
         return new DocumentLogic();
