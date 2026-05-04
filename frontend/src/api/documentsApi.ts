@@ -22,6 +22,14 @@ export async function deleteDocument(documentId: number, userId: number) {
     return response.data;
 }
 
+export async function downloadDocumentFile(documentId: number) {
+    const response = await api.get<Blob>(`/documents/${documentId}/file`, {
+        responseType: "blob",
+    });
+
+    return response.data;
+}
+
 export function getDocumentFileUrl(documentId: number) {
     return `${api.defaults.baseURL}/documents/${documentId}/file`;
 }

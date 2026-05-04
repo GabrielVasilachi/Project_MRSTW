@@ -12,6 +12,8 @@ import ActivateAccountPage from "./pages/activateAccount.tsx";
 // import SignupPage from "./pages/signup.tsx";
 import FrequentlyAskedQuestions from './pages/faq.tsx'
 import ApiTestPage from './pages/apiTest.tsx'
+import ForbiddenPage from './pages/forbidden.tsx'
+import UnauthorizedPage from './pages/unauthorized.tsx'
 
 import DashboardApp from './DashboardApp.tsx'
 import Dashboard_Admin from './pages/dashboard/DashboardAdmin.tsx'
@@ -58,6 +60,8 @@ createRoot(document.getElementById('root')!).render(
             <Route path={paths.HowItWorksSteps} element={<HowItWorksStep />} />
             <Route path={paths.FrequentlyAskedQuestions} element={<FrequentlyAskedQuestions />} />
             <Route path={paths.LoginPage} element={<LoginPage />} />
+            <Route path={paths.Unauthorized} element={<UnauthorizedPage />} />
+            <Route path={paths.Forbidden} element={<ForbiddenPage />} />
             {/* <Route path={paths.SignupPage} element={<SignupPage />} /> */}
             <Route path='*' element={<LandingPage />} />
           </Route>

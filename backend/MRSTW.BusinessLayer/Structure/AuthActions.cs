@@ -49,13 +49,30 @@ public class AuthActions
             };
         }
 
-        if (user.PasswordHash != request.Password)
+        if (!PasswordHashService.VerifyPassword(user.PasswordHash, request.Password, out var requiresHashUpdate))
         {
             return new ServiceResponse
             {
                 IsSuccess = false,
                 Message = "Parola este incorecta."
             };
+        }
+
+        if (requiresHashUpdate)
+        {
+            try
+            {
+                user.PasswordHash = PasswordHashService.HashPassword(request.Password);
+                _usersContext.SaveChanges();
+            }
+            catch (Exception e)
+            {
+                return new ServiceResponse
+                {
+                    IsSuccess = false,
+                    Message = e.Message
+                };
+            }
         }
 
         var token = JwtTokenGenerator.Generate(user);
@@ -143,7 +160,7 @@ public class AuthActions
 
         try
         {
-            user.PasswordHash = request.Password;
+            user.PasswordHash = PasswordHashService.HashPassword(request.Password);
             user.IsTemporary = false;
             user.IsPhoneConfirmed = true;
 

@@ -11,6 +11,8 @@ export const paths = {
     DashboardSettings: "/dashboard/settings",
     LoginPage: "/login",
     ActivateAccount: "/activate-account",
+    Unauthorized: "/unauthorized",
+    Forbidden: "/forbidden",
     // Admin
     Admin_Declarations: "/declarations",
     Admin_Invoices: "/invoices",

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getDocumentFileUrl, getDocumentsByUserId } from '../../../api/documentsApi'
+import { downloadDocumentFile, getDocumentsByUserId } from '../../../api/documentsApi'
 import type { DocumentInfo } from '../../../api/types/document'
 import { getSession } from '../../../auth/auth.session'
 import KpiCard from '../../../components/dashboard/KpiCard'
@@ -52,11 +52,18 @@ export default function BusinessDocuments() {
         }
     }, [userId])
 
-    function downloadDocument(id: number, fileName: string) {
-        const a = document.createElement('a')
-        a.href = getDocumentFileUrl(id)
-        a.download = fileName
-        a.click()
+    async function downloadDocument(id: number, fileName: string) {
+        try {
+            const file = await downloadDocumentFile(id)
+            const fileUrl = URL.createObjectURL(file)
+            const a = document.createElement('a')
+            a.href = fileUrl
+            a.download = fileName
+            a.click()
+            window.setTimeout(() => URL.revokeObjectURL(fileUrl), 0)
+        } catch {
+            setError('Nu s-a putut descărca documentul.')
+        }
     }
 
     return (

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MRSTW.BusinessLayer;
 using MRSTW.BusinessLayer.Interfaces;
@@ -7,6 +8,7 @@ namespace MRSTW.Api.Controllers;
 
 [ApiController]
 [Route("api/packages")]
+[Authorize(Roles = "Admin")]
 public class PackagesController : ControllerBase
 {
     private readonly IPackagesLogic _packagesLogic;

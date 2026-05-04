@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MRSTW.Api.Extensions;
 using MRSTW.BusinessLayer;
 using MRSTW.BusinessLayer.Interfaces;
 using MRSTW.Domain.Models.PhysicalProfiles;
@@ -7,6 +9,7 @@ namespace MRSTW.Api.Controllers;
 
 [ApiController]
 [Route("api/physical-profiles")]
+[Authorize]
 public class PhysicalProfilesController : ControllerBase
 {
     private readonly IPhysicalProfilesLogic _physicalProfilesLogic;
@@ -20,6 +23,11 @@ public class PhysicalProfilesController : ControllerBase
     [HttpGet("{userId}")]
     public IActionResult GetPhysicalProfileByUserId([FromRoute] int userId)
     {
+        if (!User.CanAccessUser(userId))
+        {
+            return Forbid();
+        }
+
         var response = _physicalProfilesLogic.GetPhysicalProfileByUserId(userId);
 
         if (!response.IsSuccess)
@@ -33,6 +41,11 @@ public class PhysicalProfilesController : ControllerBase
     [HttpPut("{userId}")]
     public IActionResult UpdatePhysicalProfile([FromRoute] int userId, [FromBody] PhysicalProfileUpdateRequestDto request)
     {
+        if (!User.CanAccessUser(userId))
+        {
+            return Forbid();
+        }
+
         var response = _physicalProfilesLogic.UpdatePhysicalProfile(userId, request);
 
         if (!response.IsSuccess)

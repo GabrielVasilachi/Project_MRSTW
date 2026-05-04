@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { useState, type FormEvent } from 'react'
 import { createAdminProfile } from '../../../api/adminProfilesApi'
+import { scanBusinessProfiles, scanPhysicalProfiles } from '../../../api/packagesApi'
 import type { UserRole } from '../../../auth/auth.types'
 
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:5242/api'
@@ -19,29 +20,6 @@ function getApiMessage(payload: unknown, fallback: string): string {
 	}
 
 	return fallback
-}
-
-function getApiString(payload: unknown, key: string): string | null {
-	if (!payload || typeof payload !== 'object' || !(key in payload)) {
-		return null
-	}
-
-	const value = (payload as Record<string, unknown>)[key]
-	return typeof value === 'string' && value.trim().length > 0 ? value : null
-}
-
-async function readApiPayload(response: Response): Promise<unknown> {
-	const rawText = await response.text()
-
-	if (!rawText) {
-		return null
-	}
-
-	try {
-		return JSON.parse(rawText)
-	} catch {
-		return rawText
-	}
 }
 
 export default function AdminAccountCreations() {
@@ -75,50 +53,26 @@ export default function AdminAccountCreations() {
 
 		try {
 			if (role === 'individual') {
-				const response = await fetch(`${API_URL}/packages/scan-physical-profiles`, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify({
-						trackingCode: individualsPackageID.trim(),
-						fullName: individualFullName.trim(),
-						locationAdress: individualAddress.trim(),
-						phoneNumber: individualPhoneNumber.trim()
-					})
+				const data = await scanPhysicalProfiles({
+					trackingCode: individualsPackageID.trim(),
+					fullName: individualFullName.trim(),
+					locationAdress: individualAddress.trim(),
+					phoneNumber: individualPhoneNumber.trim()
 				})
-
-				const data = await readApiPayload(response)
-
-				if (!response.ok) {
-					throw new Error(getApiMessage(data, 'Nu s-a putut crea contul individual.'))
-				}
 
 				setSuccessMessage(getApiMessage(data, 'Contul individual a fost creat cu succes.'))
-				setActivationLink(getApiString(data, 'activationLink'))
+				setActivationLink(data.activationLink ?? null)
 			} else if (role === 'business') {
-				const response = await fetch(`${API_URL}/packages/scan-business-profiles`, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify({
-						trackingCode: businessPackageID.trim(),
-						companyName: businessCompanyName.trim(),
-						locationAdress: businessLegalAddress.trim(),
-						phoneNumber: businessPhoneNumber.trim(),
-						contactPerson: businessContactPerson.trim() || null
-					})
+				const data = await scanBusinessProfiles({
+					trackingCode: businessPackageID.trim(),
+					companyName: businessCompanyName.trim(),
+					locationAdress: businessLegalAddress.trim(),
+					phoneNumber: businessPhoneNumber.trim(),
+					contactPerson: businessContactPerson.trim() || null
 				})
 
-				const data = await readApiPayload(response)
-
-				if (!response.ok) {
-					throw new Error(getApiMessage(data, 'Nu s-a putut crea contul business.'))
-				}
-
 				setSuccessMessage(getApiMessage(data, 'Contul business a fost creat cu succes.'))
-				setActivationLink(getApiString(data, 'activationLink'))
+				setActivationLink(data.activationLink ?? null)
 			} else if (role === 'admin') {
 				await createAdminProfile({
 					phoneNumber: adminPhoneNumber.trim(),
@@ -142,6 +96,10 @@ export default function AdminAccountCreations() {
 		} catch (error) {
 			if (axios.isAxiosError(error) && typeof error.response?.data === 'string') {
 				setErrorMessage(error.response.data)
+			} else if (axios.isAxiosError(error) && error.response?.data) {
+				setErrorMessage(getApiMessage(error.response.data, 'Nu s-a putut crea contul.'))
+			} else if (axios.isAxiosError(error) && !error.response) {
+				setErrorMessage(`Nu s-a putut realiza conexiunea cu serverul API (${API_URL}). Verifica daca backend-ul ruleaza.`)
 			} else if (error instanceof Error) {
 				if (error.message.toLowerCase().includes('failed to fetch')) {
 					setErrorMessage(`Nu s-a putut realiza conexiunea cu serverul API (${API_URL}). Verifica daca backend-ul ruleaza.`)

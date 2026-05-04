@@ -1,3 +1,4 @@
+using MRSTW.BusinessLayer.Security;
 using MRSTW.DataAccessLayer.Context;
 using MRSTW.Domain.Models.BusinessProfiles;
 using MRSTW.Domain.Models.Service;
@@ -101,7 +102,7 @@ public class BusinessProfilesActions
             };
         }
 
-        if (user.PasswordHash != request.Password)
+        if (!PasswordHashService.VerifyPassword(user.PasswordHash, request.Password, out var requiresHashUpdate))
         {
             return new ServiceResponse
             {
@@ -148,6 +149,11 @@ public class BusinessProfilesActions
         user.FullName = normalizedContactPerson ?? normalizedCompanyName;
         user.PhoneNumber = updatedPhoneNumber;
         user.Email = normalizedEmail;
+
+        if (requiresHashUpdate)
+        {
+            user.PasswordHash = PasswordHashService.HashPassword(request.Password);
+        }
 
         try
         {

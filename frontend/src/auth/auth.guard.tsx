@@ -1,25 +1,33 @@
+import type { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 
 import { paths } from '../routes/paths'
-import { getSession } from './auth.session'
+import { clearSession, getSession } from './auth.session'
 import type { UserRole } from './auth.types'
-import { getDashboardPathByRole } from './auth.utils'
+import { getRoleFromToken, isTokenExpired } from './auth.utils'
 
 type Props = {
 	allowedRoles?: UserRole[]
-	children: React.ReactNode
+	children: ReactNode
 }
 
 export default function AuthGuard({ allowedRoles, children }: Props) {
 	const location = useLocation()
 	const session = getSession()
 
-	if (!session) {
+	if (!session?.token) {
 		return <Navigate to={paths.LoginPage} replace state={{ from: location.pathname }} />
 	}
 
-	if (allowedRoles && !allowedRoles.includes(session.role)) {
-		return <Navigate to={getDashboardPathByRole(session.role)} replace />
+	if (isTokenExpired(session.token)) {
+		clearSession()
+		return <Navigate to={paths.LoginPage} replace state={{ from: location.pathname }} />
+	}
+
+	const role = getRoleFromToken(session.token) ?? session.role
+
+	if (allowedRoles && !allowedRoles.includes(role)) {
+		return <Navigate to={paths.Forbidden} replace />
 	}
 
 	return <>{children}</>

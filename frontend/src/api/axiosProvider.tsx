@@ -1,20 +1,9 @@
-import axios from "axios";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { api } from "./axios";
 import { AxiosContext } from "./axiosContext";
-
-const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? "http://localhost:5242/api";
 
 export function AxiosProvider({ children }: { children: ReactNode }) {
   const [serverErrorMessage, setServerErrorMessage] = useState<string | null>(null);
-
-  const api = useMemo(
-    () =>
-    axios.create({
-      baseURL: API_URL,
-      timeout: 10000,
-    }),
-    [],
-  );
 
   useEffect(() => {
     const interceptorId = api.interceptors.response.use(
@@ -31,7 +20,7 @@ export function AxiosProvider({ children }: { children: ReactNode }) {
     return () => {
       api.interceptors.response.eject(interceptorId);
     };
-  }, [api]);
+  }, []);
 
   const contextValue = useMemo(
     () => ({
@@ -39,7 +28,7 @@ export function AxiosProvider({ children }: { children: ReactNode }) {
       serverErrorMessage,
       clearServerError: () => setServerErrorMessage(null),
     }),
-    [api, serverErrorMessage],
+    [serverErrorMessage],
   );
 
   return <AxiosContext.Provider value={contextValue}>{children}</AxiosContext.Provider>;

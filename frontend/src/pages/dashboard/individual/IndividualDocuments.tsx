@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
 import { getSession } from '../../../auth/auth.session'
-import { deleteDocument as deleteDocumentRequest, getDocumentFileUrl, getDocumentsByUserId, uploadDocument } from '../../../api/documentsApi'
+import { deleteDocument as deleteDocumentRequest, downloadDocumentFile, getDocumentsByUserId, uploadDocument } from '../../../api/documentsApi'
 import type { DocumentInfo } from '../../../api/types/document'
 import KpiCard from '../../../components/dashboard/KpiCard'
 import AccountVerificationBanner from '../../../components/dashboard/AccountVerificationBanner'
@@ -82,11 +82,18 @@ export default function IndividualDocuments() {
         }
     }
 
-    function downloadDocument(id: number, fileName: string) {
-        const a = document.createElement('a')
-        a.href = getDocumentFileUrl(id)
-        a.download = fileName
-        a.click()
+    async function downloadDocument(id: number, fileName: string) {
+        try {
+            const file = await downloadDocumentFile(id)
+            const fileUrl = URL.createObjectURL(file)
+            const a = document.createElement('a')
+            a.href = fileUrl
+            a.download = fileName
+            a.click()
+            window.setTimeout(() => URL.revokeObjectURL(fileUrl), 0)
+        } catch {
+            setError('Eroare la descărcare.')
+        }
     }
 
     return (

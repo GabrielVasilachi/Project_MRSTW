@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MRSTW.Api.Extensions;
 using MRSTW.BusinessLayer;
 using MRSTW.BusinessLayer.Interfaces;
 using MRSTW.Domain.Models.BusinessProfiles;
@@ -7,6 +9,7 @@ namespace MRSTW.Api.Controllers;
 
 [ApiController]
 [Route("api/business-profiles")]
+[Authorize]
 public class BusinessProfilesController : ControllerBase
 {
     private readonly IBusinessProfilesLogic _businessProfilesLogic;
@@ -20,6 +23,11 @@ public class BusinessProfilesController : ControllerBase
     [HttpGet("{userId}")]
     public IActionResult GetBusinessProfileByUserId([FromRoute] int userId)
     {
+        if (!User.CanAccessUser(userId))
+        {
+            return Forbid();
+        }
+
         var response = _businessProfilesLogic.GetBusinessProfileByUserId(userId);
 
         if (!response.IsSuccess)
@@ -33,6 +41,11 @@ public class BusinessProfilesController : ControllerBase
     [HttpPut("{userId}")]
     public IActionResult UpdateBusinessProfile([FromRoute] int userId, [FromBody] BusinessProfileUpdateRequestDto request)
     {
+        if (!User.CanAccessUser(userId))
+        {
+            return Forbid();
+        }
+
         var response = _businessProfilesLogic.UpdateBusinessProfile(userId, request);
 
         if (!response.IsSuccess)

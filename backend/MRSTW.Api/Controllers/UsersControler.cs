@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MRSTW.BusinessLayer;
 using MRSTW.BusinessLayer.Interfaces;
@@ -6,6 +7,7 @@ namespace MRSTW.Api.Controllers;
 
 [ApiController]
 [Route("api/users")]
+[Authorize(Roles = "Admin")]
 public class UsersController : ControllerBase
 {
     private readonly IUsersLogic _usersLogic;

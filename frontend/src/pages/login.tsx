@@ -5,7 +5,7 @@ import Logo from "../../public/images/Logo.svg";
 
 import { login } from "../api/authApi";
 import { setSession } from "../auth/auth.session";
-import { getDashboardPathByRole, mapRoleEnumToUserRole } from "../auth/auth.utils";
+import { getDashboardPathByRole, getEmailFromToken, getRoleFromToken, getUserIdFromToken, mapRoleEnumToUserRole } from "../auth/auth.utils";
 
 export default function LoginPage() {
 	const navigate = useNavigate()
@@ -24,11 +24,13 @@ export default function LoginPage() {
 				phoneNumber: phoneNumber.trim(),
 				password: password.trim(),
 			})
-			const role = mapRoleEnumToUserRole(response.roleEnum)
+			const role = getRoleFromToken(response.token) ?? mapRoleEnumToUserRole(response.roleEnum)
+			const userId = getUserIdFromToken(response.token) ?? String(response.id)
+			const email = getEmailFromToken(response.token) ?? response.email ?? null
 			const session = {
 				role,
-				userId: String(response.id),
-				email: response.email ?? null,
+				userId,
+				email,
 				phoneNumber: response.phoneNumber,
 				fullName: response.fullName,
 				token: response.token,

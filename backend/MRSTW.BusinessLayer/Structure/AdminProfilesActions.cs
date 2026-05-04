@@ -1,4 +1,5 @@
 using MRSTW.DataAccessLayer.Context;
+using MRSTW.BusinessLayer.Security;
 using MRSTW.Domain.Entities.AdminProfiles;
 using MRSTW.Domain.Entities.Users;
 using MRSTW.Domain.Enums;
@@ -39,6 +40,7 @@ public class AdminProfilesActions
         }
 
         var normalizedPhoneNumber = request.PhoneNumber.Trim();
+        var passwordHash = PasswordHashService.HashPassword(request.Password);
 
         var existingAdminProfile = _adminProfilesContext.AdminProfiles
             .FirstOrDefault(a => a.PhoneNumber == normalizedPhoneNumber);
@@ -67,7 +69,7 @@ public class AdminProfilesActions
         {
             FullName = "Admin",
             PhoneNumber = normalizedPhoneNumber,
-            PasswordHash = request.Password,
+            PasswordHash = passwordHash,
             RoleEnum = UserRoleEnum.Admin,
             IsTemporary = false,
             IsPhoneConfirmed = true
@@ -91,7 +93,7 @@ public class AdminProfilesActions
         {
             UserId = adminUser.Id,
             PhoneNumber = normalizedPhoneNumber,
-            PasswordHash = request.Password
+            PasswordHash = passwordHash
         };
 
         try

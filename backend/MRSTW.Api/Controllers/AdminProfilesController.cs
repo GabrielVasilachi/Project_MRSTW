@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MRSTW.BusinessLayer;
 using MRSTW.BusinessLayer.Interfaces;
@@ -7,6 +8,7 @@ namespace MRSTW.Api.Controllers;
 
 [ApiController]
 [Route("api/admin-profiles")]
+[Authorize(Roles = "Admin")]
 public class AdminProfilesController : ControllerBase
 {
     private readonly IAdminProfilesLogic _adminProfilesLogic;
