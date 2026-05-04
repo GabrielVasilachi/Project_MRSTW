@@ -37,6 +37,11 @@ public class BusinessLogic
         return new PhysicalProfilesLogic();
     }
 
+    public IPhysicalDeclarationsLogic GetPhysicalDeclarationsLogic()
+    {
+        return new PhysicalDeclarationsLogic();
+    }
+
     public IDocumentLogic GetDocumentLogic()
     {
         return new DocumentLogic();

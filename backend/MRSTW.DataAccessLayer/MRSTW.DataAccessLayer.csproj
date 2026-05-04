@@ -11,6 +11,7 @@
       <Folder Include="Migrations\AdminProfilesMigrations\" />
       <Folder Include="Migrations\BusinessProfilesMigrations\" />
       <Folder Include="Migrations\PackagesMigrations\" />
+      <Folder Include="Migrations\PhysicalDeclarationsMigrations\" />
       <Folder Include="Migrations\PhysicalProfilesMigrations\" />
       <Folder Include="Migrations\UserMigrations\" />
     </ItemGroup>
