@@ -9,11 +9,13 @@ public class PhysicalProfilesActions
 {
     private readonly PhysicalProfilesDbContext _physicalProfilesContext;
     private readonly UsersDbContext _usersContext;
+    private readonly PackagesDbContext _packagesContext;
 
     public PhysicalProfilesActions()
     {
         _physicalProfilesContext = new PhysicalProfilesDbContext();
         _usersContext = new UsersDbContext();
+        _packagesContext = new PackagesDbContext();
     }
 
     public ServiceResponse GetPhysicalProfileByUserIdAction(int userId)
@@ -47,7 +49,7 @@ public class PhysicalProfilesActions
         };
     }
 
-    public ServiceResponse UpdatePhysicalProfileAction(int userId, PhysicalProfileUpdateRequestDto request)
+    public ServiceResponse UpdatePhysicalProfileAction(int userId, PhysicalProfileUpdateRequestDto request, bool requirePassword = true)
     {
         var profile = _physicalProfilesContext.PhysicalProfiles.FirstOrDefault(p => p.UserId == userId);
 
@@ -98,7 +100,7 @@ public class PhysicalProfilesActions
             };
         }
 
-        if (string.IsNullOrWhiteSpace(request.Password))
+        if (requirePassword && string.IsNullOrWhiteSpace(request.Password))
         {
             return new ServiceResponse
             {
@@ -107,7 +109,9 @@ public class PhysicalProfilesActions
             };
         }
 
-        if (!PasswordHashService.VerifyPassword(user.PasswordHash, request.Password, out var requiresHashUpdate))
+        var requiresHashUpdate = false;
+
+        if (requirePassword && !PasswordHashService.VerifyPassword(user.PasswordHash, request.Password, out requiresHashUpdate))
         {
             return new ServiceResponse
             {
@@ -149,10 +153,20 @@ public class PhysicalProfilesActions
             user.PasswordHash = PasswordHashService.HashPassword(request.Password);
         }
 
+        var packages = _packagesContext.Packages.Where(p => p.UserId == user.Id).ToList();
+
+        foreach (var package in packages)
+        {
+            package.FullName = normalizedFullName;
+            package.PhoneNumber = updatedPhoneNumber;
+            package.LocationAdress = normalizedLocationAddress;
+        }
+
         try
         {
             _physicalProfilesContext.SaveChanges();
             _usersContext.SaveChanges();
+            _packagesContext.SaveChanges();
         }
         catch (Exception e)
         {

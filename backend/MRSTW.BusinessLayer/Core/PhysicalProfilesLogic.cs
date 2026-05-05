@@ -12,8 +12,8 @@ public class PhysicalProfilesLogic : PhysicalProfilesActions, IPhysicalProfilesL
         return GetPhysicalProfileByUserIdAction(userId);
     }
 
-    public ServiceResponse UpdatePhysicalProfile(int userId, PhysicalProfileUpdateRequestDto request)
+    public ServiceResponse UpdatePhysicalProfile(int userId, PhysicalProfileUpdateRequestDto request, bool requirePassword = true)
     {
-        return UpdatePhysicalProfileAction(userId, request);
+        return UpdatePhysicalProfileAction(userId, request, requirePassword);
     }
 }

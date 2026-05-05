@@ -12,8 +12,8 @@ public class BusinessProfilesLogic : BusinessProfilesActions, IBusinessProfilesL
         return GetBusinessProfileByUserIdAction(userId);
     }
 
-    public ServiceResponse UpdateBusinessProfile(int userId, BusinessProfileUpdateRequestDto request)
+    public ServiceResponse UpdateBusinessProfile(int userId, BusinessProfileUpdateRequestDto request, bool requirePassword = true)
     {
-        return UpdateBusinessProfileAction(userId, request);
+        return UpdateBusinessProfileAction(userId, request, requirePassword);
     }
 }

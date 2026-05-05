@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using MRSTW.Api.Extensions;
 using MRSTW.BusinessLayer;
 using MRSTW.BusinessLayer.Interfaces;
+using MRSTW.Domain.Enums;
 using MRSTW.Domain.Models.BusinessProfiles;
 
 namespace MRSTW.Api.Controllers;
@@ -46,7 +47,10 @@ public class BusinessProfilesController : ControllerBase
             return Forbid();
         }
 
-        var response = _businessProfilesLogic.UpdateBusinessProfile(userId, request);
+        var response = _businessProfilesLogic.UpdateBusinessProfile(
+            userId,
+            request,
+            !User.IsInRole(UserRoleEnum.Admin.ToString()));
 
         if (!response.IsSuccess)
         {
