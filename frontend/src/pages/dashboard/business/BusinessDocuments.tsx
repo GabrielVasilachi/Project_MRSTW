@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { downloadDocumentFile, getDocumentsByUserId } from '../../../api/documentsApi'
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
+import { deleteDocument as deleteDocumentRequest, downloadDocumentFile, getDocumentsByUserId, uploadDocument } from '../../../api/documentsApi'
 import type { DocumentInfo } from '../../../api/types/document'
 import { getSession } from '../../../auth/auth.session'
 import KpiCard from '../../../components/dashboard/KpiCard'
@@ -14,43 +14,79 @@ export default function BusinessDocuments() {
     const userId = parsedUserId && Number.isFinite(parsedUserId) ? parsedUserId : null
     const [documents, setDocuments] = useState<DocumentInfo[]>([])
     const [loading, setLoading] = useState(true)
+    const [uploading, setUploading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [successMsg, setSuccessMsg] = useState<string | null>(null)
+    const [dragOver, setDragOver] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
-    useEffect(() => {
+    const loadDocuments = useCallback(async () => {
         if (!userId) {
             setLoading(false)
             setError('Sesiunea nu conține id-ul utilizatorului.')
             return
         }
 
-        const currentUserId = userId
-        let ignore = false
-
-        async function loadDocuments() {
-            try {
-                const response = await getDocumentsByUserId(currentUserId)
-
-                if (!ignore) {
-                    setDocuments(response ?? [])
-                    setError(null)
-                }
-            } catch {
-                if (!ignore) {
-                    setError('Nu s-au putut încărca documentele companiei.')
-                }
-            } finally {
-                if (!ignore) {
-                    setLoading(false)
-                }
-            }
-        }
-
-        loadDocuments()
-
-        return () => {
-            ignore = true
+        try {
+            const response = await getDocumentsByUserId(userId)
+            setDocuments(response ?? [])
+            setError(null)
+        } catch {
+            setError('Nu s-au putut încărca documentele companiei.')
+        } finally {
+            setLoading(false)
         }
     }, [userId])
+
+    useEffect(() => { loadDocuments() }, [loadDocuments])
+
+    async function uploadFile(file: File) {
+        if (!userId) {
+            setError('Sesiune invalidă.')
+            return
+        }
+
+        setUploading(true)
+        setError(null)
+        setSuccessMsg(null)
+
+        try {
+            await uploadDocument(userId, file)
+            setSuccessMsg(`"${file.name}" a fost încărcat cu succes.`)
+            await loadDocuments()
+        } catch (error: unknown) {
+            const message = error && typeof error === 'object' && 'response' in error
+                ? (error as { response?: { data?: unknown } }).response?.data
+                : null
+            setError(typeof message === 'string' ? message : 'Eroare la încărcare.')
+        } finally {
+            setUploading(false)
+        }
+    }
+
+    function onFileChange(e: ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0]
+        if (file) uploadFile(file)
+        e.target.value = ''
+    }
+
+    function onDrop(e: DragEvent) {
+        e.preventDefault()
+        setDragOver(false)
+        const file = e.dataTransfer.files?.[0]
+        if (file) uploadFile(file)
+    }
+
+    async function deleteDocument(id: number) {
+        if (!userId) return
+
+        try {
+            await deleteDocumentRequest(id, userId)
+            setDocuments(prev => prev.filter(document => document.id !== id))
+        } catch {
+            setError('Nu s-a putut șterge documentul.')
+        }
+    }
 
     async function downloadDocument(id: number, fileName: string) {
         try {
@@ -82,6 +118,11 @@ export default function BusinessDocuments() {
                     {error}
                 </div>
             ) : null}
+            {successMsg ? (
+                <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                    {successMsg}
+                </div>
+            ) : null}
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <KpiCard label="Total documente" value={String(documents.length)} />
@@ -91,6 +132,47 @@ export default function BusinessDocuments() {
                         ? new Date(documents[0].uploadedAt).toLocaleDateString('ro-RO')
                         : '—'
                 } />
+            </div>
+
+            <div
+                className={`rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors ${
+                    dragOver ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-white hover:border-gray-400'
+                }`}
+                onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={onDrop}
+            >
+                <div className="flex flex-col items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50">
+                        <svg className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p className="text-sm font-medium text-gray-700">
+                            Trageți un fișier aici sau{' '}
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="text-blue-600 hover:underline"
+                                disabled={uploading}
+                            >
+                                selectați din calculator
+                            </button>
+                        </p>
+                        <p className="mt-1 text-xs text-gray-400">PDF, JPG, PNG, DOCX — max 10 MB</p>
+                    </div>
+                    {uploading && (
+                        <p className="text-sm font-medium text-blue-600 animate-pulse">Se încarcă...</p>
+                    )}
+                </div>
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    className="hidden"
+                    accept=".pdf,.jpg,.jpeg,.png,.docx,.doc,.xlsx,.xls"
+                    onChange={onFileChange}
+                />
             </div>
 
             <div className="rounded-lg border border-gray-200 bg-white">
@@ -125,6 +207,12 @@ export default function BusinessDocuments() {
                                                 className="text-blue-600 hover:underline text-xs font-medium"
                                             >
                                                 Descarcă
+                                            </button>
+                                            <button
+                                                onClick={() => deleteDocument(document.id)}
+                                                className="ml-3 text-red-500 hover:underline text-xs font-medium"
+                                            >
+                                                Șterge
                                             </button>
                                         </td>
                                     </tr>
