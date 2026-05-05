@@ -12,4 +12,6 @@ public class UserResponseDto
     public bool IsTemporary { get; set; }
     public bool IsPhoneConfirmed { get; set; }
     public DateTime CreatedAt { get; set; }
+    public bool HasExpiredActivationToken { get; set; }
+    public DateTime? ActivationTokenExpiresAt { get; set; }
 }
