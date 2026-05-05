@@ -24,6 +24,8 @@ export type AdminDashboardUser = {
     tvaCode: string | null
     contactPerson: string | null
     isTemporary: boolean
+    hasExpiredActivationToken: boolean
+    activationTokenExpiresAt: string | null
     isPhoneConfirmed: boolean | null
     createdAt: string | null
     documents: DocumentInfo[]
@@ -88,6 +90,8 @@ async function toAdminDashboardUser(user: UserResponse): Promise<AdminDashboardU
         tvaCode: null,
         contactPerson: null,
         isTemporary: user.isTemporary,
+        hasExpiredActivationToken: Boolean(user.hasExpiredActivationToken),
+        activationTokenExpiresAt: user.activationTokenExpiresAt ?? null,
         isPhoneConfirmed: user.isPhoneConfirmed ?? null,
         createdAt: user.createdAt ?? null,
         documents,

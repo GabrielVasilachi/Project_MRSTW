@@ -155,7 +155,7 @@ export default function IndividualPopupDeclaration({
                             <div className="space-y-3">
                                 <label className="mb-1 block text-sm font-medium text-gray-700">Valoarea totală declarată</label>
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                    <div className="grid w-full max-w-[520px] grid-cols-[1fr_auto] items-center gap-2 rounded-md border border-gray-200 px-3 py-2">
+                                    <div className="grid w-full max-w-130 grid-cols-[1fr_auto] items-center gap-2 rounded-md border border-gray-200 px-3 py-2">
                                         <input
                                             type="number"
                                             min={0}

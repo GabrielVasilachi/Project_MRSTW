@@ -122,7 +122,7 @@ export default function Sidebar({ onNavigate, className = '' }: SidebarProps) {
 			<NavLink key={label} to={to} onClick={onNavigate} className={({ isActive }) => linkClass(isActive)}>
 				<span>{label}</span>
 				{hasBadge && (
-					<span className="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></span>
+					<span className="w-2 h-2 bg-red-500 rounded-full shrink-0"></span>
 				)}
 			</NavLink>
 		)
