@@ -20,8 +20,7 @@ public sealed class PackagesDbContext : DbContext
 
         modelBuilder.Entity<PackageEntity>()
             .Property(package => package.Status)
-            .HasConversion<string>()
-            .HasMaxLength(50);
+            .HasConversion<int>();
     }
 
 }

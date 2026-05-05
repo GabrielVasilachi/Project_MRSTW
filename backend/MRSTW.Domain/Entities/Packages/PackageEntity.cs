@@ -33,7 +33,6 @@ public class PackageEntity
     public string? ContactPerson { get; set; }
 
     [Required]
-    [StringLength(50)]
     public PackageStatusEnum Status { get; set; }
 
     public int? UserId { get; set; }
