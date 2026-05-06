@@ -15,7 +15,6 @@ export const paths = {
     Forbidden: "/forbidden",
     // Admin
     Admin_Declarations: "/declarations",
-    Admin_Invoices: "/invoices",
     Admin_Users: "/users",
     Admin_AccountCreations: "/account-creations",
     Admin_Documents: "/documents",
@@ -23,14 +22,10 @@ export const paths = {
     Admin_AuditLog: "/audit-log",
     // Individual
     Individual_Declarations: "/individual/declarations",
-    Individual_Tracking: "/individual/tracking",
-    Individual_Payments: "/individual/payments",
     Individual_Documents: "/individual/documents",
     Individual_Settings: "/individual/settings",
     // Business
     Business_Declarations: "/business/declarations",
-    Business_Payments: "/business/payments",
     Business_Documents: "/business/documents",
-    Business_Imports: "/business/imports",
     Business_Settings: "/business/settings",
 }

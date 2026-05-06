@@ -24,7 +24,6 @@ const NAV_ITEMS: Record<string, NavItem[]> = {
 	admin: [
 		{ label: 'Dashboard',          to: paths.Dashboard_Admin },
 		{ label: 'Declarații',         to: paths.Admin_Declarations },
-		{ label: 'Invoice-uri',        to: paths.Admin_Invoices },
 		{ label: 'Utilizatori',        to: paths.Admin_Users },
 		{ label: 'Creare Utilizatori', to: paths.Admin_AccountCreations },
 		{ label: 'Documente',          to: paths.Admin_Documents },
@@ -34,17 +33,13 @@ const NAV_ITEMS: Record<string, NavItem[]> = {
 	individual: [
 		{ label: 'Dashboard',           to: paths.Dashboard_Individual },
 		{ label: 'Declarațiile mele',   to: paths.Individual_Declarations },
-		{ label: 'Tracking / Status',   to: paths.Individual_Tracking },
-		{ label: 'Plăți',               to: paths.Individual_Payments },
 		{ label: 'Documentele mele',    to: paths.Individual_Documents },
 		{ label: 'Setări cont',         to: paths.Individual_Settings, showBadge: true },
 	],
 	business: [
 		{ label: 'Dashboard',            to: paths.Dashboard_Business },
 		{ label: 'Declarații companie',  to: paths.Business_Declarations },
-		{ label: 'Plăți & Facturi',      to: paths.Business_Payments },
 		{ label: 'Documente companie',   to: paths.Business_Documents },
-		{ label: 'Importuri / Istoric',  to: paths.Business_Imports },
 		{ label: 'Setări companie',      to: paths.Business_Settings, showBadge: true },
 	],
 }

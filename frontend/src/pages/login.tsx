@@ -11,6 +11,7 @@ export default function LoginPage() {
 	const navigate = useNavigate()
 	const [phoneNumber, setPhoneNumber] = React.useState('')
 	const [password, setPassword] = React.useState('')
+	const [showPassword, setShowPassword] = React.useState(false)
 	const [error, setError] = React.useState<string | null>(null)
 	const [isSubmitting, setIsSubmitting] = React.useState(false)
 
@@ -81,14 +82,28 @@ export default function LoginPage() {
 						<Link to="#" className="text-sm text-sky-600 hover:underline">Ai uitat parola?</Link>
 					</div>
 
-					<input
-						type="password"
-						placeholder="********"
-						required
-						value={password}
-						onChange={(e) => setPassword(e.target.value)}
-						className="mt-2 w-full px-3 py-2 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
-					/>
+					<div className="relative mt-2">
+						<input
+							type={showPassword ? "text" : "password"}
+							placeholder="********"
+							required
+							value={password}
+							onChange={(e) => setPassword(e.target.value)}
+							className="w-full px-3 py-2 pr-11 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+						/>
+						<button
+							type="button"
+							onClick={() => setShowPassword((prev) => !prev)}
+							className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 hover:bg-slate-100"
+							aria-label={showPassword ? "Ascunde parola" : "Afiseaza parola"}
+						>
+							<img
+								src={showPassword ? "/images/noviewpass.svg" : "/images/viewpass.svg"}
+								alt=""
+								className="h-5 w-5"
+							/>
+						</button>
+					</div>
 
 					{error ? (
 						<div className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
