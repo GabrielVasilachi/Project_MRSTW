@@ -8,6 +8,7 @@ export type BusinessDeclarationCreateRequest = {
     quantity: number;
     totalCost: number;
     currency: number;
+    category: number;
 };
 
 export type BusinessDeclarationResponse = {
@@ -21,5 +22,6 @@ export type BusinessDeclarationResponse = {
     quantity: number;
     totalCost: number;
     currency: number;
+    category: number;
     createdAt: string;
 };

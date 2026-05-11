@@ -6,6 +6,7 @@ export type PhysicalDeclarationCreateRequest = {
     quantity: number;
     totalCost: number;
     currency: number;
+    category: number;
 };
 
 export type PhysicalDeclarationResponse = {
@@ -17,5 +18,6 @@ export type PhysicalDeclarationResponse = {
     quantity: number;
     totalCost: number;
     currency: number;
+    category: number;
     createdAt: string;
 };
