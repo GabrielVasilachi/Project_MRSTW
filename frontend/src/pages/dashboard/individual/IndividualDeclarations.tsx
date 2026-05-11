@@ -13,6 +13,7 @@ import IndividualPopupDeclaration, {
     type ProductDraft,
     type ProductField,
 } from '../../../components/dashboard/IndividualPopupDeclaration'
+import { PRODUCT_CATEGORIES, calculateTaxes } from '../../../components/dashboard/TaxBreakdown'
 
 const createEmptyProduct = (): ProductDraft => ({
     id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
@@ -21,6 +22,7 @@ const createEmptyProduct = (): ProductDraft => ({
     productUrl: '',
     items: '',
     inTotal: '',
+    category: PRODUCT_CATEGORIES[12], // default: Altele
 })
 
 const CURRENCY_ENUM_BY_OPTION: Record<CurrencyOption, number> = {
@@ -41,22 +43,29 @@ const mapCurrencyOptionToEnum = (currency: CurrencyOption) => CURRENCY_ENUM_BY_O
 
 const mapCurrencyEnumToLabel = (currency: number) => CURRENCY_LABEL_BY_ENUM[currency] ?? 'EUR'
 
-const mapPhysicalToDeclaration = (item: PhysicalDeclarationResponse): Declaration => ({
-    id: String(item.id),
-    user_id: String(item.userId),
-    awb_number: item.trackingCode,
-    hs_code: 'N/A',
-    description: item.productName,
-    quantity: item.quantity,
-    gross_weight: 0,
-    customs_value: Number(item.totalCost),
-    currency: mapCurrencyEnumToLabel(item.currency),
-    vat: 0,
-    customs_duty: 0,
-    excise: 0,
-    total_taxes: 0,
-    status: 'Under Review',
-})
+const mapPhysicalToDeclaration = (item: PhysicalDeclarationResponse): Declaration => {
+    const category = PRODUCT_CATEGORIES[item.category] ?? PRODUCT_CATEGORIES[12]
+    const baseValue = Number(item.totalCost)
+    const taxes = calculateTaxes(baseValue, category)
+    return {
+        id: String(item.id),
+        user_id: String(item.userId),
+        awb_number: item.trackingCode,
+        hs_code: 'N/A',
+        description: item.productName,
+        quantity: item.quantity,
+        gross_weight: 0,
+        customs_value: baseValue,
+        currency: mapCurrencyEnumToLabel(item.currency),
+        vat: taxes.vat,
+        customs_duty: taxes.customsDuty,
+        excise: taxes.excise,
+        total_taxes: taxes.totalAmount,
+        status: 'Under Review',
+        product_url: item.productURL,
+        category_label: category.label,
+    }
+}
 
 export default function IndividualDeclarations() {
     const session = getSession()
@@ -179,6 +188,7 @@ export default function IndividualDeclarations() {
                 quantity: Number(product.items),
                 totalCost: Number(product.inTotal),
                 currency: currencyEnum,
+                category: product.category.value,
             })))
 
             await loadDeclarations()

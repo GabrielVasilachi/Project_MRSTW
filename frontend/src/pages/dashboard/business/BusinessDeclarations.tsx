@@ -13,6 +13,7 @@ import BusinessPopupDeclaration, {
     type ProductDraft,
     type ProductField,
 } from '../../../components/dashboard/BusinessPopupDeclaration'
+import { PRODUCT_CATEGORIES, calculateTaxes, type ProductCategory } from '../../../components/dashboard/TaxBreakdown'
 
 const createEmptyProduct = (): ProductDraft => ({
     id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
@@ -23,6 +24,7 @@ const createEmptyProduct = (): ProductDraft => ({
     hsCode: '',
     items: '',
     inTotal: '',
+    category: PRODUCT_CATEGORIES[12],
 })
 
 const CURRENCY_ENUM_BY_OPTION: Record<CurrencyOption, number> = {
@@ -43,22 +45,30 @@ const mapCurrencyOptionToEnum = (currency: CurrencyOption) => CURRENCY_ENUM_BY_O
 
 const mapCurrencyEnumToLabel = (currency: number) => CURRENCY_LABEL_BY_ENUM[currency] ?? 'EUR'
 
-const mapBusinessToDeclaration = (item: BusinessDeclarationResponse): Declaration => ({
-    id: String(item.id),
-    user_id: String(item.userId),
-    awb_number: item.trackingCode,
-    hs_code: item.hsCode,
-    description: item.senderName ? `${item.productName} (${item.senderName})` : item.productName,
-    quantity: item.quantity,
-    gross_weight: 0,
-    customs_value: Number(item.totalCost),
-    currency: mapCurrencyEnumToLabel(item.currency),
-    vat: 0,
-    customs_duty: 0,
-    excise: 0,
-    total_taxes: 0,
-    status: 'Under Review',
-})
+const mapBusinessToDeclaration = (item: BusinessDeclarationResponse): Declaration => {
+    const category = PRODUCT_CATEGORIES[item.category] ?? PRODUCT_CATEGORIES[12]
+    const baseValue = Number(item.totalCost)
+    const taxes = calculateTaxes(baseValue, category)
+    return {
+        id: String(item.id),
+        user_id: String(item.userId),
+        awb_number: item.trackingCode,
+        hs_code: item.hsCode,
+        description: item.productName,
+        quantity: item.quantity,
+        gross_weight: 0,
+        customs_value: baseValue,
+        currency: mapCurrencyEnumToLabel(item.currency),
+        vat: taxes.vat,
+        customs_duty: taxes.customsDuty,
+        excise: taxes.excise,
+        total_taxes: taxes.totalAmount,
+        status: 'Under Review',
+        sender_name: item.senderName,
+        product_url: item.productURL,
+        category_label: category.label,
+    }
+}
 
 export default function BusinessDeclarations() {
     const session = getSession()
@@ -116,7 +126,7 @@ export default function BusinessDeclarations() {
         setPopupError(null)
     }
 
-    const handleUpdateProduct = (productId: string, field: ProductField, value: string | number | '') => {
+    const handleUpdateProduct = (productId: string, field: ProductField, value: string | number | '' | ProductCategory) => {
         setProducts((prev) => prev.map((product) => (product.id === productId ? { ...product, [field]: value } : product)))
     }
 
@@ -140,6 +150,7 @@ export default function BusinessDeclarations() {
             hsCode: '',
             items: '',
             inTotal: '',
+            category: PRODUCT_CATEGORIES[12],
         } : product)))
     }
 
@@ -187,6 +198,7 @@ export default function BusinessDeclarations() {
                 quantity: Number(product.items),
                 totalCost: Number(product.inTotal),
                 currency: currencyEnum,
+                category: product.category.value,
             })))
 
             await loadDeclarations()
