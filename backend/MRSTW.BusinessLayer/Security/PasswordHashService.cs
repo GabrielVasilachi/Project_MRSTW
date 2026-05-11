@@ -30,7 +30,6 @@ public static class PasswordHashService
                    result == PasswordVerificationResult.SuccessRehashNeeded;
         }
 
-        //De eliminat dupa migrarea parolelor.
         if (storedPassword == password)
         {
             requiresHashUpdate = true;

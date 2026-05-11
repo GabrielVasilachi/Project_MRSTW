@@ -48,5 +48,8 @@ public class BusinessDeclarationEntity
     public CurrencyEnum Currency { get; set; } = CurrencyEnum.EUR;
 
     [Required]
+    public ProductCategoryEnum Category { get; set; } = ProductCategoryEnum.Altele;
+
+    [Required]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

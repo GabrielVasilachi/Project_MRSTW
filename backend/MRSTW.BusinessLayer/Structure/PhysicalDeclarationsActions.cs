@@ -101,7 +101,8 @@ public class PhysicalDeclarationsActions
             TrackingCode = request.TrackingCode.Trim(),
             Quantity = request.Quantity,
             TotalCost = request.TotalCost,
-            Currency = request.Currency
+            Currency = request.Currency,
+            Category = request.Category
         };
 
         try
@@ -128,6 +129,7 @@ public class PhysicalDeclarationsActions
             Quantity = declaration.Quantity,
             TotalCost = declaration.TotalCost,
             Currency = declaration.Currency,
+            Category = declaration.Category,
             CreatedAt = declaration.CreatedAt
         };
 
@@ -163,6 +165,7 @@ public class PhysicalDeclarationsActions
                 Quantity = d.Quantity,
                 TotalCost = d.TotalCost,
                 Currency = d.Currency,
+                Category = d.Category,
                 CreatedAt = d.CreatedAt
             })
             .ToList();

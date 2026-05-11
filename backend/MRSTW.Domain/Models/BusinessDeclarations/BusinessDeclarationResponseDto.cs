@@ -14,5 +14,6 @@ public class BusinessDeclarationResponseDto
     public int Quantity { get; set; }
     public decimal TotalCost { get; set; }
     public CurrencyEnum Currency { get; set; }
+    public ProductCategoryEnum Category { get; set; }
     public DateTime CreatedAt { get; set; }
 }

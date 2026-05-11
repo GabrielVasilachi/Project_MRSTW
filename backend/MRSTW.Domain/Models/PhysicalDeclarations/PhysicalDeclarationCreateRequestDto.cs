@@ -11,4 +11,5 @@ public class PhysicalDeclarationCreateRequestDto
     public int Quantity { get; set; }
     public decimal TotalCost { get; set; }
     public CurrencyEnum Currency { get; set; } = CurrencyEnum.EUR;
+    public ProductCategoryEnum Category { get; set; } = ProductCategoryEnum.Altele;
 }
