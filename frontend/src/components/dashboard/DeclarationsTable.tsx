@@ -31,10 +31,18 @@ function DeclarationModal({ d, user, onClose }: {
                     ? <ModalField label="Utilizator" value={`${user.name} (${user.type})`} />
                     : <div />
                 }
-                <ModalField label="Cod HS" value={d.hs_code} mono />
+                {d.hs_code && d.hs_code !== 'N/A' && <ModalField label="Cod HS" value={d.hs_code} mono />}
                 <ModalField label="Descriere" value={d.description} />
+                {d.sender_name && <ModalField label="Expeditor" value={d.sender_name} />}
+                {d.category_label && <ModalField label="Categorie" value={d.category_label} />}
                 <ModalField label="Cantitate" value={d.quantity} />
-                <ModalField label="Greutate brută" value={`${d.gross_weight} kg`} />
+                <ModalField label="Valoare vamală" value={`${d.customs_value} ${d.currency}`} />
+                {d.product_url && (
+                    <div className="col-span-2">
+                        <p className="text-xs font-medium uppercase tracking-wide text-gray-400">URL Produs</p>
+                        <a href={d.product_url} target="_blank" rel="noopener noreferrer" className="text-sm text-sky-600 hover:underline break-all">{d.product_url}</a>
+                    </div>
+                )}
             </ModalSection>
 
             <div className="px-6 pb-5">

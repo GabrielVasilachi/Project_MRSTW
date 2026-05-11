@@ -51,4 +51,9 @@ public class BusinessLogic
     {
         return new DocumentLogic();
     }
+
+    public ITaxCalculatorLogic GetTaxCalculatorLogic()
+    {
+        return new TaxCalculatorLogic();
+    }
 }

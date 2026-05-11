@@ -1,3 +1,5 @@
+import TaxBreakdown, { PRODUCT_CATEGORIES, type ProductCategory } from './TaxBreakdown'
+
 export type CurrencyOption = 'USD($)' | 'EUR(€)' | 'MDL' | 'RON'
 
 export type ProductDraft = {
@@ -7,6 +9,7 @@ export type ProductDraft = {
     productUrl: string
     items: number | ''
     inTotal: number | ''
+    category: ProductCategory
 }
 
 export type ProductField = Exclude<keyof ProductDraft, 'id'>
@@ -150,6 +153,28 @@ export default function IndividualPopupDeclaration({
                                 </div>
                             </div>
 
+                            <p className="pt-1 text-sm font-bold text-slate-800">CATEGORIA PRODUSULUI</p>
+
+                            <div>
+                                <label className="mb-2 block text-sm font-medium text-gray-700">Selectați categoria</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {PRODUCT_CATEGORIES.map(cat => (
+                                        <button
+                                            key={cat.value}
+                                            type="button"
+                                            onClick={() => onUpdateProduct(product.id, 'category', cat)}
+                                            className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                                                product.category.value === cat.value
+                                                    ? 'border-sky-600 bg-sky-600 text-white'
+                                                    : 'border-gray-200 bg-white text-gray-600 hover:border-sky-300 hover:text-sky-700'
+                                            }`}
+                                        >
+                                            {cat.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
                             <p className="pt-1 text-sm font-bold text-slate-800">VALOAREA BUNURILOR</p>
 
                             <div className="space-y-3">
@@ -190,6 +215,13 @@ export default function IndividualPopupDeclaration({
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Tax breakdown — shown when value is entered */}
+                            <TaxBreakdown
+                                baseValue={typeof product.inTotal === 'number' ? product.inTotal : 0}
+                                category={product.category}
+                                currency={currency.includes('MDL') ? 'MDL' : currency.includes('USD') ? 'USD' : currency.includes('RON') ? 'RON' : 'EUR'}
+                            />
                         </div>
                     ))}
 

@@ -13,4 +13,7 @@ export type Declaration = {
     excise: number
     total_taxes: number
     status: string
+    sender_name?: string
+    product_url?: string
+    category_label?: string
 }

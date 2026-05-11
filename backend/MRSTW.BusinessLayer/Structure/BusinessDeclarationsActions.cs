@@ -121,7 +121,8 @@ public class BusinessDeclarationsActions
             HSCode = request.HSCode.Trim(),
             Quantity = request.Quantity,
             TotalCost = request.TotalCost,
-            Currency = request.Currency
+            Currency = request.Currency,
+            Category = request.Category
         };
 
         try
@@ -150,6 +151,7 @@ public class BusinessDeclarationsActions
             Quantity = declaration.Quantity,
             TotalCost = declaration.TotalCost,
             Currency = declaration.Currency,
+            Category = declaration.Category,
             CreatedAt = declaration.CreatedAt
         };
 
@@ -187,6 +189,7 @@ public class BusinessDeclarationsActions
                 Quantity = d.Quantity,
                 TotalCost = d.TotalCost,
                 Currency = d.Currency,
+                Category = d.Category,
                 CreatedAt = d.CreatedAt
             })
             .ToList();
