@@ -13,7 +13,7 @@ import IndividualPopupDeclaration, {
     type ProductDraft,
     type ProductField,
 } from '../../../components/dashboard/IndividualPopupDeclaration'
-import { PRODUCT_CATEGORIES, calculateTaxes } from '../../../components/dashboard/TaxBreakdown'
+import { PRODUCT_CATEGORIES, calculateTaxes, type ProductCategory } from '../../../components/dashboard/TaxBreakdown'
 
 const createEmptyProduct = (): ProductDraft => ({
     id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
@@ -123,7 +123,7 @@ export default function IndividualDeclarations() {
         setPopupError(null)
     }
 
-    const handleUpdateProduct = (productId: string, field: ProductField, value: string | number | '') => {
+    const handleUpdateProduct = (productId: string, field: ProductField, value: string | number | '' | ProductCategory) => {
         setProducts((prev) => prev.map((product) => (product.id === productId ? { ...product, [field]: value } : product)))
     }
 

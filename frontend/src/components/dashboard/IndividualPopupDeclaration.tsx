@@ -22,7 +22,7 @@ type IndividualPopupDeclarationProps = {
     currency: CurrencyOption
     onCurrencyChange: (value: CurrencyOption) => void
     products: ProductDraft[]
-    onUpdateProduct: (productId: string, field: ProductField, value: string | number | '') => void
+    onUpdateProduct: (productId: string, field: ProductField, value: string | number | '' | ProductCategory) => void
     onAddProduct: () => void
     onDeleteProduct: (productId: string) => void
     onResetProduct: (productId: string) => void
