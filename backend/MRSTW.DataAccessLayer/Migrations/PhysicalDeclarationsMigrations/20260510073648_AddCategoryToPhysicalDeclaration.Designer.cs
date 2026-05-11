@@ -3,17 +3,20 @@ using System;
 using MRSTW.DataAccessLayer.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace MRSTW.DataAccessLayer.Migrations.BusinessDeclarationsMigrations
+namespace MRSTW.DataAccessLayer.Migrations.PhysicalDeclarationsMigrations
 {
-    [DbContext(typeof(BusinessDeclarationsDbContext))]
-    partial class BusinessDeclarationsDbContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(PhysicalDeclarationsDbContext))]
+    [Migration("20260510073648_AddCategoryToPhysicalDeclaration")]
+    partial class AddCategoryToPhysicalDeclaration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,7 +25,7 @@ namespace MRSTW.DataAccessLayer.Migrations.BusinessDeclarationsMigrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("MRSTW.Domain.Entities.BusinessDeclarations.BusinessDeclarationEntity", b =>
+            modelBuilder.Entity("MRSTW.Domain.Entities.PhysicalDeclarations.PhysicalDeclarationEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -39,11 +42,6 @@ namespace MRSTW.DataAccessLayer.Migrations.BusinessDeclarationsMigrations
                     b.Property<int>("Currency")
                         .HasColumnType("integer");
 
-                    b.Property<string>("HSCode")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
                     b.Property<string>("ProductName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -56,11 +54,6 @@ namespace MRSTW.DataAccessLayer.Migrations.BusinessDeclarationsMigrations
 
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
-
-                    b.Property<string>("SenderName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
 
                     b.Property<decimal>("TotalCost")
                         .HasColumnType("numeric(18,2)");
@@ -77,7 +70,7 @@ namespace MRSTW.DataAccessLayer.Migrations.BusinessDeclarationsMigrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("BusinessDeclaration", (string)null);
+                    b.ToTable("PhysicalDeclaration", (string)null);
                 });
 
             modelBuilder.Entity("MRSTW.Domain.Entities.Users.UserEntity", b =>
@@ -126,7 +119,7 @@ namespace MRSTW.DataAccessLayer.Migrations.BusinessDeclarationsMigrations
                         });
                 });
 
-            modelBuilder.Entity("MRSTW.Domain.Entities.BusinessDeclarations.BusinessDeclarationEntity", b =>
+            modelBuilder.Entity("MRSTW.Domain.Entities.PhysicalDeclarations.PhysicalDeclarationEntity", b =>
                 {
                     b.HasOne("MRSTW.Domain.Entities.Users.UserEntity", "User")
                         .WithMany()
