@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import TaxBreakdown, { PRODUCT_CATEGORIES, type ProductCategory } from './TaxBreakdown'
 
 export type CurrencyOption = 'USD($)' | 'EUR(€)' | 'MDL' | 'RON'
@@ -18,6 +19,32 @@ export type ProductField = Exclude<keyof ProductDraft, 'id'>
 
 const CURRENCY_OPTIONS: CurrencyOption[] = ['USD($)', 'EUR(€)', 'MDL', 'RON']
 
+function getFieldError(field: string, value: string | number | ''): string | null {
+    switch (field) {
+        case 'productName':
+            return !String(value).trim() ? 'Denumirea produsului este obligatorie.' : null
+        case 'productUrl':
+            return !String(value).trim() ? 'URL-ul produsului este obligatoriu.' : null
+        case 'trackingNumber':
+            return !String(value).trim() ? 'Numărul de tracking este obligatoriu.' : null
+        case 'senderName':
+            return !String(value).trim() ? 'Denumirea expeditorului este obligatorie.' : null
+        case 'hsCode':
+            return !String(value).trim() ? 'Codul HS este obligatoriu.' : null
+        case 'items':
+            if (value === '' || value === undefined) return 'Numărul de articole este obligatoriu.'
+            if (Number(value) <= 0) return 'Numărul de articole trebuie să fie mai mare decât 0.'
+            if (!Number.isInteger(Number(value))) return 'Numărul de articole trebuie să fie un număr întreg.'
+            return null
+        case 'inTotal':
+            if (value === '' || value === undefined) return 'Valoarea totală este obligatorie.'
+            if (Number(value) < 0) return 'Valoarea totală nu poate fi negativă.'
+            return null
+        default:
+            return null
+    }
+}
+
 type BusinessPopupDeclarationProps = {
     isOpen: boolean
     onClose: () => void
@@ -32,6 +59,8 @@ type BusinessPopupDeclarationProps = {
     onSave: () => void
 }
 
+const VALIDATED_FIELDS: ProductField[] = ['productName', 'productUrl', 'trackingNumber', 'senderName', 'hsCode', 'items', 'inTotal']
+
 export default function BusinessPopupDeclaration({
     isOpen,
     onClose,
@@ -45,9 +74,37 @@ export default function BusinessPopupDeclaration({
     popupError,
     onSave,
 }: BusinessPopupDeclarationProps) {
-    if (!isOpen) {
-        return null
+    const [touched, setTouched] = useState<Set<string>>(new Set())
+
+    useEffect(() => {
+        if (!isOpen) setTouched(new Set())
+    }, [isOpen])
+
+    const touch = (productId: string, field: string) => {
+        setTouched(prev => new Set(prev).add(`${productId}-${field}`))
     }
+
+    const isTouched = (productId: string, field: string) => touched.has(`${productId}-${field}`)
+
+    const err = (productId: string, field: ProductField, value: string | number | '') => {
+        if (!isTouched(productId, field)) return null
+        return getFieldError(field, value)
+    }
+
+    const handleSave = () => {
+        const all = new Set<string>()
+        products.forEach(p => VALIDATED_FIELDS.forEach(f => all.add(`${p.id}-${f}`)))
+        setTouched(all)
+        onSave()
+    }
+
+    const inputClass = (hasError: boolean) =>
+        `w-full rounded-md border px-3 py-2 text-sm ${hasError ? 'border-red-400 bg-red-50 focus:outline-none focus:ring-1 focus:ring-red-400' : 'border-gray-200'}`
+
+    const FieldError = ({ msg }: { msg: string | null }) =>
+        msg ? <p className="mt-1 text-xs text-red-500">{msg}</p> : null
+
+    if (!isOpen) return null
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -60,16 +117,11 @@ export default function BusinessPopupDeclaration({
 
             <div className="relative z-10 flex w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
                 <div className="flex items-center justify-between border-b border-sky-700 bg-blue-900 px-6 py-4 text-white">
-                    <div className="flex items-center gap-3">
-                        <div>
-                            <h2 className="text-xl font-extrabold tracking-wide">DECLARAȚIE VAMALĂ</h2>
-                        </div>
-                    </div>
-
+                    <h2 className="text-xl font-extrabold tracking-wide">DECLARAȚIE VAMALĂ</h2>
                     <button
                         type="button"
                         onClick={onClose}
-                        className="justify-self-end flex h-8 w-8 items-center justify-center rounded border border-white/70 text-white hover:bg-white/15"
+                        className="flex h-8 w-8 items-center justify-center rounded border border-white/70 text-white hover:bg-white/15"
                         aria-label="Inchide"
                     >
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -83,9 +135,7 @@ export default function BusinessPopupDeclaration({
                         <svg className="mt-0.5 h-4 w-4 shrink-0 text-sky-700" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path d="M12 2a10 10 0 1 0 10 10A10.01 10.01 0 0 0 12 2Zm0 4a1.25 1.25 0 1 1-1.25 1.25A1.25 1.25 0 0 1 12 6Zm1.5 12h-3v-1.5h.75v-4H10v-1.5h2.5v5.5h1Z" />
                         </svg>
-                        <p>
-                            <strong>Completați datele cu atenție.</strong> Informațiile furnizate vor fi utilizate în scopuri de control vamal.
-                        </p>
+                        <p><strong>Completați datele cu atenție.</strong> Informațiile furnizate vor fi utilizate în scopuri de control vamal.</p>
                     </div>
 
                     <div className="rounded-lg border border-gray-400 bg-white p-4">
@@ -102,149 +152,175 @@ export default function BusinessPopupDeclaration({
                         </select>
                     </div>
 
-                    {products.map((product, index) => (
-                        <div key={product.id} className="space-y-4 rounded-lg border border-gray-400 p-4">
-                            <p className="text-sm font-bold text-slate-800">
-                                INFORMAȚII DESPRE PRODUS{products.length > 1 ? ` - PRODUS ${index + 1}` : ''}
-                            </p>
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <div>
-                                    <label className="mb-1 block text-sm font-medium text-gray-700">Denumirea produsului</label>
-                                    <input
-                                        value={product.productName}
-                                        onChange={(e) => onUpdateProduct(product.id, 'productName', e.target.value)}
-                                        className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
-                                        placeholder="Introduceți denumirea completă a produsului"
-                                    />
+                    {products.map((product, index) => {
+                        const eProductName = err(product.id, 'productName', product.productName)
+                        const eProductUrl  = err(product.id, 'productUrl',  product.productUrl)
+                        const eTracking    = err(product.id, 'trackingNumber', product.trackingNumber)
+                        const eSenderName  = err(product.id, 'senderName',  product.senderName)
+                        const eHsCode      = err(product.id, 'hsCode',      product.hsCode)
+                        const eItems       = err(product.id, 'items',       product.items)
+                        const eInTotal     = err(product.id, 'inTotal',     product.inTotal)
+
+                        return (
+                            <div key={product.id} className="space-y-4 rounded-lg border border-gray-400 p-4">
+                                <p className="text-sm font-bold text-slate-800">
+                                    INFORMAȚII DESPRE PRODUS{products.length > 1 ? ` - PRODUS ${index + 1}` : ''}
+                                </p>
+
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-gray-700">Denumirea produsului</label>
+                                        <input
+                                            value={product.productName}
+                                            onChange={(e) => onUpdateProduct(product.id, 'productName', e.target.value)}
+                                            onBlur={() => touch(product.id, 'productName')}
+                                            className={inputClass(!!eProductName)}
+                                            placeholder="Introduceți denumirea completă a produsului"
+                                        />
+                                        <FieldError msg={eProductName} />
+                                    </div>
+
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-gray-700">URL produs</label>
+                                        <input
+                                            value={product.productUrl}
+                                            onChange={(e) => onUpdateProduct(product.id, 'productUrl', e.target.value)}
+                                            onBlur={() => touch(product.id, 'productUrl')}
+                                            className={inputClass(!!eProductUrl)}
+                                            placeholder="https://..."
+                                        />
+                                        <FieldError msg={eProductUrl} />
+                                    </div>
+
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-gray-700">HS code</label>
+                                        <input
+                                            value={product.hsCode}
+                                            onChange={(e) => onUpdateProduct(product.id, 'hsCode', e.target.value)}
+                                            onBlur={() => touch(product.id, 'hsCode')}
+                                            className={inputClass(!!eHsCode)}
+                                            placeholder="Ex: 8471.30"
+                                        />
+                                        <FieldError msg={eHsCode} />
+                                    </div>
                                 </div>
 
-                                <div>
-                                    <label className="mb-1 block text-sm font-medium text-gray-700">URL produs</label>
-                                    <input
-                                        value={product.productUrl}
-                                        onChange={(e) => onUpdateProduct(product.id, 'productUrl', e.target.value)}
-                                        className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
-                                        placeholder="https://..."
-                                    />
-                                </div>
+                                <p className="pt-1 text-sm font-bold text-slate-800">INFORMAȚII DESPRE EXPEDIERE</p>
 
-                                <div>
-                                    <label className="mb-1 block text-sm font-medium text-gray-700">HS code</label>
-                                    <input
-                                        value={product.hsCode}
-                                        onChange={(e) => onUpdateProduct(product.id, 'hsCode', e.target.value)}
-                                        className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
-                                        placeholder="Ex: 8471.30"
-                                    />
-                                </div>
-                            </div>
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-gray-700">Număr de urmărire (tracking)</label>
+                                        <input
+                                            value={product.trackingNumber}
+                                            onChange={(e) => onUpdateProduct(product.id, 'trackingNumber', e.target.value)}
+                                            onBlur={() => touch(product.id, 'trackingNumber')}
+                                            className={inputClass(!!eTracking)}
+                                            placeholder="Ex: 176-12345678"
+                                        />
+                                        <FieldError msg={eTracking} />
+                                    </div>
 
-                            <p className="pt-1 text-sm font-bold text-slate-800">INFORMAȚII DESPRE EXPEDIERE</p>
-
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                <div>
-                                    <label className="mb-1 block text-sm font-medium text-gray-700">Număr de urmărire (tracking)</label>
-                                    <input
-                                        value={product.trackingNumber}
-                                        onChange={(e) => onUpdateProduct(product.id, 'trackingNumber', e.target.value)}
-                                        className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
-                                        placeholder="Ex: 176-12345678"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="mb-1 block text-sm font-medium text-gray-700">Număr de articole</label>
-                                    <input
-                                        type="number"
-                                        min={1}
-                                        value={product.items}
-                                        onChange={(e) => onUpdateProduct(product.id, 'items', e.target.value === '' ? '' : Number(e.target.value))}
-                                        className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
-                                        placeholder="1"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="mb-1 block text-sm font-medium text-gray-700">Denumirea Expeditorului</label>
-                                    <input
-                                        value={product.senderName}
-                                        onChange={(e) => onUpdateProduct(product.id, 'senderName', e.target.value)}
-                                        className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
-                                        placeholder="Introduceți numele expeditorului"
-                                    />
-                                </div>
-                            </div>
-
-                            <p className="pt-1 text-sm font-bold text-slate-800">CATEGORIA PRODUSULUI</p>
-
-                            <div>
-                                <label className="mb-2 block text-sm font-medium text-gray-700">Selectați categoria</label>
-                                <div className="flex flex-wrap gap-2">
-                                    {PRODUCT_CATEGORIES.map(cat => (
-                                        <button
-                                            key={cat.value}
-                                            type="button"
-                                            onClick={() => onUpdateProduct(product.id, 'category', cat)}
-                                            className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
-                                                product.category.value === cat.value
-                                                    ? 'border-sky-600 bg-sky-600 text-white'
-                                                    : 'border-gray-200 bg-white text-gray-600 hover:border-sky-300 hover:text-sky-700'
-                                            }`}
-                                        >
-                                            {cat.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <p className="pt-1 text-sm font-bold text-slate-800">VALOAREA BUNURILOR</p>
-
-                            <div className="space-y-3">
-                                <label className="mb-1 block text-sm font-medium text-gray-700">Valoarea totală declarată</label>
-                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                    <div className="grid w-full max-w-[520px] grid-cols-[1fr_auto] items-center gap-2 rounded-md border border-gray-200 px-3 py-2">
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-gray-700">Număr de articole</label>
                                         <input
                                             type="number"
-                                            min={0}
-                                            step="0.01"
-                                            value={product.inTotal}
-                                            onChange={(e) => onUpdateProduct(product.id, 'inTotal', e.target.value === '' ? '' : Number(e.target.value))}
-                                            className="w-full border-0 p-0 text-sm focus:outline-none"
-                                            placeholder="0.00"
+                                            min={1}
+                                            value={product.items}
+                                            onChange={(e) => onUpdateProduct(product.id, 'items', e.target.value === '' ? '' : Number(e.target.value))}
+                                            onBlur={() => touch(product.id, 'items')}
+                                            className={inputClass(!!eItems)}
+                                            placeholder="1"
                                         />
-                                        <span className="text-sm font-medium text-slate-500">{currency.includes('MDL') ? 'MDL' : currency}</span>
+                                        <FieldError msg={eItems} />
                                     </div>
 
-                                    <div className="flex items-center justify-end gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => onResetProduct(product.id)}
-                                            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"
-                                        >
-                                            <img src="/images/Reset.svg" alt="Reset" className="h-4 w-4" />
-                                            <span>Reset</span>
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => onDeleteProduct(product.id)}
-                                            disabled={products.length === 1}
-                                            className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                                        >
-                                            <img src="/images/Delete.svg" alt="Delete" className="h-4 w-4" />
-                                            <span>Șterge</span>
-                                        </button>
+                                    <div>
+                                        <label className="mb-1 block text-sm font-medium text-gray-700">Denumirea Expeditorului</label>
+                                        <input
+                                            value={product.senderName}
+                                            onChange={(e) => onUpdateProduct(product.id, 'senderName', e.target.value)}
+                                            onBlur={() => touch(product.id, 'senderName')}
+                                            className={inputClass(!!eSenderName)}
+                                            placeholder="Introduceți numele expeditorului"
+                                        />
+                                        <FieldError msg={eSenderName} />
                                     </div>
                                 </div>
-                            </div>
 
-                            <TaxBreakdown
-                                baseValue={typeof product.inTotal === 'number' ? product.inTotal : 0}
-                                category={product.category}
-                                currency={currency.includes('MDL') ? 'MDL' : currency.includes('USD') ? 'USD' : currency.includes('RON') ? 'RON' : 'EUR'}
-                            />
-                        </div>
-                    ))}
+                                <p className="pt-1 text-sm font-bold text-slate-800">CATEGORIA PRODUSULUI</p>
+
+                                <div>
+                                    <label className="mb-2 block text-sm font-medium text-gray-700">Selectați categoria</label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {PRODUCT_CATEGORIES.map(cat => (
+                                            <button
+                                                key={cat.value}
+                                                type="button"
+                                                onClick={() => onUpdateProduct(product.id, 'category', cat)}
+                                                className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                                                    product.category.value === cat.value
+                                                        ? 'border-sky-600 bg-sky-600 text-white'
+                                                        : 'border-gray-200 bg-white text-gray-600 hover:border-sky-300 hover:text-sky-700'
+                                                }`}
+                                            >
+                                                {cat.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <p className="pt-1 text-sm font-bold text-slate-800">VALOAREA BUNURILOR</p>
+
+                                <div className="space-y-3">
+                                    <label className="mb-1 block text-sm font-medium text-gray-700">Valoarea totală declarată</label>
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                        <div className="w-full max-w-[520px]">
+                                            <div className={`grid grid-cols-[1fr_auto] items-center gap-2 rounded-md border px-3 py-2 ${eInTotal ? 'border-red-400 bg-red-50' : 'border-gray-200'}`}>
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    step="0.01"
+                                                    value={product.inTotal}
+                                                    onChange={(e) => onUpdateProduct(product.id, 'inTotal', e.target.value === '' ? '' : Number(e.target.value))}
+                                                    onBlur={() => touch(product.id, 'inTotal')}
+                                                    className="w-full border-0 bg-transparent p-0 text-sm focus:outline-none"
+                                                    placeholder="0.00"
+                                                />
+                                                <span className="text-sm font-medium text-slate-500">{currency.includes('MDL') ? 'MDL' : currency}</span>
+                                            </div>
+                                            <FieldError msg={eInTotal} />
+                                        </div>
+
+                                        <div className="flex items-center justify-end gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => onResetProduct(product.id)}
+                                                className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                                            >
+                                                <img src="/images/Reset.svg" alt="Reset" className="h-4 w-4" />
+                                                <span>Reset</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => onDeleteProduct(product.id)}
+                                                disabled={products.length === 1}
+                                                className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                <img src="/images/Delete.svg" alt="Delete" className="h-4 w-4" />
+                                                <span>Șterge</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <TaxBreakdown
+                                    baseValue={typeof product.inTotal === 'number' ? product.inTotal : 0}
+                                    category={product.category}
+                                    currency={currency.includes('MDL') ? 'MDL' : currency.includes('USD') ? 'USD' : currency.includes('RON') ? 'RON' : 'EUR'}
+                                />
+                            </div>
+                        )
+                    })}
 
                     {popupError ? (
                         <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -265,7 +341,7 @@ export default function BusinessPopupDeclaration({
 
                     <button
                         type="button"
-                        onClick={onSave}
+                        onClick={handleSave}
                         className="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-sky-700"
                     >
                         <img src="/Save.svg" alt="Save" className="h-4 w-4" />
