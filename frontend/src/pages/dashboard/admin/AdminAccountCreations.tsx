@@ -38,6 +38,7 @@ export default function AdminAccountCreations() {
 
 	const [adminPhoneNumber, setAdminPhoneNumber] = useState('')
 	const [adminPassword, setAdminPassword] = useState('')
+	const [showAdminPassword, setShowAdminPassword] = useState(false)
 
 	const [successMessage, setSuccessMessage] = useState<string | null>(null)
 	const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -131,7 +132,7 @@ export default function AdminAccountCreations() {
 						onChange={(e) => setRole(e.target.value as UserRole)}
 						className="mt-2 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm"
 					>
-						<option className='bg-gray-50' value="individual">individual</option>
+						<option className="bg-gray-50" value="individual">individual</option>
 						<option value="business">business</option>
 						<option value="admin">admin</option>
 					</select>
@@ -162,17 +163,17 @@ export default function AdminAccountCreations() {
 							/>
 						</div>
 
-							<div>
-								<label className="block text-sm font-medium text-gray-700">Location Address</label>
-								<input
-									type="text"
-									value={individualAddress}
-									onChange={(e) => setIndividualAddress(e.target.value)}
-									className="mt-2 w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
-									placeholder="ex: Str. Dacia 20, Chisinau"
-									required
-								/>
-							</div>
+						<div>
+							<label className="block text-sm font-medium text-gray-700">Location Address</label>
+							<input
+								type="text"
+								value={individualAddress}
+								onChange={(e) => setIndividualAddress(e.target.value)}
+								className="mt-2 w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
+								placeholder="ex: Str. Dacia 20, Chisinau"
+								required
+							/>
+						</div>
 
 						<div>
 							<label className="block text-sm font-medium text-gray-700">Phone Number</label>
@@ -266,14 +267,28 @@ export default function AdminAccountCreations() {
 
 						<div>
 							<label className="block text-sm font-medium text-gray-700">Parolă admin</label>
-							<input
-								type="password"
-								value={adminPassword}
-								onChange={(e) => setAdminPassword(e.target.value)}
-								className="mt-2 w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
-								placeholder="Setează parola contului admin"
-								required
-							/>
+							<div className="relative mt-2">
+								<input
+									type={showAdminPassword ? 'text' : 'password'}
+									value={adminPassword}
+									onChange={(e) => setAdminPassword(e.target.value)}
+									className="w-full rounded-md border border-gray-200 px-3 py-2 pr-11 text-sm"
+									placeholder="Setează parola contului admin"
+									required
+								/>
+								<button
+									type="button"
+									onClick={() => setShowAdminPassword((prev) => !prev)}
+									className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 hover:bg-gray-100"
+									aria-label={showAdminPassword ? 'Ascunde parola' : 'Afiseaza parola'}
+								>
+									<img
+										src={showAdminPassword ? '/images/noviewpass.svg' : '/images/viewpass.svg'}
+										alt=""
+										className="h-5 w-5"
+									/>
+								</button>
+							</div>
 						</div>
 					</>
 				)}

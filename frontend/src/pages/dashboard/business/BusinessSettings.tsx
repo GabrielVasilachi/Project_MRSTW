@@ -50,6 +50,7 @@ export default function BusinessSettings() {
         eoriCode: '',
     })
     const [password, setPassword] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
     const [loading, setLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -273,12 +274,26 @@ export default function BusinessSettings() {
                     <p className="mt-1 text-xs text-gray-500">
                         Pentru a salva modificările, introdu parola contului companiei.
                     </p>
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500/20"
-                    />
+                    <div className="relative mt-3">
+                        <input
+                            type={showPassword ? 'text' : 'password'}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-11 text-sm text-gray-900 focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500/20"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword((prev) => !prev)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 hover:bg-gray-100"
+                            aria-label={showPassword ? 'Ascunde parola' : 'Afiseaza parola'}
+                        >
+                            <img
+                                src={showPassword ? '/images/noviewpass.svg' : '/images/viewpass.svg'}
+                                alt=""
+                                className="h-5 w-5"
+                            />
+                        </button>
+                    </div>
                 </div>
 
                 {error ? (

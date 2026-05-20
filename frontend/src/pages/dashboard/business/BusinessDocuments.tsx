@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
 import { deleteDocument as deleteDocumentRequest, downloadDocumentFile, getDocumentsByUserId, uploadDocument } from '../../../api/documentsApi'
+import { getBusinessProfileByUserId } from '../../../api/profilesApi'
 import type { DocumentInfo } from '../../../api/types/document'
 import { getSession } from '../../../auth/auth.session'
 import KpiCard from '../../../components/dashboard/KpiCard'
 import BusinessVerificationBanner from '../../../components/dashboard/BusinessVerificationBanner'
 import { formatBytes } from '../../../utils/format'
+import { hasMissingBusinessProfileData } from '../../../utils/profileValidation'
 import { useBusinessProfileName } from './businessProfileData'
 
 export default function BusinessDocuments() {
@@ -19,6 +21,37 @@ export default function BusinessDocuments() {
     const [successMsg, setSuccessMsg] = useState<string | null>(null)
     const [dragOver, setDragOver] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const [needsVerification, setNeedsVerification] = useState(false)
+
+    useEffect(() => {
+        if (!userId) {
+            setNeedsVerification(false)
+            return
+        }
+
+        const currentUserId = userId
+        let ignore = false
+
+        async function loadProfileStatus() {
+            try {
+                const profile = await getBusinessProfileByUserId(currentUserId)
+
+                if (!ignore) {
+                    setNeedsVerification(hasMissingBusinessProfileData(profile))
+                }
+            } catch {
+                if (!ignore) {
+                    setNeedsVerification(false)
+                }
+            }
+        }
+
+        loadProfileStatus()
+
+        return () => {
+            ignore = true
+        }
+    }, [userId])
 
     const loadDocuments = useCallback(async () => {
         if (!userId) {
@@ -104,7 +137,7 @@ export default function BusinessDocuments() {
 
     return (
         <div className="space-y-8">
-            <BusinessVerificationBanner />
+            {needsVerification ? <BusinessVerificationBanner /> : null}
 
             <div>
                 <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Documente companie</h1>

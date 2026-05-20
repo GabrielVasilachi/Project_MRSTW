@@ -3,11 +3,13 @@ import axios from 'axios'
 import type { Declaration } from '../../../types/declaration'
 import { getSession } from '../../../auth/auth.session'
 import { createBusinessDeclaration, getBusinessDeclarationsByUserId } from '../../../api/businessDeclarationsApi'
+import { getBusinessProfileByUserId } from '../../../api/profilesApi'
 import type { BusinessDeclarationResponse } from '../../../api/types/businessDeclaration'
 import KpiCard from '../../../components/dashboard/KpiCard'
 import { fmt } from '../../../utils/format'
 import DeclarationsTable from '../../../components/dashboard/DeclarationsTable'
 import BusinessVerificationBanner from '../../../components/dashboard/BusinessVerificationBanner'
+import { hasMissingBusinessProfileData } from '../../../utils/profileValidation'
 import BusinessPopupDeclaration, {
     type CurrencyOption,
     type ProductDraft,
@@ -84,6 +86,37 @@ export default function BusinessDeclarations() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [isSaving, setIsSaving] = useState(false)
+    const [needsVerification, setNeedsVerification] = useState(false)
+
+    useEffect(() => {
+        if (!userId) {
+            setNeedsVerification(false)
+            return
+        }
+
+        const currentUserId = userId
+        let ignore = false
+
+        async function loadProfileStatus() {
+            try {
+                const profile = await getBusinessProfileByUserId(currentUserId)
+
+                if (!ignore) {
+                    setNeedsVerification(hasMissingBusinessProfileData(profile))
+                }
+            } catch {
+                if (!ignore) {
+                    setNeedsVerification(false)
+                }
+            }
+        }
+
+        loadProfileStatus()
+
+        return () => {
+            ignore = true
+        }
+    }, [userId])
 
     const companyDeclarations = useMemo(
         () => businessDeclarations.map(mapBusinessToDeclaration),
@@ -217,7 +250,7 @@ export default function BusinessDeclarations() {
 
     return (
         <div className="space-y-8">
-            <BusinessVerificationBanner />
+            {needsVerification ? <BusinessVerificationBanner /> : null}
 
             <div className="space-y-4">
                 <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Declarații companie</h1>

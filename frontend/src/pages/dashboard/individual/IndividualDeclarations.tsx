@@ -3,11 +3,13 @@ import axios from 'axios'
 import type { Declaration } from '../../../types/declaration'
 import { getSession } from '../../../auth/auth.session'
 import { createPhysicalDeclaration, getPhysicalDeclarationsByUserId } from '../../../api/physicalDeclarationsApi'
+import { getPhysicalProfileByUserId } from '../../../api/profilesApi'
 import type { PhysicalDeclarationResponse } from '../../../api/types/physicalDeclaration'
 import KpiCard from '../../../components/dashboard/KpiCard'
 import { fmt } from '../../../utils/format'
 import DeclarationsTable from '../../../components/dashboard/DeclarationsTable'
 import AccountVerificationBanner from '../../../components/dashboard/AccountVerificationBanner'
+import { hasMissingPhysicalProfileData } from '../../../utils/profileValidation'
 import IndividualPopupDeclaration, {
     type CurrencyOption,
     type ProductDraft,
@@ -81,6 +83,37 @@ export default function IndividualDeclarations() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [isSaving, setIsSaving] = useState(false)
+    const [needsVerification, setNeedsVerification] = useState(false)
+
+    useEffect(() => {
+        if (!userId) {
+            setNeedsVerification(false)
+            return
+        }
+
+        const currentUserId = userId
+        let ignore = false
+
+        async function loadProfileStatus() {
+            try {
+                const profile = await getPhysicalProfileByUserId(currentUserId)
+
+                if (!ignore) {
+                    setNeedsVerification(hasMissingPhysicalProfileData(profile))
+                }
+            } catch {
+                if (!ignore) {
+                    setNeedsVerification(false)
+                }
+            }
+        }
+
+        loadProfileStatus()
+
+        return () => {
+            ignore = true
+        }
+    }, [userId])
 
     const userDeclarations = useMemo(
         () => physicalDeclarations.map(mapPhysicalToDeclaration),
@@ -207,7 +240,7 @@ export default function IndividualDeclarations() {
 
     return (
         <div className="space-y-8">
-            <AccountVerificationBanner />
+            {needsVerification ? <AccountVerificationBanner /> : null}
 
             <div className="space-y-4">
                 <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Declarațiile mele</h1>

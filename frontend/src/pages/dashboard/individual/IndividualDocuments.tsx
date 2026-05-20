@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
 import { getSession } from '../../../auth/auth.session'
 import { deleteDocument as deleteDocumentRequest, downloadDocumentFile, getDocumentsByUserId, uploadDocument } from '../../../api/documentsApi'
+import { getPhysicalProfileByUserId } from '../../../api/profilesApi'
 import type { DocumentInfo } from '../../../api/types/document'
 import KpiCard from '../../../components/dashboard/KpiCard'
 import AccountVerificationBanner from '../../../components/dashboard/AccountVerificationBanner'
 import { formatBytes } from '../../../utils/format'
+import { hasMissingPhysicalProfileData } from '../../../utils/profileValidation'
 
 export default function IndividualDocuments() {
     const session = getSession()
@@ -19,6 +21,37 @@ export default function IndividualDocuments() {
     const [successMsg, setSuccessMsg] = useState<string | null>(null)
     const [dragOver, setDragOver] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const [needsVerification, setNeedsVerification] = useState(false)
+
+    useEffect(() => {
+        if (!userId) {
+            setNeedsVerification(false)
+            return
+        }
+
+        const currentUserId = userId
+        let ignore = false
+
+        async function loadProfileStatus() {
+            try {
+                const profile = await getPhysicalProfileByUserId(currentUserId)
+
+                if (!ignore) {
+                    setNeedsVerification(hasMissingPhysicalProfileData(profile))
+                }
+            } catch {
+                if (!ignore) {
+                    setNeedsVerification(false)
+                }
+            }
+        }
+
+        loadProfileStatus()
+
+        return () => {
+            ignore = true
+        }
+    }, [userId])
 
     const loadDocuments = useCallback(async () => {
         if (!userId) {
@@ -98,7 +131,7 @@ export default function IndividualDocuments() {
 
     return (
         <div className="space-y-8">
-            <AccountVerificationBanner />
+            {needsVerification ? <AccountVerificationBanner /> : null}
 
             <div>
                 <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Documentele mele</h1>
