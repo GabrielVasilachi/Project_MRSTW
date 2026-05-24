@@ -38,6 +38,9 @@ public class BusinessDeclarationEntity
     public string HSCode { get; set; } = string.Empty;
 
     [Required]
+    public ProductCategoryEnum Category { get; set; } = ProductCategoryEnum.Altele;
+
+    [Required]
     public int Quantity { get; set; }
 
     [Required]
@@ -48,7 +51,7 @@ public class BusinessDeclarationEntity
     public CurrencyEnum Currency { get; set; } = CurrencyEnum.EUR;
 
     [Required]
-    public ProductCategoryEnum Category { get; set; } = ProductCategoryEnum.Altele;
+    public DeclarationStatus Status { get; set; } = DeclarationStatus.UnderReview;
 
     [Required]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

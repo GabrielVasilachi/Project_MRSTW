@@ -119,10 +119,11 @@ public class BusinessDeclarationsActions
             ProductURL = request.ProductURL.Trim(),
             TrackingCode = request.TrackingCode.Trim(),
             HSCode = request.HSCode.Trim(),
+            Category = request.Category,
             Quantity = request.Quantity,
             TotalCost = request.TotalCost,
             Currency = request.Currency,
-            Category = request.Category
+            Status = DeclarationStatus.UnderReview
         };
 
         try
@@ -148,10 +149,11 @@ public class BusinessDeclarationsActions
             ProductURL = declaration.ProductURL,
             TrackingCode = declaration.TrackingCode,
             HSCode = declaration.HSCode,
+            Category = declaration.Category,
             Quantity = declaration.Quantity,
             TotalCost = declaration.TotalCost,
             Currency = declaration.Currency,
-            Category = declaration.Category,
+            Status = declaration.Status,
             CreatedAt = declaration.CreatedAt
         };
 
@@ -186,10 +188,11 @@ public class BusinessDeclarationsActions
                 ProductURL = d.ProductURL,
                 TrackingCode = d.TrackingCode,
                 HSCode = d.HSCode,
+                Category = d.Category,
                 Quantity = d.Quantity,
                 TotalCost = d.TotalCost,
                 Currency = d.Currency,
-                Category = d.Category,
+                Status = d.Status,
                 CreatedAt = d.CreatedAt
             })
             .ToList();
