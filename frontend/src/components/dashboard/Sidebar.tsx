@@ -93,8 +93,10 @@ export default function Sidebar({ onNavigate, className = '' }: SidebarProps) {
 		}
 
 		loadProfileStatus()
+		window.addEventListener('profile-updated', loadProfileStatus)
 
 		return () => {
+			window.removeEventListener('profile-updated', loadProfileStatus)
 			ignore = true
 		}
 	}, [profileStatusKey, role, userId])

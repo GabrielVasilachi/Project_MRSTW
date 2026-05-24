@@ -99,10 +99,11 @@ public class PhysicalDeclarationsActions
             ProductName = request.ProductName.Trim(),
             ProductURL = request.ProductURL.Trim(),
             TrackingCode = request.TrackingCode.Trim(),
+            Category = request.Category,
             Quantity = request.Quantity,
             TotalCost = request.TotalCost,
             Currency = request.Currency,
-            Category = request.Category
+            Status = DeclarationStatus.UnderReview
         };
 
         try
@@ -126,10 +127,11 @@ public class PhysicalDeclarationsActions
             ProductName = declaration.ProductName,
             ProductURL = declaration.ProductURL,
             TrackingCode = declaration.TrackingCode,
+            Category = declaration.Category,
             Quantity = declaration.Quantity,
             TotalCost = declaration.TotalCost,
             Currency = declaration.Currency,
-            Category = declaration.Category,
+            Status = declaration.Status,
             CreatedAt = declaration.CreatedAt
         };
 
@@ -162,10 +164,11 @@ public class PhysicalDeclarationsActions
                 ProductName = d.ProductName,
                 ProductURL = d.ProductURL,
                 TrackingCode = d.TrackingCode,
+                Category = d.Category,
                 Quantity = d.Quantity,
                 TotalCost = d.TotalCost,
                 Currency = d.Currency,
-                Category = d.Category,
+                Status = d.Status,
                 CreatedAt = d.CreatedAt
             })
             .ToList();

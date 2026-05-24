@@ -153,6 +153,7 @@ export default function IndividualSettings() {
 
             setSuccessMessage(message || 'Datele au fost salvate cu succes.')
             setPassword('')
+            window.dispatchEvent(new Event('profile-updated'))
         } catch (err: unknown) {
             if (axios.isAxiosError(err) && typeof err.response?.data === 'string') {
                 setError(err.response.data)
