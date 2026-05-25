@@ -23,5 +23,6 @@ export type BusinessDeclarationResponse = {
     totalCost: number;
     currency: number;
     category: number;
+    status: number;
     createdAt: string;
 };

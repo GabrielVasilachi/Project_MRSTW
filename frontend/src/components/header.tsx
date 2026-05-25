@@ -7,7 +7,7 @@ export default function Header() {
     const navLinks = [
         { to: '/guide', label: 'Servicii' },
         { to: '/', label: 'Despre noi' },
-        { to: '/faq', label: 'Contact' },
+        { to: '/faq', label: 'FAQ' },
     ]
 
     return (
