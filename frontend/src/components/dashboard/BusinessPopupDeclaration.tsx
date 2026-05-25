@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import TaxBreakdown, { PRODUCT_CATEGORIES, type ProductCategory } from './TaxBreakdown'
+import { getMDLRates, toMDL, type InputCurrency } from '../../utils/exchangeRates'
 
-export type CurrencyOption = 'USD($)' | 'EUR(€)' | 'MDL' | 'RON'
+export type { InputCurrency }
 
 export type ProductDraft = {
     id: string
@@ -12,12 +13,13 @@ export type ProductDraft = {
     hsCode: string
     items: number | ''
     inTotal: number | ''
+    inputCurrency: InputCurrency
     category: ProductCategory
 }
 
 export type ProductField = Exclude<keyof ProductDraft, 'id'>
 
-const CURRENCY_OPTIONS: CurrencyOption[] = ['USD($)', 'EUR(€)', 'MDL', 'RON']
+const INPUT_CURRENCIES: InputCurrency[] = ['MDL', 'USD', 'EUR', 'RON']
 
 function getFieldError(field: string, value: string | number | ''): string | null {
     switch (field) {
@@ -48,10 +50,8 @@ function getFieldError(field: string, value: string | number | ''): string | nul
 type BusinessPopupDeclarationProps = {
     isOpen: boolean
     onClose: () => void
-    currency: CurrencyOption
-    onCurrencyChange: (value: CurrencyOption) => void
     products: ProductDraft[]
-    onUpdateProduct: (productId: string, field: ProductField, value: string | number | '' | ProductCategory) => void
+    onUpdateProduct: (productId: string, field: ProductField, value: string | number | '' | ProductCategory | InputCurrency) => void
     onAddProduct: () => void
     onDeleteProduct: (productId: string) => void
     onResetProduct: (productId: string) => void
@@ -64,8 +64,6 @@ const VALIDATED_FIELDS: ProductField[] = ['productName', 'productUrl', 'tracking
 export default function BusinessPopupDeclaration({
     isOpen,
     onClose,
-    currency,
-    onCurrencyChange,
     products,
     onUpdateProduct,
     onAddProduct,
@@ -75,9 +73,14 @@ export default function BusinessPopupDeclaration({
     onSave,
 }: BusinessPopupDeclarationProps) {
     const [touched, setTouched] = useState<Set<string>>(new Set())
+    const [rates, setRates] = useState<Record<string, number> | null>(null)
 
     useEffect(() => {
-        if (!isOpen) setTouched(new Set())
+        if (!isOpen) {
+            setTouched(new Set())
+            return
+        }
+        getMDLRates().then(setRates)
     }, [isOpen])
 
     const touch = (productId: string, field: string) => {
@@ -138,20 +141,6 @@ export default function BusinessPopupDeclaration({
                         <p><strong>Completați datele cu atenție.</strong> Informațiile furnizate vor fi utilizate în scopuri de control vamal.</p>
                     </div>
 
-                    <div className="rounded-lg border border-gray-400 bg-white p-4">
-                        <p className="mb-3 text-sm font-bold text-slate-800">DATE GENERALE</p>
-                        <label className="mb-2 block text-sm font-medium text-gray-700">Moneda</label>
-                        <select
-                            value={currency}
-                            onChange={(e) => onCurrencyChange(e.target.value as CurrencyOption)}
-                            className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm sm:max-w-xs"
-                        >
-                            {CURRENCY_OPTIONS.map(option => (
-                                <option key={option} value={option}>{option}</option>
-                            ))}
-                        </select>
-                    </div>
-
                     {products.map((product, index) => {
                         const eProductName = err(product.id, 'productName', product.productName)
                         const eProductUrl  = err(product.id, 'productUrl',  product.productUrl)
@@ -160,6 +149,10 @@ export default function BusinessPopupDeclaration({
                         const eHsCode      = err(product.id, 'hsCode',      product.hsCode)
                         const eItems       = err(product.id, 'items',       product.items)
                         const eInTotal     = err(product.id, 'inTotal',     product.inTotal)
+
+                        const mdlValue = typeof product.inTotal === 'number' && product.inTotal > 0 && rates
+                            ? toMDL(product.inTotal, product.inputCurrency, rates)
+                            : null
 
                         return (
                             <div key={product.id} className="space-y-4 rounded-lg border border-gray-400 p-4">
@@ -193,7 +186,7 @@ export default function BusinessPopupDeclaration({
                                     </div>
 
                                     <div>
-                                        <label className="mb-1 block text-sm font-medium text-gray-700">HS code</label>
+                                        <label className="mb-1 block text-sm font-medium text-gray-700">Cod HS</label>
                                         <input
                                             value={product.hsCode}
                                             onChange={(e) => onUpdateProduct(product.id, 'hsCode', e.target.value)}
@@ -235,7 +228,7 @@ export default function BusinessPopupDeclaration({
                                     </div>
 
                                     <div>
-                                        <label className="mb-1 block text-sm font-medium text-gray-700">Denumirea Expeditorului</label>
+                                        <label className="mb-1 block text-sm font-medium text-gray-700">Denumirea expeditorului</label>
                                         <input
                                             value={product.senderName}
                                             onChange={(e) => onUpdateProduct(product.id, 'senderName', e.target.value)}
@@ -286,8 +279,21 @@ export default function BusinessPopupDeclaration({
                                                     className="w-full border-0 bg-transparent p-0 text-sm focus:outline-none"
                                                     placeholder="0.00"
                                                 />
-                                                <span className="text-sm font-medium text-slate-500">{currency.includes('MDL') ? 'MDL' : currency}</span>
+                                                <select
+                                                    value={product.inputCurrency}
+                                                    onChange={(e) => onUpdateProduct(product.id, 'inputCurrency', e.target.value as InputCurrency)}
+                                                    className="border-0 bg-transparent p-0 text-sm font-medium text-slate-500 focus:outline-none"
+                                                >
+                                                    {INPUT_CURRENCIES.map(c => (
+                                                        <option key={c} value={c}>{c}</option>
+                                                    ))}
+                                                </select>
                                             </div>
+                                            {product.inputCurrency !== 'MDL' && mdlValue !== null && (
+                                                <p className="mt-1 text-xs text-slate-500">
+                                                    ≈ {mdlValue.toLocaleString('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MDL
+                                                </p>
+                                            )}
                                             <FieldError msg={eInTotal} />
                                         </div>
 
@@ -297,8 +303,8 @@ export default function BusinessPopupDeclaration({
                                                 onClick={() => onResetProduct(product.id)}
                                                 className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"
                                             >
-                                                <img src="/images/Reset.svg" alt="Reset" className="h-4 w-4" />
-                                                <span>Reset</span>
+                                                <img src="/images/Reset.svg" alt="Resetează" className="h-4 w-4" />
+                                                <span>Resetează</span>
                                             </button>
                                             <button
                                                 type="button"
@@ -306,7 +312,7 @@ export default function BusinessPopupDeclaration({
                                                 disabled={products.length === 1}
                                                 className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
                                             >
-                                                <img src="/images/Delete.svg" alt="Delete" className="h-4 w-4" />
+                                                <img src="/images/Delete.svg" alt="Șterge" className="h-4 w-4" />
                                                 <span>Șterge</span>
                                             </button>
                                         </div>
@@ -314,9 +320,11 @@ export default function BusinessPopupDeclaration({
                                 </div>
 
                                 <TaxBreakdown
-                                    baseValue={typeof product.inTotal === 'number' ? product.inTotal : 0}
+                                    baseValue={rates && typeof product.inTotal === 'number'
+                                        ? toMDL(product.inTotal, product.inputCurrency, rates)
+                                        : typeof product.inTotal === 'number' ? product.inTotal : 0}
                                     category={product.category}
-                                    currency={currency.includes('MDL') ? 'MDL' : currency.includes('USD') ? 'USD' : currency.includes('RON') ? 'RON' : 'EUR'}
+                                    currency="MDL"
                                 />
                             </div>
                         )
@@ -335,7 +343,7 @@ export default function BusinessPopupDeclaration({
                         onClick={onAddProduct}
                         className="inline-flex items-center gap-2 rounded-lg border border-sky-200 bg-white px-4 py-2 text-sm font-semibold text-sky-700 transition-colors hover:bg-sky-50"
                     >
-                        <img src="/images/Plus.svg" alt="Add product" className="h-4 w-4" />
+                        <img src="/images/Plus.svg" alt="Adaugă produs" className="h-4 w-4" />
                         <span>Adaugă încă un produs</span>
                     </button>
 
@@ -344,7 +352,7 @@ export default function BusinessPopupDeclaration({
                         onClick={handleSave}
                         className="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-sky-700"
                     >
-                        <img src="/Save.svg" alt="Save" className="h-4 w-4" />
+                        <img src="/Save.svg" alt="Salvează" className="h-4 w-4" />
                         <span>Salvează declarația</span>
                     </button>
                 </div>

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { Declaration } from '../../types/declaration'
 import StatusBadge from './StatusBadge'
-import { STATUS_COLORS } from './statusColors'
+import { STATUS_COLORS, STATUS_LABELS_RO } from './statusColors'
 import RowDetailModal, { ModalField, ModalBadge, ModalSection, TaxesTable } from './RowDetailModal'
 import { fmt } from '../../utils/format'
 
@@ -26,7 +26,7 @@ function DeclarationModal({ d, user, onClose }: {
     return (
         <RowDetailModal title={`Detalii declarație ${d.awb_number}`} onClose={onClose}>
             <ModalSection>
-                <ModalBadge label="Status" value={d.status} color={statusColor} />
+                <ModalBadge label="Status" value={STATUS_LABELS_RO[d.status] ?? d.status} color={statusColor} />
                 {user
                     ? <ModalField label="Utilizator" value={`${user.name} (${user.type})`} />
                     : <div />
@@ -49,7 +49,7 @@ function DeclarationModal({ d, user, onClose }: {
                 <p className="mb-3 text-base font-semibold text-gray-900">Taxe estimate</p>
                 <TaxesTable
                     rows={[
-                        { label: `TVA`, amount: d.vat },
+                        { label: 'TVA', amount: d.vat },
                         { label: 'Taxă vamală', amount: d.customs_duty },
                         ...(d.excise > 0 ? [{ label: 'Accize', amount: d.excise }] : []),
                     ]}
@@ -76,7 +76,7 @@ export default function DeclarationsTable({ declarations, resolveUser }: Props) 
                         {STATUSES.slice(1).map(s => (
                             <div key={s} className={`rounded-lg px-4 py-3 ${STATUS_COLORS[s]}`}>
                                 <p className="text-lg font-bold">{declarations.filter(d => d.status === s).length}</p>
-                                <p className="text-xs font-medium">{s}</p>
+                                <p className="text-xs font-medium">{STATUS_LABELS_RO[s] ?? s}</p>
                             </div>
                         ))}
                     </div>
@@ -94,7 +94,7 @@ export default function DeclarationsTable({ declarations, resolveUser }: Props) 
                                     className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                                         filter === s ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                     }`}>
-                                    {s}
+                                    {STATUS_LABELS_RO[s] ?? s}
                                 </button>
                             ))}
                         </div>

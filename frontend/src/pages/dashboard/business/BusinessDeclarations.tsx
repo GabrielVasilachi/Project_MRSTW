@@ -3,19 +3,18 @@ import axios from 'axios'
 import type { Declaration } from '../../../types/declaration'
 import { getSession } from '../../../auth/auth.session'
 import { createBusinessDeclaration, getBusinessDeclarationsByUserId } from '../../../api/businessDeclarationsApi'
-import { getBusinessProfileByUserId } from '../../../api/profilesApi'
 import type { BusinessDeclarationResponse } from '../../../api/types/businessDeclaration'
 import KpiCard from '../../../components/dashboard/KpiCard'
 import { fmt } from '../../../utils/format'
 import DeclarationsTable from '../../../components/dashboard/DeclarationsTable'
 import BusinessVerificationBanner from '../../../components/dashboard/BusinessVerificationBanner'
-import { hasMissingBusinessProfileData } from '../../../utils/profileValidation'
 import BusinessPopupDeclaration, {
-    type CurrencyOption,
     type ProductDraft,
     type ProductField,
 } from '../../../components/dashboard/BusinessPopupDeclaration'
 import { PRODUCT_CATEGORIES, calculateTaxes, type ProductCategory } from '../../../components/dashboard/TaxBreakdown'
+import { getMDLRates, toMDL } from '../../../utils/exchangeRates'
+import type { InputCurrency } from '../../../utils/exchangeRates'
 
 const createEmptyProduct = (): ProductDraft => ({
     id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
@@ -26,15 +25,9 @@ const createEmptyProduct = (): ProductDraft => ({
     hsCode: '',
     items: '',
     inTotal: '',
+    inputCurrency: 'MDL',
     category: PRODUCT_CATEGORIES[12],
 })
-
-const CURRENCY_ENUM_BY_OPTION: Record<CurrencyOption, number> = {
-    'EUR(€)': 0,
-    'USD($)': 1,
-    'MDL': 2,
-    'RON': 3,
-}
 
 const CURRENCY_LABEL_BY_ENUM: Record<number, string> = {
     0: 'EUR',
@@ -43,9 +36,15 @@ const CURRENCY_LABEL_BY_ENUM: Record<number, string> = {
     3: 'RON',
 }
 
-const mapCurrencyOptionToEnum = (currency: CurrencyOption) => CURRENCY_ENUM_BY_OPTION[currency] ?? 0
+const STATUS_BY_ENUM: Record<number, string> = {
+    0: 'Under Review',
+    1: 'Approved',
+    2: 'Rejected',
+    3: 'Pending Documents',
+}
 
-const mapCurrencyEnumToLabel = (currency: number) => CURRENCY_LABEL_BY_ENUM[currency] ?? 'EUR'
+const mapCurrencyEnumToLabel = (currency: number) => CURRENCY_LABEL_BY_ENUM[currency] ?? 'MDL'
+const mapStatusEnumToLabel = (status: number) => STATUS_BY_ENUM[status] ?? 'Under Review'
 
 const mapBusinessToDeclaration = (item: BusinessDeclarationResponse): Declaration => {
     const category = PRODUCT_CATEGORIES[item.category] ?? PRODUCT_CATEGORIES[12]
@@ -65,7 +64,7 @@ const mapBusinessToDeclaration = (item: BusinessDeclarationResponse): Declaratio
         customs_duty: taxes.customsDuty,
         excise: taxes.excise,
         total_taxes: taxes.totalAmount,
-        status: 'Under Review',
+        status: mapStatusEnumToLabel(item.status),
         sender_name: item.senderName,
         product_url: item.productURL,
         category_label: category.label,
@@ -79,44 +78,12 @@ export default function BusinessDeclarations() {
         : null
 
     const [isPopupOpen, setIsPopupOpen] = useState(false)
-    const [currency, setCurrency] = useState<CurrencyOption>('USD($)')
     const [products, setProducts] = useState<ProductDraft[]>(() => [createEmptyProduct()])
     const [popupError, setPopupError] = useState<string | null>(null)
     const [businessDeclarations, setBusinessDeclarations] = useState<BusinessDeclarationResponse[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [isSaving, setIsSaving] = useState(false)
-    const [needsVerification, setNeedsVerification] = useState(false)
-
-    useEffect(() => {
-        if (!userId) {
-            setNeedsVerification(false)
-            return
-        }
-
-        const currentUserId = userId
-        let ignore = false
-
-        async function loadProfileStatus() {
-            try {
-                const profile = await getBusinessProfileByUserId(currentUserId)
-
-                if (!ignore) {
-                    setNeedsVerification(hasMissingBusinessProfileData(profile))
-                }
-            } catch {
-                if (!ignore) {
-                    setNeedsVerification(false)
-                }
-            }
-        }
-
-        loadProfileStatus()
-
-        return () => {
-            ignore = true
-        }
-    }, [userId])
 
     const companyDeclarations = useMemo(
         () => businessDeclarations.map(mapBusinessToDeclaration),
@@ -159,7 +126,7 @@ export default function BusinessDeclarations() {
         setPopupError(null)
     }
 
-    const handleUpdateProduct = (productId: string, field: ProductField, value: string | number | '' | ProductCategory) => {
+    const handleUpdateProduct = (productId: string, field: ProductField, value: string | number | '' | ProductCategory | InputCurrency) => {
         setProducts((prev) => prev.map((product) => (product.id === productId ? { ...product, [field]: value } : product)))
     }
 
@@ -183,15 +150,13 @@ export default function BusinessDeclarations() {
             hsCode: '',
             items: '',
             inTotal: '',
+            inputCurrency: 'MDL' as InputCurrency,
             category: PRODUCT_CATEGORIES[12],
         } : product)))
     }
 
     const handleSaveDeclaration = async () => {
-        if (isSaving) {
-            return
-        }
-
+        if (isSaving) return
         if (!userId) {
             setPopupError('Sesiune invalidă.')
             return
@@ -219,20 +184,23 @@ export default function BusinessDeclarations() {
         }
 
         try {
-            const currencyEnum = mapCurrencyOptionToEnum(currency)
+            const rates = await getMDLRates()
 
-            await Promise.all(products.map((product) => createBusinessDeclaration({
-                userId,
-                senderName: product.senderName.trim(),
-                productName: product.productName.trim(),
-                productURL: product.productUrl.trim(),
-                trackingCode: product.trackingNumber.trim(),
-                hsCode: product.hsCode.trim(),
-                quantity: Number(product.items),
-                totalCost: Number(product.inTotal),
-                currency: currencyEnum,
-                category: product.category.value,
-            })))
+            await Promise.all(products.map((product) => {
+                const mdlValue = toMDL(Number(product.inTotal), product.inputCurrency, rates)
+                return createBusinessDeclaration({
+                    userId,
+                    senderName: product.senderName.trim(),
+                    productName: product.productName.trim(),
+                    productURL: product.productUrl.trim(),
+                    trackingCode: product.trackingNumber.trim(),
+                    hsCode: product.hsCode.trim(),
+                    quantity: Number(product.items),
+                    totalCost: mdlValue,
+                    currency: 2,
+                    category: product.category.value,
+                })
+            }))
 
             await loadDeclarations()
             setProducts([createEmptyProduct()])
@@ -250,18 +218,18 @@ export default function BusinessDeclarations() {
 
     return (
         <div className="space-y-8">
-            {needsVerification ? <BusinessVerificationBanner /> : null}
+            <BusinessVerificationBanner />
 
             <div className="space-y-4">
                 <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Declarații companie</h1>
-                    <button
-                        type="button"
-                        onClick={handleOpenPopup}
-                        className="flex w-full items-center gap-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-900 transition-colors hover:bg-sky-100 sm:w-auto"
-                    >
-                        <img src="/images/Declaration.svg" alt="Declaratie" className="h-6 w-6" />
-                        <span>Adaugă o declarație</span>
-                    </button>
+                <button
+                    type="button"
+                    onClick={handleOpenPopup}
+                    className="flex w-full items-center gap-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-900 transition-colors hover:bg-sky-100 sm:w-auto"
+                >
+                    <img src="/images/Declaration.svg" alt="Declaratie" className="h-6 w-6" />
+                    <span>Adaugă o declarație</span>
+                </button>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -287,8 +255,6 @@ export default function BusinessDeclarations() {
             <BusinessPopupDeclaration
                 isOpen={isPopupOpen}
                 onClose={handleClosePopup}
-                currency={currency}
-                onCurrencyChange={setCurrency}
                 products={products}
                 onUpdateProduct={handleUpdateProduct}
                 onAddProduct={handleAddProduct}

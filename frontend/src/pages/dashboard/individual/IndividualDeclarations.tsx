@@ -3,19 +3,18 @@ import axios from 'axios'
 import type { Declaration } from '../../../types/declaration'
 import { getSession } from '../../../auth/auth.session'
 import { createPhysicalDeclaration, getPhysicalDeclarationsByUserId } from '../../../api/physicalDeclarationsApi'
-import { getPhysicalProfileByUserId } from '../../../api/profilesApi'
 import type { PhysicalDeclarationResponse } from '../../../api/types/physicalDeclaration'
 import KpiCard from '../../../components/dashboard/KpiCard'
 import { fmt } from '../../../utils/format'
 import DeclarationsTable from '../../../components/dashboard/DeclarationsTable'
 import AccountVerificationBanner from '../../../components/dashboard/AccountVerificationBanner'
-import { hasMissingPhysicalProfileData } from '../../../utils/profileValidation'
 import IndividualPopupDeclaration, {
-    type CurrencyOption,
     type ProductDraft,
     type ProductField,
 } from '../../../components/dashboard/IndividualPopupDeclaration'
 import { PRODUCT_CATEGORIES, calculateTaxes, type ProductCategory } from '../../../components/dashboard/TaxBreakdown'
+import { getMDLRates, toMDL } from '../../../utils/exchangeRates'
+import type { InputCurrency } from '../../../utils/exchangeRates'
 
 const createEmptyProduct = (): ProductDraft => ({
     id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
@@ -24,15 +23,9 @@ const createEmptyProduct = (): ProductDraft => ({
     productUrl: '',
     items: '',
     inTotal: '',
-    category: PRODUCT_CATEGORIES[12], // default: Altele
+    inputCurrency: 'MDL',
+    category: PRODUCT_CATEGORIES[12],
 })
-
-const CURRENCY_ENUM_BY_OPTION: Record<CurrencyOption, number> = {
-    'EUR(€)': 0,
-    'USD($)': 1,
-    'MDL': 2,
-    'RON': 3,
-}
 
 const CURRENCY_LABEL_BY_ENUM: Record<number, string> = {
     0: 'EUR',
@@ -41,9 +34,15 @@ const CURRENCY_LABEL_BY_ENUM: Record<number, string> = {
     3: 'RON',
 }
 
-const mapCurrencyOptionToEnum = (currency: CurrencyOption) => CURRENCY_ENUM_BY_OPTION[currency] ?? 0
+const STATUS_BY_ENUM: Record<number, string> = {
+    0: 'Under Review',
+    1: 'Approved',
+    2: 'Rejected',
+    3: 'Pending Documents',
+}
 
-const mapCurrencyEnumToLabel = (currency: number) => CURRENCY_LABEL_BY_ENUM[currency] ?? 'EUR'
+const mapCurrencyEnumToLabel = (currency: number) => CURRENCY_LABEL_BY_ENUM[currency] ?? 'MDL'
+const mapStatusEnumToLabel = (status: number) => STATUS_BY_ENUM[status] ?? 'Under Review'
 
 const mapPhysicalToDeclaration = (item: PhysicalDeclarationResponse): Declaration => {
     const category = PRODUCT_CATEGORIES[item.category] ?? PRODUCT_CATEGORIES[12]
@@ -63,7 +62,7 @@ const mapPhysicalToDeclaration = (item: PhysicalDeclarationResponse): Declaratio
         customs_duty: taxes.customsDuty,
         excise: taxes.excise,
         total_taxes: taxes.totalAmount,
-        status: 'Under Review',
+        status: mapStatusEnumToLabel(item.status),
         product_url: item.productURL,
         category_label: category.label,
     }
@@ -76,44 +75,12 @@ export default function IndividualDeclarations() {
         : null
 
     const [isPopupOpen, setIsPopupOpen] = useState(false)
-    const [currency, setCurrency] = useState<CurrencyOption>('USD($)')
     const [products, setProducts] = useState<ProductDraft[]>(() => [createEmptyProduct()])
     const [popupError, setPopupError] = useState<string | null>(null)
     const [physicalDeclarations, setPhysicalDeclarations] = useState<PhysicalDeclarationResponse[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [isSaving, setIsSaving] = useState(false)
-    const [needsVerification, setNeedsVerification] = useState(false)
-
-    useEffect(() => {
-        if (!userId) {
-            setNeedsVerification(false)
-            return
-        }
-
-        const currentUserId = userId
-        let ignore = false
-
-        async function loadProfileStatus() {
-            try {
-                const profile = await getPhysicalProfileByUserId(currentUserId)
-
-                if (!ignore) {
-                    setNeedsVerification(hasMissingPhysicalProfileData(profile))
-                }
-            } catch {
-                if (!ignore) {
-                    setNeedsVerification(false)
-                }
-            }
-        }
-
-        loadProfileStatus()
-
-        return () => {
-            ignore = true
-        }
-    }, [userId])
 
     const userDeclarations = useMemo(
         () => physicalDeclarations.map(mapPhysicalToDeclaration),
@@ -156,7 +123,7 @@ export default function IndividualDeclarations() {
         setPopupError(null)
     }
 
-    const handleUpdateProduct = (productId: string, field: ProductField, value: string | number | '' | ProductCategory) => {
+    const handleUpdateProduct = (productId: string, field: ProductField, value: string | number | '' | ProductCategory | InputCurrency) => {
         setProducts((prev) => prev.map((product) => (product.id === productId ? { ...product, [field]: value } : product)))
     }
 
@@ -178,14 +145,12 @@ export default function IndividualDeclarations() {
             productUrl: '',
             items: '',
             inTotal: '',
+            inputCurrency: 'MDL' as InputCurrency,
         } : product)))
     }
 
     const handleSaveDeclaration = async () => {
-        if (isSaving) {
-            return
-        }
-
+        if (isSaving) return
         if (!userId) {
             setPopupError('Sesiune invalidă.')
             return
@@ -211,18 +176,21 @@ export default function IndividualDeclarations() {
         }
 
         try {
-            const currencyEnum = mapCurrencyOptionToEnum(currency)
+            const rates = await getMDLRates()
 
-            await Promise.all(products.map((product) => createPhysicalDeclaration({
-                userId,
-                productName: product.productName.trim(),
-                productURL: product.productUrl.trim(),
-                trackingCode: product.trackingNumber.trim(),
-                quantity: Number(product.items),
-                totalCost: Number(product.inTotal),
-                currency: currencyEnum,
-                category: product.category.value,
-            })))
+            await Promise.all(products.map((product) => {
+                const mdlValue = toMDL(Number(product.inTotal), product.inputCurrency, rates)
+                return createPhysicalDeclaration({
+                    userId,
+                    productName: product.productName.trim(),
+                    productURL: product.productUrl.trim(),
+                    trackingCode: product.trackingNumber.trim(),
+                    quantity: Number(product.items),
+                    totalCost: mdlValue,
+                    currency: 2,
+                    category: product.category.value,
+                })
+            }))
 
             await loadDeclarations()
             setProducts([createEmptyProduct()])
@@ -240,21 +208,18 @@ export default function IndividualDeclarations() {
 
     return (
         <div className="space-y-8">
-            {needsVerification ? <AccountVerificationBanner /> : null}
+            <AccountVerificationBanner />
 
             <div className="space-y-4">
                 <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Declarațiile mele</h1>
-
-               
-                    <button
-                        type="button"
-                        onClick={handleOpenPopup}
-                        className="flex w-full items-center gap-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-900 transition-colors hover:bg-sky-100 sm:w-auto"
-                    >
-                        <img src="/images/Declaration.svg" alt="Declaratie" className="h-6 w-6" />
-                        <span>Adaugă o declarație</span>
-                    </button>
-                
+                <button
+                    type="button"
+                    onClick={handleOpenPopup}
+                    className="flex w-full items-center gap-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-900 transition-colors hover:bg-sky-100 sm:w-auto"
+                >
+                    <img src="/images/Declaration.svg" alt="Declaratie" className="h-6 w-6" />
+                    <span>Adaugă o declarație</span>
+                </button>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -280,8 +245,6 @@ export default function IndividualDeclarations() {
             <IndividualPopupDeclaration
                 isOpen={isPopupOpen}
                 onClose={handleClosePopup}
-                currency={currency}
-                onCurrencyChange={setCurrency}
                 products={products}
                 onUpdateProduct={handleUpdateProduct}
                 onAddProduct={handleAddProduct}
