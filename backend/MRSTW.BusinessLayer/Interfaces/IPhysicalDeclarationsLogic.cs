@@ -7,4 +7,5 @@ public interface IPhysicalDeclarationsLogic
 {
     ServiceResponse CreatePhysicalDeclaration(PhysicalDeclarationCreateRequestDto request);
     ServiceResponse GetPhysicalDeclarationsByUserId(int userId);
+    ServiceResponse GetAllPhysicalDeclarations();
 }

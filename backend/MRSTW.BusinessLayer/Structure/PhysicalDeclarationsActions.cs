@@ -1,6 +1,8 @@
+using Microsoft.EntityFrameworkCore;
 using MRSTW.DataAccessLayer.Context;
 using MRSTW.Domain.Entities.PhysicalDeclarations;
 using MRSTW.Domain.Enums;
+using MRSTW.Domain.Models.AdminDeclarations;
 using MRSTW.Domain.Models.PhysicalDeclarations;
 using MRSTW.Domain.Models.Service;
 
@@ -140,6 +142,44 @@ public class PhysicalDeclarationsActions
             IsSuccess = true,
             Data = response,
             Message = "PhysicalDeclaration a fost creata cu succes."
+        };
+    }
+
+    public ServiceResponse GetAllPhysicalDeclarationsAction()
+    {
+        var declarations = _physicalDeclarationsContext.PhysicalDeclarations
+            .Include(d => d.User)
+            .OrderByDescending(d => d.CreatedAt)
+            .Select(d => new AdminDeclarationResponseDto
+            {
+                Id = d.Id,
+                DeclarationType = "physical",
+                PersonType = "individual",
+                UserId = d.UserId,
+                User = new AdminDeclarationUserInfoDto
+                {
+                    Id = d.UserId,
+                    FullName = d.User.FullName,
+                    Email = d.User.Email,
+                    PhoneNumber = d.User.PhoneNumber
+                },
+                ProductName = d.ProductName,
+                ProductURL = d.ProductURL,
+                TrackingCode = d.TrackingCode,
+                Category = d.Category,
+                Quantity = d.Quantity,
+                TotalCost = d.TotalCost,
+                Currency = d.Currency,
+                Status = d.Status,
+                CreatedAt = d.CreatedAt,
+                Review = null
+            })
+            .ToList();
+
+        return new ServiceResponse
+        {
+            IsSuccess = true,
+            Data = declarations
         };
     }
 

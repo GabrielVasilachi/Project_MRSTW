@@ -10,6 +10,7 @@ const STATUSES = ['Toate', 'Approved', 'Pending Documents', 'Under Review', 'Rej
 type Props = {
     declarations: Declaration[]
     resolveUser?: (userId: string) => { name: string; type: string }
+    onOpenDeclaration?: (declaration: Declaration) => Promise<void>
 }
 
 function DeclarationModal({ d, user, onClose }: {
@@ -24,7 +25,7 @@ function DeclarationModal({ d, user, onClose }: {
         'bg-yellow-100 text-yellow-800'
 
     return (
-        <RowDetailModal title={`Detalii declarație ${d.awb_number}`} onClose={onClose}>
+        <RowDetailModal title={`Detalii declarație - Tracking Code: ${d.awb_number}`} onClose={onClose}>
             <ModalSection>
                 <ModalBadge label="Status" value={STATUS_LABELS_RO[d.status] ?? d.status} color={statusColor} />
                 {user
@@ -61,11 +62,32 @@ function DeclarationModal({ d, user, onClose }: {
     )
 }
 
-export default function DeclarationsTable({ declarations, resolveUser }: Props) {
+export default function DeclarationsTable({ declarations, resolveUser, onOpenDeclaration }: Props) {
     const [filter, setFilter] = useState('Toate')
     const [selected, setSelected] = useState<Declaration | null>(null)
+    const [openingId, setOpeningId] = useState<string | null>(null)
+    const [openError, setOpenError] = useState<string | null>(null)
     const filtered = filter === 'Toate' ? declarations : declarations.filter(d => d.status === filter)
-    const totalsCols = resolveUser ? 6 : 4
+
+    const handleRowClick = async (declaration: Declaration) => {
+        if (openingId) return
+        if (!onOpenDeclaration) {
+            setSelected(declaration)
+            return
+        }
+
+        setOpeningId(declaration.id)
+        setOpenError(null)
+
+        try {
+            await onOpenDeclaration(declaration)
+            setSelected(declaration)
+        } catch {
+            setOpenError('Nu s-a putut deschide declarația.')
+        } finally {
+            setOpeningId(null)
+        }
+    }
 
     return (
         <>
@@ -100,6 +122,12 @@ export default function DeclarationsTable({ declarations, resolveUser }: Props) 
                         </div>
                     </div>
 
+                    {openError ? (
+                        <div className="border-b border-red-100 bg-red-50 px-6 py-3 text-sm text-red-700">
+                            {openError}
+                        </div>
+                    ) : null}
+
                     {filtered.length === 0 ? (
                         <p className="px-6 py-8 text-center text-sm text-gray-400">Nu există declarații pentru filtrul selectat.</p>
                     ) : (
@@ -107,37 +135,33 @@ export default function DeclarationsTable({ declarations, resolveUser }: Props) 
                             <table className="min-w-full text-left text-sm">
                                 <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-600">
                                     <tr>
-                                        <th className="px-6 py-3 font-medium">AWB</th>
-                                        {resolveUser && <th className="px-6 py-3 font-medium">Utilizator</th>}
-                                        {resolveUser && <th className="px-6 py-3 font-medium">Tip</th>}
+                                        <th className="px-6 py-3 font-medium">Tracking Code</th>
                                         <th className="px-6 py-3 font-medium">Descriere</th>
-                                        <th className="px-6 py-3 font-medium">Cant.</th>
-                                        <th className="px-6 py-3 font-medium">Greut. (kg)</th>
+                                        <th className="px-6 py-3 font-medium">Cantitate</th>
                                         <th className="px-6 py-3 font-medium">Valoare vamală</th>
+                                        <th className="px-6 py-3 font-medium">Taxă vamală</th>
                                         <th className="px-6 py-3 font-medium">TVA</th>
-                                        <th className="px-6 py-3 font-medium">Taxe vamale</th>
-                                        <th className="px-6 py-3 font-medium">Total taxe</th>
+                                        <th className="px-6 py-3 font-medium">Valoarea totală</th>
                                         <th className="px-6 py-3 font-medium">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     {filtered.map(d => {
-                                        const user = resolveUser?.(d.user_id)
+                                        const isOpening = openingId === d.id
                                         return (
                                             <tr
                                                 key={d.id}
-                                                className="cursor-pointer hover:bg-blue-50 transition-colors"
-                                                onClick={() => setSelected(d)}
+                                                className={`cursor-pointer transition-colors ${
+                                                    isOpening ? 'opacity-60' : 'hover:bg-blue-50'
+                                                }`}
+                                                onClick={() => handleRowClick(d)}
                                             >
                                                 <td className="px-6 py-3 font-mono text-xs font-medium text-gray-900">{d.awb_number}</td>
-                                                {user && <td className="px-6 py-3 font-medium text-gray-900">{user.name}</td>}
-                                                {user && <td className="px-6 py-3 text-gray-500">{user.type}</td>}
                                                 <td className="px-6 py-3 text-gray-700">{d.description}</td>
                                                 <td className="px-6 py-3 text-gray-700">{d.quantity}</td>
-                                                <td className="px-6 py-3 text-gray-700">{d.gross_weight}</td>
                                                 <td className="px-6 py-3 text-gray-700">{fmt(d.customs_value, d.currency)}</td>
-                                                <td className="px-6 py-3 text-gray-700">{fmt(d.vat, d.currency)}</td>
                                                 <td className="px-6 py-3 text-gray-700">{fmt(d.customs_duty, d.currency)}</td>
+                                                <td className="px-6 py-3 text-gray-700">{fmt(d.vat, d.currency)}</td>
                                                 <td className="px-6 py-3 font-medium text-gray-900">{fmt(d.total_taxes, d.currency)}</td>
                                                 <td className="px-6 py-3"><StatusBadge status={d.status} /></td>
                                             </tr>
@@ -146,12 +170,12 @@ export default function DeclarationsTable({ declarations, resolveUser }: Props) 
                                 </tbody>
                                 <tfoot className="border-t-2 border-gray-200 bg-gray-50 text-sm font-semibold text-gray-800">
                                     <tr>
-                                        <td colSpan={totalsCols} className="px-6 py-3 text-right text-xs uppercase tracking-wide text-gray-500">
+                                        <td colSpan={3} className="px-6 py-3 text-right text-xs uppercase tracking-wide text-gray-500">
                                             Total ({filtered.length}):
                                         </td>
                                         <td className="px-6 py-3">{fmt(filtered.reduce((s, d) => s + d.customs_value, 0))}</td>
-                                        <td className="px-6 py-3">{fmt(filtered.reduce((s, d) => s + d.vat, 0))}</td>
                                         <td className="px-6 py-3">{fmt(filtered.reduce((s, d) => s + d.customs_duty, 0))}</td>
+                                        <td className="px-6 py-3">{fmt(filtered.reduce((s, d) => s + d.vat, 0))}</td>
                                         <td className="px-6 py-3">{fmt(filtered.reduce((s, d) => s + d.total_taxes, 0))}</td>
                                         <td />
                                     </tr>
