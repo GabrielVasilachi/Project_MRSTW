@@ -34,6 +34,7 @@ export type AdminDeclarationResponse = {
     declarationType: 'physical' | 'legal';
     personType: string;
     userId: number;
+    packageId?: number | null;
     user: AdminDeclarationUserInfo;
     productName: string;
     productURL: string;

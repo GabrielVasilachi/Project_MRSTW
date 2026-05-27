@@ -10,6 +10,10 @@ export type PhysicalDeclarationCreateRequest = {
     category: number;
 };
 
+export type PhysicalDeclarationUpdateRequest = Omit<PhysicalDeclarationCreateRequest, "userId"> & {
+    status: number;
+};
+
 export type PhysicalDeclarationResponse = {
     id: number;
     userId: number;

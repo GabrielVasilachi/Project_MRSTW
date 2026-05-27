@@ -12,6 +12,10 @@ export type BusinessDeclarationCreateRequest = {
     category: number;
 };
 
+export type BusinessDeclarationUpdateRequest = Omit<BusinessDeclarationCreateRequest, "userId"> & {
+    status: number;
+};
+
 export type BusinessDeclarationResponse = {
     id: number;
     userId: number;
