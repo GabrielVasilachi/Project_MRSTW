@@ -17,6 +17,11 @@ public class UsersLogic : UsersActions, IUsersLogic
         return UpdateUserAction(userId, request);
     }
 
+    public ServiceResponse DeleteUser(int userId)
+    {
+        return DeleteUserAction(userId);
+    }
+
     public ServiceResponse RegenerateActivationToken(int userId)
     {
         return RegenerateActivationTokenAction(userId);

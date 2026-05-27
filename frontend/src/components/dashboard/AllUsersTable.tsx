@@ -3,13 +3,14 @@ import axios from 'axios'
 
 import { deleteDocument, downloadDocumentFile } from '../../api/documentsApi'
 import { updateBusinessProfile, updatePhysicalProfile } from '../../api/profilesApi'
-import { regenerateActivationToken, updateUser } from '../../api/usersApi'
+import { deleteUser, regenerateActivationToken, updateUser } from '../../api/usersApi'
 import type { AdminDashboardUser } from '../../pages/dashboard/admin/adminData'
 import { formatBytes } from '../../utils/format'
 import RowDetailModal, { ModalBadge, ModalField, ModalSection } from './RowDetailModal'
 
 type Props = {
     users: AdminDashboardUser[]
+    onUserDeleted?: (userId: number) => void
 }
 
 type UserPatch = Partial<AdminDashboardUser>
@@ -111,12 +112,13 @@ function EditField({ label, value, onChange, required, mono }: {
     )
 }
 
-function UserDetailModal({ user, onClose, onUserUpdated, onDocumentsChanged, onActivationTokenRegenerated }: {
+function UserDetailModal({ user, onClose, onUserUpdated, onDocumentsChanged, onActivationTokenRegenerated, onUserDeleted }: {
     user: AdminDashboardUser
     onClose: () => void
     onUserUpdated: (user: AdminDashboardUser) => void
     onDocumentsChanged: (userId: number, documents: AdminDashboardUser['documents']) => void
     onActivationTokenRegenerated: (userId: number, expiresAt: string) => void
+    onUserDeleted: (userId: number) => void
 }) {
     const accountStatus = getAccountStatus(user)
     const [isEditing, setIsEditing] = useState(false)
@@ -130,6 +132,8 @@ function UserDetailModal({ user, onClose, onUserUpdated, onDocumentsChanged, onA
     const [regenerating, setRegenerating] = useState(false)
     const [regenerateError, setRegenerateError] = useState<string | null>(null)
     const [activationLink, setActivationLink] = useState<string | null>(null)
+    const [deletingUser, setDeletingUser] = useState(false)
+    const [deleteError, setDeleteError] = useState<string | null>(null)
 
     function updateField(field: keyof UserEditForm, value: string) {
         setForm(current => ({ ...current, [field]: value }))
@@ -277,6 +281,25 @@ function UserDetailModal({ user, onClose, onUserUpdated, onDocumentsChanged, onA
         }
     }
 
+    async function removeUser() {
+        const confirmed = window.confirm(`Ștergi contul ${user.name}? Această acțiune va șterge și datele asociate contului.`)
+
+        if (!confirmed) return
+
+        setDeletingUser(true)
+        setDeleteError(null)
+
+        try {
+            await deleteUser(user.userId)
+            onUserDeleted(user.userId)
+            onClose()
+        } catch (error: unknown) {
+            setDeleteError(getApiErrorMessage(error, 'Nu s-a putut șterge contul.'))
+        } finally {
+            setDeletingUser(false)
+        }
+    }
+
     return (
         <RowDetailModal title={`Detalii cont - ${user.name}`} onClose={onClose}>
             <ModalSection title={user.roleLabel}>
@@ -349,15 +372,33 @@ function UserDetailModal({ user, onClose, onUserUpdated, onDocumentsChanged, onA
                             </button>
                         </>
                     ) : (
-                        <button
-                            type="button"
-                            onClick={() => setIsEditing(true)}
-                            className="rounded-md border border-blue-200 bg-white px-3 py-1.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-50"
-                        >
-                            Modificare
-                        </button>
+                        <>
+                            <button
+                                type="button"
+                                onClick={() => setIsEditing(true)}
+                                disabled={deletingUser}
+                                className="rounded-md border border-blue-200 bg-white px-3 py-1.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-50 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400"
+                            >
+                                Modificare
+                            </button>
+                            {user.role === 'individual' || user.role === 'business' ? (
+                                <button
+                                    type="button"
+                                    onClick={removeUser}
+                                    disabled={deletingUser}
+                                    className="rounded-md border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-700 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400"
+                                >
+                                    {deletingUser ? 'Se șterge...' : 'Șterge cont'}
+                                </button>
+                            ) : null}
+                        </>
                     )}
                 </div>
+                {deleteError ? (
+                    <div className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                        {deleteError}
+                    </div>
+                ) : null}
                 {saveError ? (
                     <div className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                         {saveError}
@@ -449,7 +490,7 @@ function UserDetailModal({ user, onClose, onUserUpdated, onDocumentsChanged, onA
     )
 }
 
-export default function AllUsersTable({ users }: Props) {
+export default function AllUsersTable({ users, onUserDeleted }: Props) {
     const [tab, setTab] = useState<Tab>('Toți')
     const [selected, setSelected] = useState<AdminDashboardUser | null>(null)
     const [userOverrides, setUserOverrides] = useState<Record<number, UserPatch>>({})
@@ -498,6 +539,16 @@ export default function AllUsersTable({ users }: Props) {
             }
             : current
         )
+    }
+
+    function userDeleted(userId: number) {
+        setSelected(null)
+        setUserOverrides(current => {
+            const next = { ...current }
+            delete next[userId]
+            return next
+        })
+        onUserDeleted?.(userId)
     }
 
     const displayedUsers = users.map(withUserOverride)
@@ -572,6 +623,7 @@ export default function AllUsersTable({ users }: Props) {
                     onUserUpdated={userUpdated}
                     onDocumentsChanged={documentsChanged}
                     onActivationTokenRegenerated={activationTokenRegenerated}
+                    onUserDeleted={userDeleted}
                 />
             )}
         </>
