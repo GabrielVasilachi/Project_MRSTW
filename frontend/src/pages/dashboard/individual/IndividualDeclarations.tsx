@@ -4,6 +4,7 @@ import type { Declaration } from '../../../types/declaration'
 import { getSession } from '../../../auth/auth.session'
 import { createPhysicalDeclaration, deletePhysicalDeclaration, getPhysicalDeclarationsByUserId, updatePhysicalDeclaration } from '../../../api/physicalDeclarationsApi'
 import type { PhysicalDeclarationResponse } from '../../../api/types/physicalDeclaration'
+import { getPhysicalProfileByUserId } from '../../../api/profilesApi'
 import { getPackagesByUserId } from '../../../api/packagesApi'
 import type { PackageResponse } from '../../../api/types/package'
 import KpiCard from '../../../components/dashboard/KpiCard'
@@ -19,6 +20,7 @@ import { calculateTaxes as calculateTaxesApi, getTaxCategories } from '../../../
 import type { TaxCalculationResult, TaxCategory } from '../../../api/types/taxCalculator'
 import { getMDLRates, toMDL } from '../../../utils/exchangeRates'
 import type { InputCurrency } from '../../../utils/exchangeRates'
+import { hasMissingPhysicalProfileData } from '../../../utils/profileValidation'
 
 const createProductId = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`
 const DEFAULT_CATEGORY: TaxCategory = { value: 12, label: '' }
@@ -118,6 +120,7 @@ export default function IndividualDeclarations() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [isSaving, setIsSaving] = useState(false)
+    const [needsVerification, setNeedsVerification] = useState(false)
 
     const defaultCategory = useMemo(
         () => productCategories.find((category) => category.value === 12) ?? productCategories[0] ?? DEFAULT_CATEGORY,
@@ -211,6 +214,35 @@ export default function IndividualDeclarations() {
     useEffect(() => {
         loadCategories()
     }, [loadCategories])
+
+    useEffect(() => {
+        if (!userId) {
+            setNeedsVerification(false)
+            return
+        }
+
+        let ignore = false
+
+        async function loadProfileStatus() {
+            try {
+                const profile = await getPhysicalProfileByUserId(userId!)
+
+                if (!ignore) {
+                    setNeedsVerification(hasMissingPhysicalProfileData(profile))
+                }
+            } catch {
+                if (!ignore) {
+                    setNeedsVerification(false)
+                }
+            }
+        }
+
+        loadProfileStatus()
+
+        return () => {
+            ignore = true
+        }
+    }, [userId])
 
     const handleOpenPopup = () => {
         setPopupError(null)
@@ -330,7 +362,7 @@ export default function IndividualDeclarations() {
 
     return (
         <div className="space-y-8">
-            <AccountVerificationBanner />
+            {needsVerification ? <AccountVerificationBanner /> : null}
 
             <div className="space-y-4">
                 <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Declarațiile mele</h1>
