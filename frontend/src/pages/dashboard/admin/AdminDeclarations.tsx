@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 import type { Declaration } from '../../../types/declaration'
-import { getAdminDeclarations, openAdminDeclaration } from '../../../api/adminDeclarationsApi'
 import type { AdminDeclarationResponse, AdminDeclarationsFilter } from '../../../api/types/adminDeclaration'
+import { deleteBusinessDeclaration, getAllBusinessDeclarations, updateBusinessDeclaration } from '../../../api/businessDeclarationsApi'
+import { deletePhysicalDeclaration, getAllPhysicalDeclarations, updatePhysicalDeclaration } from '../../../api/physicalDeclarationsApi'
 import KpiCard from '../../../components/dashboard/KpiCard'
 import DeclarationsTable from '../../../components/dashboard/DeclarationsTable'
+import type { DeclarationEditValues } from '../../../components/dashboard/DeclarationsTable'
 import { calculateTaxes as calculateTaxesApi, getTaxCategories } from '../../../api/taxCalculatorApi'
 import type { TaxCalculationResult, TaxCategory } from '../../../api/types/taxCalculator'
 
@@ -45,7 +47,9 @@ const mapAdminToDeclaration = (
 
     return {
         id: String(item.id),
+        declaration_type: item.declarationType,
         user_id: String(item.userId),
+        package_id: item.packageId ?? null,
         awb_number: item.trackingCode,
         hs_code: item.hsCode ?? 'N/A',
         description: item.productName,
@@ -53,11 +57,14 @@ const mapAdminToDeclaration = (
         gross_weight: 0,
         customs_value: baseValue,
         currency: mapCurrencyEnumToLabel(item.currency),
+        currency_value: item.currency,
+        category: item.category,
         vat: taxCalculation?.vat ?? 0,
         customs_duty: taxCalculation?.customsDuty ?? 0,
         excise: taxCalculation?.excise ?? 0,
         total_taxes: taxCalculation?.totalAmount ?? 0,
         status: mapStatusEnumToLabel(item.status),
+        status_value: item.status,
         sender_name: item.senderName ?? undefined,
         product_url: item.productURL,
         category_label: category?.label ?? taxCalculation?.categoryName,
@@ -67,7 +74,7 @@ const mapAdminToDeclaration = (
 function getApiErrorMessage(error: unknown) {
     if (axios.isAxiosError(error)) {
         if (error.response?.status === 404 || error.response?.status === 405) {
-            return 'Endpointul GET /admin-declarations nu este disponibil în backend-ul curent.'
+            return 'Endpointul pentru declarații nu este disponibil în backend-ul curent.'
         }
 
         if (typeof error.response?.data === 'string') {
@@ -95,9 +102,15 @@ export default function AdminDeclarations() {
         setLoading(true)
 
         try {
-            const response = await getAdminDeclarations(filter)
-            setAdminDeclarations(response ?? [])
-            const taxCalculationEntries = await Promise.all((response ?? []).map(async (item) => {
+            const [physicalDeclarations, businessDeclarations] = await Promise.all([
+                filter === 'all' || filter === 'physical' ? getAllPhysicalDeclarations() : Promise.resolve([]),
+                filter === 'all' || filter === 'legal' ? getAllBusinessDeclarations() : Promise.resolve([]),
+            ])
+            const declarations = [...physicalDeclarations, ...businessDeclarations]
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+
+            setAdminDeclarations(declarations)
+            const taxCalculationEntries = await Promise.all(declarations.map(async (item) => {
                 const taxCalculation = await calculateTaxesApi({
                     baseValue: Number(item.totalCost),
                     category: item.category,
@@ -159,18 +172,53 @@ export default function AdminDeclarations() {
 
     const resolveUser = useCallback((userId: string) => userLookup.get(userId), [userLookup])
 
-    const handleOpenDeclaration = useCallback(async (declaration: Declaration) => {
+    const handleDeleteDeclaration = useCallback(async (declaration: Declaration) => {
         const adminItem = adminById.get(declaration.id)
 
         if (!adminItem) {
             return
         }
 
-        await openAdminDeclaration(adminItem.id, {
-            action: 'open',
-            declarationType: adminItem.declarationType,
-        })
-    }, [adminById])
+        if (adminItem.declarationType === 'physical') {
+            await deletePhysicalDeclaration(adminItem.id)
+        } else {
+            await deleteBusinessDeclaration(adminItem.id)
+        }
+
+        await loadDeclarations()
+    }, [adminById, loadDeclarations])
+
+    const handleUpdateDeclaration = useCallback(async (declaration: Declaration, values: DeclarationEditValues) => {
+        const adminItem = adminById.get(declaration.id)
+
+        if (!adminItem) {
+            return
+        }
+
+        const baseRequest = {
+            packageId: adminItem.packageId ?? null,
+            productName: values.productName.trim(),
+            productURL: values.productURL.trim(),
+            trackingCode: values.trackingCode.trim(),
+            quantity: values.quantity,
+            totalCost: values.totalCost,
+            currency: values.currency,
+            category: values.category,
+            status: values.status,
+        }
+
+        if (adminItem.declarationType === 'physical') {
+            await updatePhysicalDeclaration(adminItem.id, baseRequest)
+        } else {
+            await updateBusinessDeclaration(adminItem.id, {
+                ...baseRequest,
+                senderName: values.senderName.trim(),
+                hsCode: values.hsCode.trim(),
+            })
+        }
+
+        await loadDeclarations()
+    }, [adminById, loadDeclarations])
 
     const pending = declarations.filter(d => d.status === 'Pending Documents').length
     const underReview = declarations.filter(d => d.status === 'Under Review').length
@@ -229,7 +277,10 @@ export default function AdminDeclarations() {
                 <DeclarationsTable
                     declarations={declarations}
                     resolveUser={resolveUser}
-                    onOpenDeclaration={handleOpenDeclaration}
+                    onDeleteDeclaration={handleDeleteDeclaration}
+                    onUpdateDeclaration={handleUpdateDeclaration}
+                    productCategories={productCategories}
+                    canEditStatus
                 />
             )}
         </div>

@@ -2,13 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 import type { Declaration } from '../../../types/declaration'
 import { getSession } from '../../../auth/auth.session'
-import { createPhysicalDeclaration, getPhysicalDeclarationsByUserId } from '../../../api/physicalDeclarationsApi'
+import { createPhysicalDeclaration, deletePhysicalDeclaration, getPhysicalDeclarationsByUserId, updatePhysicalDeclaration } from '../../../api/physicalDeclarationsApi'
 import type { PhysicalDeclarationResponse } from '../../../api/types/physicalDeclaration'
 import { getPackagesByUserId } from '../../../api/packagesApi'
 import type { PackageResponse } from '../../../api/types/package'
 import KpiCard from '../../../components/dashboard/KpiCard'
 import { fmt } from '../../../utils/format'
 import DeclarationsTable from '../../../components/dashboard/DeclarationsTable'
+import type { DeclarationEditValues } from '../../../components/dashboard/DeclarationsTable'
 import AccountVerificationBanner from '../../../components/dashboard/AccountVerificationBanner'
 import IndividualPopupDeclaration, {
     type ProductDraft,
@@ -76,7 +77,9 @@ const mapPhysicalToDeclaration = (
     const baseValue = Number(item.totalCost)
     return {
         id: String(item.id),
+        declaration_type: 'physical',
         user_id: String(item.userId),
+        package_id: item.packageId ?? null,
         awb_number: item.trackingCode,
         hs_code: 'N/A',
         description: item.productName,
@@ -84,11 +87,14 @@ const mapPhysicalToDeclaration = (
         gross_weight: 0,
         customs_value: baseValue,
         currency: mapCurrencyEnumToLabel(item.currency),
+        currency_value: item.currency,
+        category: item.category,
         vat: taxCalculation?.vat ?? 0,
         customs_duty: taxCalculation?.customsDuty ?? 0,
         excise: taxCalculation?.excise ?? 0,
         total_taxes: taxCalculation?.totalAmount ?? 0,
         status: mapStatusEnumToLabel(item.status),
+        status_value: item.status,
         product_url: item.productURL,
         category_label: category?.label ?? taxCalculation?.categoryName,
     }
@@ -302,6 +308,26 @@ export default function IndividualDeclarations() {
         }
     }
 
+    const handleDeleteDeclaration = async (declaration: Declaration) => {
+        await deletePhysicalDeclaration(Number(declaration.id))
+        await loadDeclarations()
+    }
+
+    const handleUpdateDeclaration = async (declaration: Declaration, values: DeclarationEditValues) => {
+        await updatePhysicalDeclaration(Number(declaration.id), {
+            packageId: declaration.package_id ?? null,
+            productName: values.productName.trim(),
+            productURL: values.productURL.trim(),
+            trackingCode: values.trackingCode.trim(),
+            quantity: values.quantity,
+            totalCost: values.totalCost,
+            currency: values.currency,
+            category: values.category,
+            status: declaration.status_value ?? 0,
+        })
+        await loadDeclarations()
+    }
+
     return (
         <div className="space-y-8">
             <AccountVerificationBanner />
@@ -368,7 +394,12 @@ export default function IndividualDeclarations() {
                     Se încarcă declarațiile...
                 </div>
             ) : (
-                <DeclarationsTable declarations={userDeclarations} />
+                <DeclarationsTable
+                    declarations={userDeclarations}
+                    onDeleteDeclaration={handleDeleteDeclaration}
+                    onUpdateDeclaration={handleUpdateDeclaration}
+                    productCategories={productCategories}
+                />
             )}
 
             {isPopupOpen ? (

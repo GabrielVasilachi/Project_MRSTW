@@ -2,13 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import axios from 'axios'
 import type { Declaration } from '../../../types/declaration'
 import { getSession } from '../../../auth/auth.session'
-import { createBusinessDeclaration, getBusinessDeclarationsByUserId } from '../../../api/businessDeclarationsApi'
+import { createBusinessDeclaration, deleteBusinessDeclaration, getBusinessDeclarationsByUserId, updateBusinessDeclaration } from '../../../api/businessDeclarationsApi'
 import type { BusinessDeclarationResponse } from '../../../api/types/businessDeclaration'
 import { getPackagesByUserId } from '../../../api/packagesApi'
 import type { PackageResponse } from '../../../api/types/package'
 import KpiCard from '../../../components/dashboard/KpiCard'
 import { fmt } from '../../../utils/format'
 import DeclarationsTable from '../../../components/dashboard/DeclarationsTable'
+import type { DeclarationEditValues } from '../../../components/dashboard/DeclarationsTable'
 import BusinessVerificationBanner from '../../../components/dashboard/BusinessVerificationBanner'
 import BusinessPopupDeclaration, {
     type ProductDraft,
@@ -78,7 +79,9 @@ const mapBusinessToDeclaration = (
     const baseValue = Number(item.totalCost)
     return {
         id: String(item.id),
+        declaration_type: 'legal',
         user_id: String(item.userId),
+        package_id: item.packageId ?? null,
         awb_number: item.trackingCode,
         hs_code: item.hsCode,
         description: item.productName,
@@ -86,11 +89,14 @@ const mapBusinessToDeclaration = (
         gross_weight: 0,
         customs_value: baseValue,
         currency: mapCurrencyEnumToLabel(item.currency),
+        currency_value: item.currency,
+        category: item.category,
         vat: taxCalculation?.vat ?? 0,
         customs_duty: taxCalculation?.customsDuty ?? 0,
         excise: taxCalculation?.excise ?? 0,
         total_taxes: taxCalculation?.totalAmount ?? 0,
         status: mapStatusEnumToLabel(item.status),
+        status_value: item.status,
         sender_name: item.senderName,
         product_url: item.productURL,
         category_label: category?.label ?? taxCalculation?.categoryName,
@@ -311,6 +317,28 @@ export default function BusinessDeclarations() {
         }
     }
 
+    const handleDeleteDeclaration = async (declaration: Declaration) => {
+        await deleteBusinessDeclaration(Number(declaration.id))
+        await loadDeclarations()
+    }
+
+    const handleUpdateDeclaration = async (declaration: Declaration, values: DeclarationEditValues) => {
+        await updateBusinessDeclaration(Number(declaration.id), {
+            packageId: declaration.package_id ?? null,
+            senderName: values.senderName.trim(),
+            productName: values.productName.trim(),
+            productURL: values.productURL.trim(),
+            trackingCode: values.trackingCode.trim(),
+            hsCode: values.hsCode.trim(),
+            quantity: values.quantity,
+            totalCost: values.totalCost,
+            currency: values.currency,
+            category: values.category,
+            status: declaration.status_value ?? 0,
+        })
+        await loadDeclarations()
+    }
+
     return (
         <div className="space-y-8">
             <BusinessVerificationBanner />
@@ -377,7 +405,12 @@ export default function BusinessDeclarations() {
                     Se încarcă declarațiile...
                 </div>
             ) : (
-                <DeclarationsTable declarations={companyDeclarations} />
+                <DeclarationsTable
+                    declarations={companyDeclarations}
+                    onDeleteDeclaration={handleDeleteDeclaration}
+                    onUpdateDeclaration={handleUpdateDeclaration}
+                    productCategories={productCategories}
+                />
             )}
 
             {isPopupOpen ? (
