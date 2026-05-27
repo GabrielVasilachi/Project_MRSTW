@@ -1,6 +1,8 @@
+using Microsoft.EntityFrameworkCore;
 using MRSTW.DataAccessLayer.Context;
 using MRSTW.Domain.Entities.BusinessDeclarations;
 using MRSTW.Domain.Enums;
+using MRSTW.Domain.Models.AdminDeclarations;
 using MRSTW.Domain.Models.BusinessDeclarations;
 using MRSTW.Domain.Models.Service;
 
@@ -162,6 +164,46 @@ public class BusinessDeclarationsActions
             IsSuccess = true,
             Data = response,
             Message = "BusinessDeclaration a fost creata cu succes."
+        };
+    }
+
+    public ServiceResponse GetAllBusinessDeclarationsAction()
+    {
+        var declarations = _businessDeclarationsContext.BusinessDeclarations
+            .Include(d => d.User)
+            .OrderByDescending(d => d.CreatedAt)
+            .Select(d => new AdminDeclarationResponseDto
+            {
+                Id = d.Id,
+                DeclarationType = "legal",
+                PersonType = "business",
+                UserId = d.UserId,
+                User = new AdminDeclarationUserInfoDto
+                {
+                    Id = d.UserId,
+                    FullName = d.User.FullName,
+                    Email = d.User.Email,
+                    PhoneNumber = d.User.PhoneNumber
+                },
+                ProductName = d.ProductName,
+                ProductURL = d.ProductURL,
+                TrackingCode = d.TrackingCode,
+                SenderName = d.SenderName,
+                HsCode = d.HSCode,
+                Category = d.Category,
+                Quantity = d.Quantity,
+                TotalCost = d.TotalCost,
+                Currency = d.Currency,
+                Status = d.Status,
+                CreatedAt = d.CreatedAt,
+                Review = null
+            })
+            .ToList();
+
+        return new ServiceResponse
+        {
+            IsSuccess = true,
+            Data = declarations
         };
     }
 

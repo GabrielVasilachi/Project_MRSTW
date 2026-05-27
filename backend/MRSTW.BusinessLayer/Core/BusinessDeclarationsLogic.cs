@@ -16,4 +16,9 @@ public class BusinessDeclarationsLogic : BusinessDeclarationsActions, IBusinessD
     {
         return GetBusinessDeclarationsByUserIdAction(userId);
     }
+
+    public ServiceResponse GetAllBusinessDeclarations()
+    {
+        return GetAllBusinessDeclarationsAction();
+    }
 }

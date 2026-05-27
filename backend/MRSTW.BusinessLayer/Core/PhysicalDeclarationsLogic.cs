@@ -16,4 +16,9 @@ public class PhysicalDeclarationsLogic : PhysicalDeclarationsActions, IPhysicalD
     {
         return GetPhysicalDeclarationsByUserIdAction(userId);
     }
+
+    public ServiceResponse GetAllPhysicalDeclarations()
+    {
+        return GetAllPhysicalDeclarationsAction();
+    }
 }
