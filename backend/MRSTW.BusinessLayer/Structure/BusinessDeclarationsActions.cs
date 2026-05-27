@@ -12,11 +12,13 @@ public class BusinessDeclarationsActions
 {
     private readonly BusinessDeclarationsDbContext _businessDeclarationsContext;
     private readonly UsersDbContext _usersContext;
+    private readonly PackagesDbContext _packagesContext;
 
     public BusinessDeclarationsActions()
     {
         _businessDeclarationsContext = new BusinessDeclarationsDbContext();
         _usersContext = new UsersDbContext();
+        _packagesContext = new PackagesDbContext();
     }
 
     public ServiceResponse CreateBusinessDeclarationAction(BusinessDeclarationCreateRequestDto request)
@@ -113,13 +115,22 @@ public class BusinessDeclarationsActions
             };
         }
 
+        var normalizedTrackingCode = request.TrackingCode.Trim();
+        var packageValidation = ResolvePackageId(request.UserId, request.PackageId, normalizedTrackingCode, out var packageId);
+
+        if (!packageValidation.IsSuccess)
+        {
+            return packageValidation;
+        }
+
         var declaration = new BusinessDeclarationEntity
         {
             UserId = request.UserId,
+            PackageId = packageId,
             SenderName = request.SenderName.Trim(),
             ProductName = request.ProductName.Trim(),
             ProductURL = request.ProductURL.Trim(),
-            TrackingCode = request.TrackingCode.Trim(),
+            TrackingCode = normalizedTrackingCode,
             HSCode = request.HSCode.Trim(),
             Category = request.Category,
             Quantity = request.Quantity,
@@ -146,6 +157,7 @@ public class BusinessDeclarationsActions
         {
             Id = declaration.Id,
             UserId = declaration.UserId,
+            PackageId = declaration.PackageId,
             SenderName = declaration.SenderName,
             ProductName = declaration.ProductName,
             ProductURL = declaration.ProductURL,
@@ -225,6 +237,7 @@ public class BusinessDeclarationsActions
             {
                 Id = d.Id,
                 UserId = d.UserId,
+                PackageId = d.PackageId,
                 SenderName = d.SenderName,
                 ProductName = d.ProductName,
                 ProductURL = d.ProductURL,
@@ -243,6 +256,69 @@ public class BusinessDeclarationsActions
         {
             IsSuccess = true,
             Data = declarations
+        };
+    }
+
+    private ServiceResponse ResolvePackageId(int userId, int? requestPackageId, string trackingCode, out int? packageId)
+    {
+        packageId = null;
+
+        if (requestPackageId.HasValue && requestPackageId.Value <= 0)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "PackageId este invalid."
+            };
+        }
+
+        if (requestPackageId.HasValue)
+        {
+            var package = _packagesContext.Packages.FirstOrDefault(p => p.Id == requestPackageId.Value);
+
+            if (package == null)
+            {
+                return new ServiceResponse
+                {
+                    IsSuccess = false,
+                    Message = "Coletul nu a fost gasit."
+                };
+            }
+
+            if (package.UserId != userId)
+            {
+                return new ServiceResponse
+                {
+                    IsSuccess = false,
+                    Message = "Coletul nu apartine utilizatorului."
+                };
+            }
+
+            if (!string.Equals(package.TrackingCode, trackingCode, StringComparison.OrdinalIgnoreCase))
+            {
+                return new ServiceResponse
+                {
+                    IsSuccess = false,
+                    Message = "TrackingCode nu corespunde coletului selectat."
+                };
+            }
+
+            packageId = package.Id;
+
+            return new ServiceResponse
+            {
+                IsSuccess = true
+            };
+        }
+
+        var matchedPackage = _packagesContext.Packages
+            .FirstOrDefault(p => p.UserId == userId && p.TrackingCode == trackingCode);
+
+        packageId = matchedPackage?.Id;
+
+        return new ServiceResponse
+        {
+            IsSuccess = true
         };
     }
 }

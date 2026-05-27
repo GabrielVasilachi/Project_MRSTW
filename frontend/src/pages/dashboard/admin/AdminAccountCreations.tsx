@@ -137,9 +137,9 @@ export default function AdminAccountCreations() {
 		<div className="flex justify-center px-4 py-8">
 			<div className="w-full max-w-3xl space-y-6">
 				<div>
-					<h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Creare Utilizator Nou</h1>
+					<h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Scanare Colet</h1>
 					<p className="mt-2 text-sm text-slate-500">
-						Completeaza informatiile pentru a adauga un utilizator nou in sistem. Toate campurile marcate sunt obligatorii.
+						Completeaza informatiile pentru a adauga un utilizator nou in sistem sau asocierea coletului unui utilizator deja existent. Toate campurile marcate sunt obligatorii.
 					</p>
 				</div>
 

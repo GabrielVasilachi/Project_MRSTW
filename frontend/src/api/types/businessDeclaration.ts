@@ -1,5 +1,6 @@
 export type BusinessDeclarationCreateRequest = {
     userId: number;
+    packageId?: number | null;
     senderName: string;
     productName: string;
     productURL: string;
@@ -14,6 +15,7 @@ export type BusinessDeclarationCreateRequest = {
 export type BusinessDeclarationResponse = {
     id: number;
     userId: number;
+    packageId?: number | null;
     senderName: string;
     productName: string;
     productURL: string;

@@ -9,4 +9,7 @@ public class TaxCalculatorLogic : TaxCalculatorActions, ITaxCalculatorLogic
 {
     public ServiceResponse CalculateTaxes(TaxCalculationRequestDto request)
         => CalculateTaxesAction(request);
+
+    public ServiceResponse GetCategories()
+        => GetCategoriesAction();
 }

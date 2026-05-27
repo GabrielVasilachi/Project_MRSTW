@@ -6,6 +6,7 @@ public class BusinessDeclarationResponseDto
 {
     public int Id { get; set; }
     public int UserId { get; set; }
+    public int? PackageId { get; set; }
     public string SenderName { get; set; } = string.Empty;
     public string ProductName { get; set; } = string.Empty;
     public string ProductURL { get; set; } = string.Empty;

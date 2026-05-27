@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MRSTW.Domain.Entities.Packages;
 using MRSTW.Domain.Entities.Users;
 using MRSTW.Domain.Enums;
 
@@ -16,6 +17,11 @@ public class BusinessDeclarationEntity
 
     [ForeignKey(nameof(UserId))]
     public UserEntity User { get; set; } = null!;
+
+    public int? PackageId { get; set; }
+
+    [ForeignKey(nameof(PackageId))]
+    public PackageEntity? Package { get; set; }
 
     [Required]
     [StringLength(200)]

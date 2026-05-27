@@ -70,4 +70,18 @@ public class TaxCalculatorActions
 
         return new ServiceResponse { IsSuccess = true, Data = result };
     }
+
+    public ServiceResponse GetCategoriesAction()
+    {
+        var categories = CategoryNames
+            .OrderBy(category => (int)category.Key)
+            .Select(category => new TaxCategoryResponseDto
+            {
+                Value = (int)category.Key,
+                Label = category.Value
+            })
+            .ToList();
+
+        return new ServiceResponse { IsSuccess = true, Data = categories };
+    }
 }

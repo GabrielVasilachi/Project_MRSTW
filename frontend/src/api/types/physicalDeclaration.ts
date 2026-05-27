@@ -1,5 +1,6 @@
 export type PhysicalDeclarationCreateRequest = {
     userId: number;
+    packageId?: number | null;
     productName: string;
     productURL: string;
     trackingCode: string;
@@ -12,6 +13,7 @@ export type PhysicalDeclarationCreateRequest = {
 export type PhysicalDeclarationResponse = {
     id: number;
     userId: number;
+    packageId?: number | null;
     productName: string;
     productURL: string;
     trackingCode: string;

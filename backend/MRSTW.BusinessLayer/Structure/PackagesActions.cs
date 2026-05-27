@@ -27,6 +27,42 @@ public class PackagesActions
         _physicalProfilesContext = new PhysicalProfilesDbContext();
     }
 
+    public ServiceResponse GetPackagesByUserIdAction(int userId)
+    {
+        if (userId <= 0)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "UserId este obligatoriu."
+            };
+        }
+
+        var packages = _packagesContext.Packages
+            .Where(p => p.UserId == userId)
+            .OrderByDescending(p => p.CreatedAt)
+            .Select(p => new PackageResponseDto
+            {
+                Id = p.Id,
+                TrackingCode = p.TrackingCode,
+                PhoneNumber = p.PhoneNumber,
+                LocationAdress = p.LocationAdress,
+                FullName = p.FullName,
+                CompanyName = p.CompanyName,
+                ContactPerson = p.ContactPerson,
+                Status = p.Status,
+                UserId = p.UserId,
+                CreatedAt = p.CreatedAt
+            })
+            .ToList();
+
+        return new ServiceResponse
+        {
+            IsSuccess = true,
+            Data = packages
+        };
+    }
+
     public ServiceResponse ScanPhysicalProfilesAction(PackageScanPhysicalProfilesRequestDto request)
     {
         if (string.IsNullOrWhiteSpace(request.TrackingCode))

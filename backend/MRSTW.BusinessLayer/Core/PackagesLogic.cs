@@ -16,4 +16,9 @@ public class PackagesLogic : PackagesActions, IPackagesLogic
     {
         return ScanBusinessProfilesAction(request);
     }
+
+    public ServiceResponse GetPackagesByUserId(int userId)
+    {
+        return GetPackagesByUserIdAction(userId);
+    }
 }

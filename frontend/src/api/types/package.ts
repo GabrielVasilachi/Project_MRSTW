@@ -32,3 +32,16 @@ export type PackageScanBusinessProfilesResponse = {
     activationLink?: string | null;
     message: string;
 };
+
+export type PackageResponse = {
+    id: number;
+    trackingCode: string;
+    phoneNumber: string;
+    locationAdress: string;
+    fullName?: string | null;
+    companyName?: string | null;
+    contactPerson?: string | null;
+    status: number;
+    userId?: number | null;
+    createdAt: string;
+};

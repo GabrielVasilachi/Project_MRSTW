@@ -5,6 +5,7 @@ namespace MRSTW.Domain.Models.PhysicalDeclarations;
 public class PhysicalDeclarationCreateRequestDto
 {
     public int UserId { get; set; }
+    public int? PackageId { get; set; }
     public string ProductName { get; set; } = string.Empty;
     public string ProductURL { get; set; } = string.Empty;
     public string TrackingCode { get; set; } = string.Empty;

@@ -25,7 +25,7 @@ const NAV_ITEMS: Record<string, NavItem[]> = {
 		{ label: 'Dashboard',          to: paths.Dashboard_Admin },
 		{ label: 'Declarații',         to: paths.Admin_Declarations },
 		{ label: 'Utilizatori',        to: paths.Admin_Users },
-		{ label: 'Creare Utilizatori', to: paths.Admin_AccountCreations },
+		{ label: 'Scanare Colete',     to: paths.Admin_AccountCreations },
 		{ label: 'Documente',          to: paths.Admin_Documents },
 		{ label: 'Rapoarte',           to: paths.Admin_Reports },
 		{ label: 'Audit Log',          to: paths.Admin_AuditLog },

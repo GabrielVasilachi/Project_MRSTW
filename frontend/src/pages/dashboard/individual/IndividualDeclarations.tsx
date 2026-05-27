@@ -4,6 +4,8 @@ import type { Declaration } from '../../../types/declaration'
 import { getSession } from '../../../auth/auth.session'
 import { createPhysicalDeclaration, getPhysicalDeclarationsByUserId } from '../../../api/physicalDeclarationsApi'
 import type { PhysicalDeclarationResponse } from '../../../api/types/physicalDeclaration'
+import { getPackagesByUserId } from '../../../api/packagesApi'
+import type { PackageResponse } from '../../../api/types/package'
 import KpiCard from '../../../components/dashboard/KpiCard'
 import { fmt } from '../../../utils/format'
 import DeclarationsTable from '../../../components/dashboard/DeclarationsTable'
@@ -12,20 +14,42 @@ import IndividualPopupDeclaration, {
     type ProductDraft,
     type ProductField,
 } from '../../../components/dashboard/IndividualPopupDeclaration'
-import { PRODUCT_CATEGORIES, calculateTaxes, type ProductCategory } from '../../../components/dashboard/TaxBreakdown'
+import { calculateTaxes as calculateTaxesApi, getTaxCategories } from '../../../api/taxCalculatorApi'
+import type { TaxCalculationResult, TaxCategory } from '../../../api/types/taxCalculator'
 import { getMDLRates, toMDL } from '../../../utils/exchangeRates'
 import type { InputCurrency } from '../../../utils/exchangeRates'
 
-const createEmptyProduct = (): ProductDraft => ({
-    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+const createProductId = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`
+const DEFAULT_CATEGORY: TaxCategory = { value: 12, label: '' }
+
+const createEmptyProduct = (category: TaxCategory = DEFAULT_CATEGORY): ProductDraft => ({
+    id: createProductId(),
+    packageId: null,
     trackingNumber: '',
     productName: '',
     productUrl: '',
     items: '',
     inTotal: '',
     inputCurrency: 'MDL',
-    category: PRODUCT_CATEGORIES[12],
+    category,
 })
+
+const createProductFromPackage = (packageItem: PackageResponse, category: TaxCategory): ProductDraft => ({
+    ...createEmptyProduct(category),
+    packageId: packageItem.id,
+    trackingNumber: packageItem.trackingCode,
+})
+
+const createProductsFromPackages = (packages: PackageResponse[], category: TaxCategory): ProductDraft[] => (
+    packages.length > 0 ? packages.map((packageItem) => createProductFromPackage(packageItem, category)) : [createEmptyProduct(category)]
+)
+
+const getPackageOwnerLabel = (packageItem: PackageResponse) => (
+    packageItem.companyName
+    || packageItem.fullName
+    || packageItem.contactPerson
+    || packageItem.locationAdress
+)
 
 const CURRENCY_LABEL_BY_ENUM: Record<number, string> = {
     0: 'EUR',
@@ -44,10 +68,12 @@ const STATUS_BY_ENUM: Record<number, string> = {
 const mapCurrencyEnumToLabel = (currency: number) => CURRENCY_LABEL_BY_ENUM[currency] ?? 'MDL'
 const mapStatusEnumToLabel = (status: number) => STATUS_BY_ENUM[status] ?? 'Under Review'
 
-const mapPhysicalToDeclaration = (item: PhysicalDeclarationResponse): Declaration => {
-    const category = PRODUCT_CATEGORIES[item.category] ?? PRODUCT_CATEGORIES[12]
+const mapPhysicalToDeclaration = (
+    item: PhysicalDeclarationResponse,
+    taxCalculation: TaxCalculationResult | undefined,
+    category: TaxCategory | undefined,
+): Declaration => {
     const baseValue = Number(item.totalCost)
-    const taxes = calculateTaxes(baseValue, category)
     return {
         id: String(item.id),
         user_id: String(item.userId),
@@ -58,13 +84,13 @@ const mapPhysicalToDeclaration = (item: PhysicalDeclarationResponse): Declaratio
         gross_weight: 0,
         customs_value: baseValue,
         currency: mapCurrencyEnumToLabel(item.currency),
-        vat: taxes.vat,
-        customs_duty: taxes.customsDuty,
-        excise: taxes.excise,
-        total_taxes: taxes.totalAmount,
+        vat: taxCalculation?.vat ?? 0,
+        customs_duty: taxCalculation?.customsDuty ?? 0,
+        excise: taxCalculation?.excise ?? 0,
+        total_taxes: taxCalculation?.totalAmount ?? 0,
         status: mapStatusEnumToLabel(item.status),
         product_url: item.productURL,
-        category_label: category.label,
+        category_label: category?.label ?? taxCalculation?.categoryName,
     }
 }
 
@@ -78,13 +104,32 @@ export default function IndividualDeclarations() {
     const [products, setProducts] = useState<ProductDraft[]>(() => [createEmptyProduct()])
     const [popupError, setPopupError] = useState<string | null>(null)
     const [physicalDeclarations, setPhysicalDeclarations] = useState<PhysicalDeclarationResponse[]>([])
+    const [taxCalculationsByDeclarationId, setTaxCalculationsByDeclarationId] = useState<Record<number, TaxCalculationResult>>({})
+    const [productCategories, setProductCategories] = useState<TaxCategory[]>([])
+    const [userPackages, setUserPackages] = useState<PackageResponse[]>([])
+    const [packagesLoading, setPackagesLoading] = useState(true)
+    const [packagesError, setPackagesError] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [isSaving, setIsSaving] = useState(false)
 
+    const defaultCategory = useMemo(
+        () => productCategories.find((category) => category.value === 12) ?? productCategories[0] ?? DEFAULT_CATEGORY,
+        [productCategories],
+    )
+
+    const categoryByValue = useMemo(
+        () => Object.fromEntries(productCategories.map((category) => [category.value, category])),
+        [productCategories],
+    )
+
     const userDeclarations = useMemo(
-        () => physicalDeclarations.map(mapPhysicalToDeclaration),
-        [physicalDeclarations],
+        () => physicalDeclarations.map((item) => mapPhysicalToDeclaration(
+            item,
+            taxCalculationsByDeclarationId[item.id],
+            categoryByValue[item.category],
+        )),
+        [physicalDeclarations, taxCalculationsByDeclarationId, categoryByValue],
     )
 
     const loadDeclarations = useCallback(async () => {
@@ -97,6 +142,15 @@ export default function IndividualDeclarations() {
         try {
             const response = await getPhysicalDeclarationsByUserId(userId)
             setPhysicalDeclarations(response ?? [])
+            const taxCalculationEntries = await Promise.all((response ?? []).map(async (item) => {
+                const taxCalculation = await calculateTaxesApi({
+                    baseValue: Number(item.totalCost),
+                    category: item.category,
+                })
+
+                return [item.id, taxCalculation] as const
+            }))
+            setTaxCalculationsByDeclarationId(Object.fromEntries(taxCalculationEntries))
             setError(null)
         } catch (err: unknown) {
             if (axios.isAxiosError(err) && typeof err.response?.data === 'string') {
@@ -109,12 +163,52 @@ export default function IndividualDeclarations() {
         }
     }, [userId])
 
+    const loadCategories = useCallback(async () => {
+        try {
+            const response = await getTaxCategories()
+            setProductCategories(response ?? [])
+        } catch {
+            setProductCategories([])
+        }
+    }, [])
+
+    const loadPackages = useCallback(async () => {
+        if (!userId) {
+            setPackagesLoading(false)
+            setPackagesError('Sesiunea nu conține id-ul utilizatorului.')
+            return
+        }
+
+        try {
+            const response = await getPackagesByUserId(userId)
+            setUserPackages(response ?? [])
+            setPackagesError(null)
+        } catch (err: unknown) {
+            if (axios.isAxiosError(err) && typeof err.response?.data === 'string') {
+                setPackagesError(err.response.data)
+            } else {
+                setPackagesError('Nu s-au putut încărca coletele.')
+            }
+        } finally {
+            setPackagesLoading(false)
+        }
+    }, [userId])
+
     useEffect(() => {
         loadDeclarations()
     }, [loadDeclarations])
 
+    useEffect(() => {
+        loadPackages()
+    }, [loadPackages])
+
+    useEffect(() => {
+        loadCategories()
+    }, [loadCategories])
+
     const handleOpenPopup = () => {
         setPopupError(null)
+        setProducts(createProductsFromPackages(userPackages, defaultCategory))
         setIsPopupOpen(true)
     }
 
@@ -123,13 +217,13 @@ export default function IndividualDeclarations() {
         setPopupError(null)
     }
 
-    const handleUpdateProduct = (productId: string, field: ProductField, value: string | number | '' | ProductCategory | InputCurrency) => {
+    const handleUpdateProduct = (productId: string, field: ProductField, value: string | number | '' | TaxCategory | InputCurrency) => {
         setProducts((prev) => prev.map((product) => (product.id === productId ? { ...product, [field]: value } : product)))
     }
 
     const handleAddProduct = () => {
         setPopupError(null)
-        setProducts((prev) => [...prev, createEmptyProduct()])
+        setProducts((prev) => [...prev, createEmptyProduct(defaultCategory)])
     }
 
     const handleDeleteProduct = (productId: string) => {
@@ -140,12 +234,13 @@ export default function IndividualDeclarations() {
     const handleResetProduct = (productId: string) => {
         setProducts((prev) => prev.map((product) => (product.id === productId ? {
             ...product,
-            trackingNumber: '',
+            trackingNumber: product.packageId ? product.trackingNumber : '',
             productName: '',
             productUrl: '',
             items: '',
             inTotal: '',
             inputCurrency: 'MDL' as InputCurrency,
+            category: defaultCategory,
         } : product)))
     }
 
@@ -182,6 +277,7 @@ export default function IndividualDeclarations() {
                 const mdlValue = toMDL(Number(product.inTotal), product.inputCurrency, rates)
                 return createPhysicalDeclaration({
                     userId,
+                    packageId: product.packageId ?? null,
                     productName: product.productName.trim(),
                     productURL: product.productUrl.trim(),
                     trackingCode: product.trackingNumber.trim(),
@@ -193,7 +289,7 @@ export default function IndividualDeclarations() {
             }))
 
             await loadDeclarations()
-            setProducts([createEmptyProduct()])
+            setProducts([createEmptyProduct(defaultCategory)])
             setIsPopupOpen(false)
         } catch (err: unknown) {
             if (axios.isAxiosError(err) && typeof err.response?.data === 'string') {
@@ -212,14 +308,47 @@ export default function IndividualDeclarations() {
 
             <div className="space-y-4">
                 <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Declarațiile mele</h1>
-                <button
-                    type="button"
-                    onClick={handleOpenPopup}
-                    className="flex w-full items-center gap-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-900 transition-colors hover:bg-sky-100 sm:w-auto"
-                >
-                    <img src="/images/Declaration.svg" alt="Declaratie" className="h-6 w-6" />
-                    <span>Adaugă o declarație</span>
-                </button>
+                <div className="rounded-lg border border-gray-200 bg-white p-5">
+                    <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-base font-semibold text-gray-900">Colete asociate</p>
+                        <p className="text-sm text-gray-500">{userPackages.length} colete</p>
+                    </div>
+
+                    {packagesLoading ? (
+                        <p className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-gray-500">
+                            Se încarcă coletele...
+                        </p>
+                    ) : packagesError ? (
+                        <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                            {packagesError}
+                        </p>
+                    ) : userPackages.length > 0 ? (
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            {userPackages.map((packageItem) => (
+                                <div key={packageItem.id} className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3">
+                                    <p className="font-mono text-sm font-semibold text-gray-900">{packageItem.trackingCode}</p>
+                                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
+                                        <span>{getPackageOwnerLabel(packageItem)}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-gray-500">
+                            Nu există colete asociate contului.
+                        </p>
+                    )}
+
+                    <button
+                        type="button"
+                        onClick={handleOpenPopup}
+                        disabled={packagesLoading}
+                        className="mt-4 flex w-full items-center gap-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-900 transition-colors hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                    >
+                        <img src="/images/Declaration.svg" alt="Declaratie" className="h-6 w-6" />
+                        <span>Adaugă o declarație</span>
+                    </button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -242,17 +371,20 @@ export default function IndividualDeclarations() {
                 <DeclarationsTable declarations={userDeclarations} />
             )}
 
-            <IndividualPopupDeclaration
-                isOpen={isPopupOpen}
-                onClose={handleClosePopup}
-                products={products}
-                onUpdateProduct={handleUpdateProduct}
-                onAddProduct={handleAddProduct}
-                onDeleteProduct={handleDeleteProduct}
-                onResetProduct={handleResetProduct}
-                popupError={popupError}
-                onSave={handleSaveDeclaration}
-            />
+            {isPopupOpen ? (
+                <IndividualPopupDeclaration
+                    isOpen={isPopupOpen}
+                    onClose={handleClosePopup}
+                    products={products}
+                    onUpdateProduct={handleUpdateProduct}
+                    onAddProduct={handleAddProduct}
+                    onDeleteProduct={handleDeleteProduct}
+                    onResetProduct={handleResetProduct}
+                    popupError={popupError}
+                    onSave={handleSaveDeclaration}
+                    productCategories={productCategories}
+                />
+            ) : null}
         </div>
     )
 }

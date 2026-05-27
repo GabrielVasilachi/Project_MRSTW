@@ -26,4 +26,15 @@ public class TaxCalculatorController : ControllerBase
 
         return Ok(response.Data);
     }
+
+    [HttpGet("categories")]
+    public IActionResult GetCategories()
+    {
+        var response = _taxLogic.GetCategories();
+
+        if (!response.IsSuccess)
+            return BadRequest(response.Message);
+
+        return Ok(response.Data);
+    }
 }

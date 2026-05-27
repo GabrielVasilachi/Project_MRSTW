@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react'
-import TaxBreakdown, { PRODUCT_CATEGORIES, type ProductCategory } from './TaxBreakdown'
+import TaxBreakdown from './TaxBreakdown'
 import { getMDLRates, toMDL, type InputCurrency } from '../../utils/exchangeRates'
+import type { TaxCategory } from '../../api/types/taxCalculator'
 
 export type { InputCurrency }
 
 export type ProductDraft = {
     id: string
+    packageId?: number | null
     trackingNumber: string
     productName: string
     productUrl: string
     items: number | ''
     inTotal: number | ''
     inputCurrency: InputCurrency
-    category: ProductCategory
+    category: TaxCategory
 }
 
 export type ProductField = Exclude<keyof ProductDraft, 'id'>
@@ -45,12 +47,13 @@ type IndividualPopupDeclarationProps = {
     isOpen: boolean
     onClose: () => void
     products: ProductDraft[]
-    onUpdateProduct: (productId: string, field: ProductField, value: string | number | '' | ProductCategory | InputCurrency) => void
+    onUpdateProduct: (productId: string, field: ProductField, value: string | number | '' | TaxCategory | InputCurrency) => void
     onAddProduct: () => void
     onDeleteProduct: (productId: string) => void
     onResetProduct: (productId: string) => void
     popupError: string | null
     onSave: () => void
+    productCategories: TaxCategory[]
 }
 
 const VALIDATED_FIELDS: ProductField[] = ['productName', 'productUrl', 'trackingNumber', 'items', 'inTotal']
@@ -65,15 +68,13 @@ export default function IndividualPopupDeclaration({
     onResetProduct,
     popupError,
     onSave,
+    productCategories,
 }: IndividualPopupDeclarationProps) {
     const [touched, setTouched] = useState<Set<string>>(new Set())
     const [rates, setRates] = useState<Record<string, number> | null>(null)
 
     useEffect(() => {
-        if (!isOpen) {
-            setTouched(new Set())
-            return
-        }
+        if (!isOpen) return
         getMDLRates().then(setRates)
     }, [isOpen])
 
@@ -141,6 +142,7 @@ export default function IndividualPopupDeclaration({
                         const eTracking    = err(product.id, 'trackingNumber', product.trackingNumber)
                         const eItems       = err(product.id, 'items',       product.items)
                         const eInTotal     = err(product.id, 'inTotal',     product.inTotal)
+                        const isPackageLinked = product.packageId !== null && product.packageId !== undefined
 
                         const mdlValue = typeof product.inTotal === 'number' && product.inTotal > 0 && rates
                             ? toMDL(product.inTotal, product.inputCurrency, rates)
@@ -185,9 +187,10 @@ export default function IndividualPopupDeclaration({
                                         <label className="mb-1 block text-sm font-medium text-gray-700">Număr de urmărire (tracking)</label>
                                         <input
                                             value={product.trackingNumber}
+                                            readOnly={isPackageLinked}
                                             onChange={(e) => onUpdateProduct(product.id, 'trackingNumber', e.target.value)}
                                             onBlur={() => touch(product.id, 'trackingNumber')}
-                                            className={inputClass(!!eTracking)}
+                                            className={`${inputClass(!!eTracking)} ${isPackageLinked ? 'bg-gray-100 text-gray-700' : ''}`}
                                             placeholder="Ex: 176-12345678"
                                         />
                                         <FieldError msg={eTracking} />
@@ -213,7 +216,7 @@ export default function IndividualPopupDeclaration({
                                 <div>
                                     <label className="mb-2 block text-sm font-medium text-gray-700">Selectați categoria</label>
                                     <div className="flex flex-wrap gap-2">
-                                        {PRODUCT_CATEGORIES.map(cat => (
+                                        {productCategories.map(cat => (
                                             <button
                                                 key={cat.value}
                                                 type="button"

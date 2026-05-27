@@ -4,6 +4,7 @@ import type {
     PackageScanBusinessProfilesResponse,
     PackageScanPhysicalProfilesRequest,
     PackageScanPhysicalProfilesResponse,
+    PackageResponse,
 } from "./types/package";
 
 export async function scanPhysicalProfiles(data: PackageScanPhysicalProfilesRequest) {
@@ -13,5 +14,10 @@ export async function scanPhysicalProfiles(data: PackageScanPhysicalProfilesRequ
 
 export async function scanBusinessProfiles(data: PackageScanBusinessProfilesRequest) {
     const response = await api.post<PackageScanBusinessProfilesResponse>("/packages/scan-business-profiles", data);
+    return response.data;
+}
+
+export async function getPackagesByUserId(userId: number) {
+    const response = await api.get<PackageResponse[]>(`/packages/by-user/${userId}`);
     return response.data;
 }
