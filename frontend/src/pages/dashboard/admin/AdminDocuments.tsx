@@ -77,7 +77,7 @@ export default function AdminDocuments() {
                         <table className="min-w-full text-left text-sm">
                             <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-600">
                                 <tr>
-                                    {['Fișier', 'Tip', 'Utilizator', 'Rol', 'Dimensiune', 'Data'].map(h => (
+                                    {['Fișier', 'Declarație', 'Tip', 'Utilizator', 'Rol', 'Dimensiune', 'Data'].map(h => (
                                         <th key={h} className="px-6 py-3 font-medium">{h}</th>
                                     ))}
                                 </tr>
@@ -86,6 +86,7 @@ export default function AdminDocuments() {
                                 {filtered.map(document => (
                                     <tr key={document.id} className="hover:bg-gray-50">
                                         <td className="px-6 py-3 font-mono text-xs text-gray-700">{document.fileName}</td>
+                                        <td className="px-6 py-3 font-mono text-xs text-gray-600">{document.declarationId ? `#${document.declarationId}` : '—'}</td>
                                         <td className="px-6 py-3 text-gray-900">{document.contentType}</td>
                                         <td className="px-6 py-3 font-medium text-gray-900">{document.userName}</td>
                                         <td className="px-6 py-3 text-gray-500">{document.userRole}</td>

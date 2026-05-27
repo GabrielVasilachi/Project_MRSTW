@@ -12,6 +12,11 @@ public class DocumentEntity
     [Required]
     public int UserId { get; set; }
 
+    public int? DeclarationId { get; set; }
+
+    [StringLength(30)]
+    public string? DeclarationType { get; set; }
+
     [Required]
     [StringLength(255)]
     public string FileName { get; set; } = string.Empty;

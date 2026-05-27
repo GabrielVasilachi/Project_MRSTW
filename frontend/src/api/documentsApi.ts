@@ -6,10 +6,11 @@ export async function getDocumentsByUserId(userId: number) {
     return response.data;
 }
 
-export async function uploadDocument(userId: number, file: File) {
+export async function uploadDocument(userId: number, declarationId: number, file: File) {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("userId", String(userId));
+    formData.append("declarationId", String(declarationId));
 
     const response = await api.post<DocumentInfo>("/documents/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },

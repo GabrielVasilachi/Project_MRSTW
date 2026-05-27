@@ -13,12 +13,14 @@ public class PhysicalDeclarationsActions
     private readonly PhysicalDeclarationsDbContext _physicalDeclarationsContext;
     private readonly UsersDbContext _usersContext;
     private readonly PackagesDbContext _packagesContext;
+    private readonly DocumentsDbContext _documentsContext;
 
     public PhysicalDeclarationsActions()
     {
         _physicalDeclarationsContext = new PhysicalDeclarationsDbContext();
         _usersContext = new UsersDbContext();
         _packagesContext = new PackagesDbContext();
+        _documentsContext = new DocumentsDbContext();
     }
 
     public ServiceResponse CreatePhysicalDeclarationAction(PhysicalDeclarationCreateRequestDto request)
@@ -417,7 +419,13 @@ public class PhysicalDeclarationsActions
 
         try
         {
+            var documents = _documentsContext.Documents
+                .Where(document => document.DeclarationId == declaration.Id && document.DeclarationType == "physical")
+                .ToList();
+
+            _documentsContext.Documents.RemoveRange(documents);
             _physicalDeclarationsContext.PhysicalDeclarations.Remove(declaration);
+            _documentsContext.SaveChanges();
             _physicalDeclarationsContext.SaveChanges();
         }
         catch (Exception e)

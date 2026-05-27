@@ -16,5 +16,8 @@ public sealed class DocumentsDbContext : DbContext
     {
         modelBuilder.Entity<DocumentEntity>()
             .HasIndex(document => document.UserId);
+
+        modelBuilder.Entity<DocumentEntity>()
+            .HasIndex(document => document.DeclarationId);
     }
 }

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
+import { getBusinessDeclarationsByUserId } from '../../../api/businessDeclarationsApi'
 import { deleteDocument as deleteDocumentRequest, downloadDocumentFile, getDocumentsByUserId, uploadDocument } from '../../../api/documentsApi'
 import { getBusinessProfileByUserId } from '../../../api/profilesApi'
+import type { BusinessDeclarationResponse } from '../../../api/types/businessDeclaration'
 import type { DocumentInfo } from '../../../api/types/document'
 import { getSession } from '../../../auth/auth.session'
 import KpiCard from '../../../components/dashboard/KpiCard'
@@ -15,6 +17,8 @@ export default function BusinessDocuments() {
     const parsedUserId = session?.userId ? Number(session.userId) : null
     const userId = parsedUserId && Number.isFinite(parsedUserId) ? parsedUserId : null
     const [documents, setDocuments] = useState<DocumentInfo[]>([])
+    const [declarations, setDeclarations] = useState<BusinessDeclarationResponse[]>([])
+    const [selectedDeclarationId, setSelectedDeclarationId] = useState('all')
     const [loading, setLoading] = useState(true)
     const [uploading, setUploading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -73,9 +77,36 @@ export default function BusinessDocuments() {
 
     useEffect(() => { loadDocuments() }, [loadDocuments])
 
+    const loadDeclarations = useCallback(async () => {
+        if (!userId) return
+
+        try {
+            const response = await getBusinessDeclarationsByUserId(userId)
+            setDeclarations(response ?? [])
+        } catch {
+            setError('Nu s-au putut încărca declarațiile companiei.')
+        }
+    }, [userId])
+
+    useEffect(() => { loadDeclarations() }, [loadDeclarations])
+
     async function uploadFile(file: File) {
         if (!userId) {
             setError('Sesiune invalidă.')
+            return
+        }
+
+        if (declarations.length === 0) {
+            setError('Nu există declarații pentru care să încărcați documente.')
+            return
+        }
+
+        const targetDeclarationIds = selectedDeclarationId === 'all'
+            ? declarations.map(declaration => declaration.id)
+            : [Number(selectedDeclarationId)]
+
+        if (targetDeclarationIds.some(id => !Number.isFinite(id) || id <= 0)) {
+            setError('Selectați o declarație validă.')
             return
         }
 
@@ -84,8 +115,10 @@ export default function BusinessDocuments() {
         setSuccessMsg(null)
 
         try {
-            await uploadDocument(userId, file)
-            setSuccessMsg(`"${file.name}" a fost încărcat cu succes.`)
+            await Promise.all(targetDeclarationIds.map(declarationId => uploadDocument(userId, declarationId, file)))
+            setSuccessMsg(selectedDeclarationId === 'all'
+                ? `"${file.name}" a fost încărcat pentru toate declarațiile.`
+                : `"${file.name}" a fost încărcat cu succes.`)
             await loadDocuments()
         } catch (error: unknown) {
             const message = error && typeof error === 'object' && 'response' in error
@@ -135,6 +168,18 @@ export default function BusinessDocuments() {
         }
     }
 
+    function getDeclarationTitle(declaration: BusinessDeclarationResponse) {
+        return `Declarația #${declaration.id} - ${declaration.productName}`
+    }
+
+    function getDeclarationDocuments(declarationId: number) {
+        return documents.filter(document => document.declarationId === declarationId)
+    }
+
+    function getDocumentDeclaration(document: DocumentInfo) {
+        return declarations.find(declaration => declaration.id === document.declarationId)
+    }
+
     return (
         <div className="space-y-8">
             {needsVerification ? <BusinessVerificationBanner /> : null}
@@ -167,6 +212,43 @@ export default function BusinessDocuments() {
                 } />
             </div>
 
+            <div className="rounded-lg border border-gray-200 bg-white">
+                <div className="border-b border-gray-200 px-6 py-4">
+                    <p className="text-base font-semibold text-gray-900">Declarații</p>
+                    <p className="mt-0.5 text-sm text-gray-500">Încărcați documente separat sau pentru toate declarațiile companiei.</p>
+                </div>
+
+                {declarations.length === 0 ? (
+                    <p className="px-6 py-8 text-center text-sm text-gray-400">Nu există declarații pentru care să încărcați documente.</p>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full text-left text-sm">
+                            <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-600">
+                                <tr>
+                                    {['Declarație', 'Tracking', 'Documente', 'Data'].map(h => (
+                                        <th key={h} className="px-6 py-3 font-medium">{h}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {declarations.map(declaration => {
+                                    const declarationDocuments = getDeclarationDocuments(declaration.id)
+
+                                    return (
+                                        <tr key={declaration.id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-3 font-medium text-gray-900">{getDeclarationTitle(declaration)}</td>
+                                            <td className="px-6 py-3 font-mono text-xs text-gray-600">{declaration.trackingCode}</td>
+                                            <td className="px-6 py-3 text-gray-600">{declarationDocuments.length}</td>
+                                            <td className="px-6 py-3 text-gray-600">{new Date(declaration.createdAt).toLocaleDateString('ro-RO')}</td>
+                                        </tr>
+                                    )
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+
             <div
                 className={`rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors ${
                     dragOver ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-white hover:border-gray-400'
@@ -182,13 +264,26 @@ export default function BusinessDocuments() {
                         </svg>
                     </div>
                     <div>
+                        <select
+                            value={selectedDeclarationId}
+                            onChange={event => setSelectedDeclarationId(event.target.value)}
+                            disabled={uploading || declarations.length === 0}
+                            className="mb-4 w-full max-w-md rounded-md border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
+                        >
+                            <option value="all">Toate declarațiile</option>
+                            {declarations.map(declaration => (
+                                <option key={declaration.id} value={String(declaration.id)}>
+                                    {getDeclarationTitle(declaration)}
+                                </option>
+                            ))}
+                        </select>
                         <p className="text-sm font-medium text-gray-700">
                             Trageți un fișier aici sau{' '}
                             <button
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
                                 className="text-blue-600 hover:underline"
-                                disabled={uploading}
+                                disabled={uploading || declarations.length === 0}
                             >
                                 selectați din calculator
                             </button>
@@ -222,7 +317,7 @@ export default function BusinessDocuments() {
                         <table className="min-w-full text-left text-sm">
                             <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-600">
                                 <tr>
-                                    {['Fișier', 'Tip', 'Dimensiune', 'Data', 'Acțiuni'].map(h => (
+                                    {['Fișier', 'Declarație', 'Tip', 'Dimensiune', 'Data', 'Acțiuni'].map(h => (
                                         <th key={h} className="px-6 py-3 font-medium">{h}</th>
                                     ))}
                                 </tr>
@@ -231,6 +326,9 @@ export default function BusinessDocuments() {
                                 {documents.map(document => (
                                     <tr key={document.id} className="hover:bg-gray-50">
                                         <td className="px-6 py-3 font-mono text-xs text-gray-700">{document.fileName}</td>
+                                        <td className="px-6 py-3 text-gray-600">
+                                            {getDocumentDeclaration(document)?.productName ?? (document.declarationId ? `#${document.declarationId}` : '—')}
+                                        </td>
                                         <td className="px-6 py-3 text-gray-500 text-xs">{document.contentType}</td>
                                         <td className="px-6 py-3 text-gray-600">{formatBytes(document.fileSize)}</td>
                                         <td className="px-6 py-3 text-gray-600">{new Date(document.uploadedAt).toLocaleDateString('ro-RO')}</td>
