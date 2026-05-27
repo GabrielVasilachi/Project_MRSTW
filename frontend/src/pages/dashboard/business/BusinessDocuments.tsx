@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
+import { Fragment, useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { getBusinessDeclarationsByUserId } from '../../../api/businessDeclarationsApi'
 import { deleteDocument as deleteDocumentRequest, downloadDocumentFile, getDocumentsByUserId, uploadDocument } from '../../../api/documentsApi'
 import { getBusinessProfileByUserId } from '../../../api/profilesApi'
@@ -18,12 +18,12 @@ export default function BusinessDocuments() {
     const userId = parsedUserId && Number.isFinite(parsedUserId) ? parsedUserId : null
     const [documents, setDocuments] = useState<DocumentInfo[]>([])
     const [declarations, setDeclarations] = useState<BusinessDeclarationResponse[]>([])
-    const [selectedDeclarationId, setSelectedDeclarationId] = useState('all')
+    const [selectedDeclarationIds, setSelectedDeclarationIds] = useState<number[]>([])
+    const [pendingUploadDeclarationIds, setPendingUploadDeclarationIds] = useState<number[]>([])
     const [loading, setLoading] = useState(true)
     const [uploading, setUploading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [successMsg, setSuccessMsg] = useState<string | null>(null)
-    const [dragOver, setDragOver] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [needsVerification, setNeedsVerification] = useState(false)
 
@@ -90,23 +90,14 @@ export default function BusinessDocuments() {
 
     useEffect(() => { loadDeclarations() }, [loadDeclarations])
 
-    async function uploadFile(file: File) {
+    async function uploadFiles(files: File[], declarationIds: number[]) {
         if (!userId) {
             setError('Sesiune invalidă.')
             return
         }
 
-        if (declarations.length === 0) {
-            setError('Nu există declarații pentru care să încărcați documente.')
-            return
-        }
-
-        const targetDeclarationIds = selectedDeclarationId === 'all'
-            ? declarations.map(declaration => declaration.id)
-            : [Number(selectedDeclarationId)]
-
-        if (targetDeclarationIds.some(id => !Number.isFinite(id) || id <= 0)) {
-            setError('Selectați o declarație validă.')
+        if (declarationIds.length === 0) {
+            setError('Selectați cel puțin o declarație.')
             return
         }
 
@@ -115,10 +106,11 @@ export default function BusinessDocuments() {
         setSuccessMsg(null)
 
         try {
-            await Promise.all(targetDeclarationIds.map(declarationId => uploadDocument(userId, declarationId, file)))
-            setSuccessMsg(selectedDeclarationId === 'all'
-                ? `"${file.name}" a fost încărcat pentru toate declarațiile.`
-                : `"${file.name}" a fost încărcat cu succes.`)
+            await Promise.all(declarationIds.flatMap(declarationId =>
+                files.map(file => uploadDocument(userId, declarationId, file))
+            ))
+            setSuccessMsg(`${files.length} fișier(e) încărcate pentru ${declarationIds.length} declarație(i).`)
+            setSelectedDeclarationIds([])
             await loadDocuments()
         } catch (error: unknown) {
             const message = error && typeof error === 'object' && 'response' in error
@@ -127,20 +119,31 @@ export default function BusinessDocuments() {
             setError(typeof message === 'string' ? message : 'Eroare la încărcare.')
         } finally {
             setUploading(false)
+            setPendingUploadDeclarationIds([])
         }
     }
 
     function onFileChange(e: ChangeEvent<HTMLInputElement>) {
-        const file = e.target.files?.[0]
-        if (file) uploadFile(file)
+        const files = Array.from(e.target.files ?? [])
+
+        if (files.length > 0) {
+            uploadFiles(files, pendingUploadDeclarationIds)
+        }
+
         e.target.value = ''
     }
 
-    function onDrop(e: DragEvent) {
-        e.preventDefault()
-        setDragOver(false)
-        const file = e.dataTransfer.files?.[0]
-        if (file) uploadFile(file)
+    function openUpload(declarationIds: number[]) {
+        setPendingUploadDeclarationIds(declarationIds)
+        fileInputRef.current?.click()
+    }
+
+    function toggleDeclarationSelection(declarationId: number) {
+        setSelectedDeclarationIds(current =>
+            current.includes(declarationId)
+                ? current.filter(id => id !== declarationId)
+                : [...current, declarationId]
+        )
     }
 
     async function deleteDocument(id: number) {
@@ -176,9 +179,13 @@ export default function BusinessDocuments() {
         return documents.filter(document => document.declarationId === declarationId)
     }
 
-    function getDocumentDeclaration(document: DocumentInfo) {
-        return declarations.find(declaration => declaration.id === document.declarationId)
+    function getDocumentDeclarationTitle(document: DocumentInfo) {
+        const declaration = declarations.find(item => item.id === document.declarationId)
+        return declaration ? getDeclarationTitle(declaration) : document.declarationId ? `Declarația #${document.declarationId}` : '—'
     }
+
+    const selectedCount = selectedDeclarationIds.length
+    const hasMultipleSelection = selectedCount >= 2
 
     return (
         <div className="space-y-8">
@@ -212,10 +219,24 @@ export default function BusinessDocuments() {
                 } />
             </div>
 
+            <div className={`overflow-hidden transition-all duration-300 ease-out ${hasMultipleSelection ? 'max-h-28 opacity-100' : 'max-h-0 opacity-0'}`}>
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3">
+                    <p className="text-sm font-medium text-blue-900">{selectedCount} declarații selectate</p>
+                    <button
+                        type="button"
+                        onClick={() => openUpload(selectedDeclarationIds)}
+                        disabled={uploading}
+                        className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+                    >
+                        {uploading ? 'Se încarcă...' : 'Încarcă fișiere'}
+                    </button>
+                </div>
+            </div>
+
             <div className="rounded-lg border border-gray-200 bg-white">
                 <div className="border-b border-gray-200 px-6 py-4">
                     <p className="text-base font-semibold text-gray-900">Declarații</p>
-                    <p className="mt-0.5 text-sm text-gray-500">Încărcați documente separat sau pentru toate declarațiile companiei.</p>
+                    <p className="mt-0.5 text-sm text-gray-500">Selectați declarații sau încărcați fișiere separat pe fiecare declarație.</p>
                 </div>
 
                 {declarations.length === 0 ? (
@@ -225,7 +246,8 @@ export default function BusinessDocuments() {
                         <table className="min-w-full text-left text-sm">
                             <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-600">
                                 <tr>
-                                    {['Declarație', 'Tracking', 'Documente', 'Data'].map(h => (
+                                    <th className="w-12 px-6 py-3 font-medium" />
+                                    {['Declarație', 'Tracking', 'Documente', 'Data', hasMultipleSelection ? null : 'Acțiuni'].filter(Boolean).map(h => (
                                         <th key={h} className="px-6 py-3 font-medium">{h}</th>
                                     ))}
                                 </tr>
@@ -233,14 +255,69 @@ export default function BusinessDocuments() {
                             <tbody className="divide-y divide-gray-100">
                                 {declarations.map(declaration => {
                                     const declarationDocuments = getDeclarationDocuments(declaration.id)
+                                    const isSelected = selectedDeclarationIds.includes(declaration.id)
 
                                     return (
-                                        <tr key={declaration.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-3 font-medium text-gray-900">{getDeclarationTitle(declaration)}</td>
-                                            <td className="px-6 py-3 font-mono text-xs text-gray-600">{declaration.trackingCode}</td>
-                                            <td className="px-6 py-3 text-gray-600">{declarationDocuments.length}</td>
-                                            <td className="px-6 py-3 text-gray-600">{new Date(declaration.createdAt).toLocaleDateString('ro-RO')}</td>
-                                        </tr>
+                                        <Fragment key={declaration.id}>
+                                            <tr className="hover:bg-gray-50">
+                                                <td className="px-6 py-3">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        onChange={() => toggleDeclarationSelection(declaration.id)}
+                                                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                        aria-label={`Selectați ${getDeclarationTitle(declaration)}`}
+                                                    />
+                                                </td>
+                                                <td className="px-6 py-3 font-medium text-gray-900">{getDeclarationTitle(declaration)}</td>
+                                                <td className="px-6 py-3 font-mono text-xs text-gray-600">{declaration.trackingCode}</td>
+                                                <td className="px-6 py-3 text-gray-600">{declarationDocuments.length}</td>
+                                                <td className="px-6 py-3 text-gray-600">{new Date(declaration.createdAt).toLocaleDateString('ro-RO')}</td>
+                                                {!hasMultipleSelection ? (
+                                                    <td className="px-6 py-3">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => openUpload([declaration.id])}
+                                                            disabled={uploading}
+                                                            className="rounded-md border border-blue-200 bg-white px-3 py-1.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-50 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400"
+                                                        >
+                                                            Încarcă fișiere
+                                                        </button>
+                                                    </td>
+                                                ) : null}
+                                            </tr>
+                                            {declarationDocuments.length > 0 ? (
+                                                <tr className="bg-gray-50">
+                                                    <td />
+                                                    <td colSpan={hasMultipleSelection ? 4 : 5} className="px-6 py-3">
+                                                        <div className="space-y-2">
+                                                            {declarationDocuments.map(document => (
+                                                                <div key={document.id} className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-600">
+                                                                    <span className="font-medium text-gray-800">{document.fileName}</span>
+                                                                    <span>{formatBytes(document.fileSize)} · {new Date(document.uploadedAt).toLocaleDateString('ro-RO')}</span>
+                                                                    <div className="flex gap-3">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => downloadDocument(document.id, document.fileName)}
+                                                                            className="font-medium text-blue-600 hover:underline"
+                                                                        >
+                                                                            Descarcă
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => deleteDocument(document.id)}
+                                                                            className="font-medium text-red-500 hover:underline"
+                                                                        >
+                                                                            Șterge
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ) : null}
+                                        </Fragment>
                                     )
                                 })}
                             </tbody>
@@ -249,75 +326,20 @@ export default function BusinessDocuments() {
                 )}
             </div>
 
-            <div
-                className={`rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors ${
-                    dragOver ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-white hover:border-gray-400'
-                }`}
-                onDragOver={e => { e.preventDefault(); setDragOver(true) }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={onDrop}
-            >
-                <div className="flex flex-col items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50">
-                        <svg className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                        </svg>
-                    </div>
-                    <div>
-                        <select
-                            value={selectedDeclarationId}
-                            onChange={event => setSelectedDeclarationId(event.target.value)}
-                            disabled={uploading || declarations.length === 0}
-                            className="mb-4 w-full max-w-md rounded-md border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 outline-none focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
-                        >
-                            <option value="all">Toate declarațiile</option>
-                            {declarations.map(declaration => (
-                                <option key={declaration.id} value={String(declaration.id)}>
-                                    {getDeclarationTitle(declaration)}
-                                </option>
-                            ))}
-                        </select>
-                        <p className="text-sm font-medium text-gray-700">
-                            Trageți un fișier aici sau{' '}
-                            <button
-                                type="button"
-                                onClick={() => fileInputRef.current?.click()}
-                                className="text-blue-600 hover:underline"
-                                disabled={uploading || declarations.length === 0}
-                            >
-                                selectați din calculator
-                            </button>
-                        </p>
-                        <p className="mt-1 text-xs text-gray-400">PDF, JPG, PNG, DOCX — max 10 MB</p>
-                    </div>
-                    {uploading && (
-                        <p className="text-sm font-medium text-blue-600 animate-pulse">Se încarcă...</p>
-                    )}
-                </div>
-                <input
-                    ref={fileInputRef}
-                    type="file"
-                    className="hidden"
-                    accept=".pdf,.jpg,.jpeg,.png,.docx,.doc,.xlsx,.xls"
-                    onChange={onFileChange}
-                />
-            </div>
-
             <div className="rounded-lg border border-gray-200 bg-white">
                 <div className="border-b border-gray-200 px-6 py-4">
-                    <p className="text-base font-semibold text-gray-900">Documente încărcate</p>
-                    <p className="mt-0.5 text-sm text-gray-500">{documents.length} fișiere</p>
+                    <p className="text-base font-semibold text-gray-900">Istoric documente</p>
+                    <p className="mt-0.5 text-sm text-gray-500">{documents.length} fișiere încărcate</p>
                 </div>
-                {loading ? (
-                    <p className="px-6 py-8 text-center text-sm text-gray-400">Se încarcă...</p>
-                ) : documents.length === 0 ? (
+
+                {documents.length === 0 ? (
                     <p className="px-6 py-8 text-center text-sm text-gray-400">Nu există documente încărcate pentru companie.</p>
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="min-w-full text-left text-sm">
                             <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-600">
                                 <tr>
-                                    {['Fișier', 'Declarație', 'Tip', 'Dimensiune', 'Data', 'Acțiuni'].map(h => (
+                                    {['Fișier', 'Declarație', 'Dimensiune', 'Data', 'Acțiuni'].map(h => (
                                         <th key={h} className="px-6 py-3 font-medium">{h}</th>
                                     ))}
                                 </tr>
@@ -325,26 +347,27 @@ export default function BusinessDocuments() {
                             <tbody className="divide-y divide-gray-100">
                                 {documents.map(document => (
                                     <tr key={document.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-3 font-mono text-xs text-gray-700">{document.fileName}</td>
-                                        <td className="px-6 py-3 text-gray-600">
-                                            {getDocumentDeclaration(document)?.productName ?? (document.declarationId ? `#${document.declarationId}` : '—')}
-                                        </td>
-                                        <td className="px-6 py-3 text-gray-500 text-xs">{document.contentType}</td>
+                                        <td className="px-6 py-3 font-medium text-gray-900">{document.fileName}</td>
+                                        <td className="px-6 py-3 text-gray-600">{getDocumentDeclarationTitle(document)}</td>
                                         <td className="px-6 py-3 text-gray-600">{formatBytes(document.fileSize)}</td>
                                         <td className="px-6 py-3 text-gray-600">{new Date(document.uploadedAt).toLocaleDateString('ro-RO')}</td>
                                         <td className="px-6 py-3">
-                                            <button
-                                                onClick={() => downloadDocument(document.id, document.fileName)}
-                                                className="text-blue-600 hover:underline text-xs font-medium"
-                                            >
-                                                Descarcă
-                                            </button>
-                                            <button
-                                                onClick={() => deleteDocument(document.id)}
-                                                className="ml-3 text-red-500 hover:underline text-xs font-medium"
-                                            >
-                                                Șterge
-                                            </button>
+                                            <div className="flex gap-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => downloadDocument(document.id, document.fileName)}
+                                                    className="text-xs font-medium text-blue-600 hover:underline"
+                                                >
+                                                    Descarcă
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => deleteDocument(document.id)}
+                                                    className="text-xs font-medium text-red-500 hover:underline"
+                                                >
+                                                    Șterge
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -353,6 +376,19 @@ export default function BusinessDocuments() {
                     </div>
                 )}
             </div>
+
+            <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                accept=".pdf,.jpg,.jpeg,.png,.docx,.doc,.xlsx,.xls"
+                onChange={onFileChange}
+            />
+
+            {loading ? (
+                <p className="text-center text-sm text-gray-400">Se încarcă documentele...</p>
+            ) : null}
         </div>
     )
 }
