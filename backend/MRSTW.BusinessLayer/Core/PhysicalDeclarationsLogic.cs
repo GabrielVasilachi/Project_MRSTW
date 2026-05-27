@@ -12,6 +12,16 @@ public class PhysicalDeclarationsLogic : PhysicalDeclarationsActions, IPhysicalD
         return CreatePhysicalDeclarationAction(request);
     }
 
+    public ServiceResponse UpdatePhysicalDeclaration(int declarationId, PhysicalDeclarationUpdateRequestDto request, int userId, bool isAdmin)
+    {
+        return UpdatePhysicalDeclarationAction(declarationId, request, userId, isAdmin);
+    }
+
+    public ServiceResponse DeletePhysicalDeclaration(int declarationId, int userId, bool isAdmin)
+    {
+        return DeletePhysicalDeclarationAction(declarationId, userId, isAdmin);
+    }
+
     public ServiceResponse GetPhysicalDeclarationsByUserId(int userId)
     {
         return GetPhysicalDeclarationsByUserIdAction(userId);

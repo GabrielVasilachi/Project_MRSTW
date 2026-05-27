@@ -190,6 +190,7 @@ public class BusinessDeclarationsActions
                 DeclarationType = "legal",
                 PersonType = "business",
                 UserId = d.UserId,
+                PackageId = d.PackageId,
                 User = new AdminDeclarationUserInfoDto
                 {
                     Id = d.UserId,
@@ -256,6 +257,230 @@ public class BusinessDeclarationsActions
         {
             IsSuccess = true,
             Data = declarations
+        };
+    }
+
+    public ServiceResponse UpdateBusinessDeclarationAction(int declarationId, BusinessDeclarationUpdateRequestDto request, int userId, bool isAdmin)
+    {
+        if (declarationId <= 0)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "DeclarationId este obligatoriu."
+            };
+        }
+
+        var declaration = _businessDeclarationsContext.BusinessDeclarations.FirstOrDefault(d => d.Id == declarationId);
+
+        if (declaration == null)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Declaratia nu a fost gasita."
+            };
+        }
+
+        if (!isAdmin && declaration.UserId != userId)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Nu aveti acces la aceasta declaratie."
+            };
+        }
+
+        if (string.IsNullOrWhiteSpace(request.SenderName))
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "SenderName este obligatoriu."
+            };
+        }
+
+        if (string.IsNullOrWhiteSpace(request.ProductName))
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "ProductName este obligatoriu."
+            };
+        }
+
+        if (string.IsNullOrWhiteSpace(request.ProductURL))
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "ProductURL este obligatoriu."
+            };
+        }
+
+        if (string.IsNullOrWhiteSpace(request.TrackingCode))
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "TrackingCode este obligatoriu."
+            };
+        }
+
+        if (string.IsNullOrWhiteSpace(request.HSCode))
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "HSCode este obligatoriu."
+            };
+        }
+
+        if (request.Quantity <= 0)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Quantity trebuie sa fie mai mare ca 0."
+            };
+        }
+
+        if (request.TotalCost < 0)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "TotalCost trebuie sa fie mai mare sau egal cu 0."
+            };
+        }
+
+        if (!Enum.IsDefined(typeof(CurrencyEnum), request.Currency))
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Currency este invalid."
+            };
+        }
+
+        if (!Enum.IsDefined(typeof(DeclarationStatus), request.Status))
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Status este invalid."
+            };
+        }
+
+        var normalizedTrackingCode = request.TrackingCode.Trim();
+        var packageValidation = ResolvePackageId(declaration.UserId, request.PackageId, normalizedTrackingCode, out var packageId);
+
+        if (!packageValidation.IsSuccess)
+        {
+            return packageValidation;
+        }
+
+        declaration.PackageId = packageId;
+        declaration.SenderName = request.SenderName.Trim();
+        declaration.ProductName = request.ProductName.Trim();
+        declaration.ProductURL = request.ProductURL.Trim();
+        declaration.TrackingCode = normalizedTrackingCode;
+        declaration.HSCode = request.HSCode.Trim();
+        declaration.Category = request.Category;
+        declaration.Quantity = request.Quantity;
+        declaration.TotalCost = request.TotalCost;
+        declaration.Currency = request.Currency;
+        if (isAdmin)
+        {
+            declaration.Status = request.Status;
+        }
+
+        try
+        {
+            _businessDeclarationsContext.SaveChanges();
+        }
+        catch (Exception e)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = e.Message
+            };
+        }
+
+        return new ServiceResponse
+        {
+            IsSuccess = true,
+            Data = new BusinessDeclarationResponseDto
+            {
+                Id = declaration.Id,
+                UserId = declaration.UserId,
+                PackageId = declaration.PackageId,
+                SenderName = declaration.SenderName,
+                ProductName = declaration.ProductName,
+                ProductURL = declaration.ProductURL,
+                TrackingCode = declaration.TrackingCode,
+                HSCode = declaration.HSCode,
+                Category = declaration.Category,
+                Quantity = declaration.Quantity,
+                TotalCost = declaration.TotalCost,
+                Currency = declaration.Currency,
+                Status = declaration.Status,
+                CreatedAt = declaration.CreatedAt
+            },
+            Message = "BusinessDeclaration a fost modificata cu succes."
+        };
+    }
+
+    public ServiceResponse DeleteBusinessDeclarationAction(int declarationId, int userId, bool isAdmin)
+    {
+        if (declarationId <= 0)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "DeclarationId este obligatoriu."
+            };
+        }
+
+        var declaration = _businessDeclarationsContext.BusinessDeclarations.FirstOrDefault(d => d.Id == declarationId);
+
+        if (declaration == null)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Declaratia nu a fost gasita."
+            };
+        }
+
+        if (!isAdmin && declaration.UserId != userId)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Nu aveti acces la aceasta declaratie."
+            };
+        }
+
+        try
+        {
+            _businessDeclarationsContext.BusinessDeclarations.Remove(declaration);
+            _businessDeclarationsContext.SaveChanges();
+        }
+        catch (Exception e)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = e.Message
+            };
+        }
+
+        return new ServiceResponse
+        {
+            IsSuccess = true,
+            Message = "BusinessDeclaration a fost stearsa cu succes."
         };
     }
 

@@ -3,13 +3,14 @@ using Microsoft.AspNetCore.Mvc;
 using MRSTW.Api.Extensions;
 using MRSTW.BusinessLayer;
 using MRSTW.BusinessLayer.Interfaces;
+using MRSTW.Domain.Enums;
 using MRSTW.Domain.Models.PhysicalDeclarations;
 
 namespace MRSTW.Api.Controllers;
 
 [ApiController]
 [Route("api/physical-declarations")]
-[Authorize]
+[Authorize(Roles = "Individual,Admin")]
 public class PhysicalDeclarationsController : ControllerBase
 {
     private readonly IPhysicalDeclarationsLogic _physicalDeclarationsLogic;
@@ -18,6 +19,20 @@ public class PhysicalDeclarationsController : ControllerBase
     {
         var bl = new BusinessLogic();
         _physicalDeclarationsLogic = bl.GetPhysicalDeclarationsLogic();
+    }
+
+    [HttpGet]
+    [Authorize(Roles = "Admin")]
+    public IActionResult GetAllPhysicalDeclarations()
+    {
+        var response = _physicalDeclarationsLogic.GetAllPhysicalDeclarations();
+
+        if (!response.IsSuccess)
+        {
+            return BadRequest(response.Message);
+        }
+
+        return Ok(response.Data);
     }
 
     [HttpPost]
@@ -36,6 +51,53 @@ public class PhysicalDeclarationsController : ControllerBase
         }
 
         return Ok(response.Data);
+    }
+
+    [HttpPut("{id}")]
+    public IActionResult UpdatePhysicalDeclaration([FromRoute] int id, [FromBody] PhysicalDeclarationUpdateRequestDto request)
+    {
+        var userId = User.GetUserId();
+
+        if (!userId.HasValue)
+        {
+            return Unauthorized();
+        }
+
+        var response = _physicalDeclarationsLogic.UpdatePhysicalDeclaration(
+            id,
+            request,
+            userId.Value,
+            User.IsInRole(UserRoleEnum.Admin.ToString()));
+
+        if (!response.IsSuccess)
+        {
+            return BadRequest(response.Message);
+        }
+
+        return Ok(response.Data);
+    }
+
+    [HttpDelete("{id}")]
+    public IActionResult DeletePhysicalDeclaration([FromRoute] int id)
+    {
+        var userId = User.GetUserId();
+
+        if (!userId.HasValue)
+        {
+            return Unauthorized();
+        }
+
+        var response = _physicalDeclarationsLogic.DeletePhysicalDeclaration(
+            id,
+            userId.Value,
+            User.IsInRole(UserRoleEnum.Admin.ToString()));
+
+        if (!response.IsSuccess)
+        {
+            return BadRequest(response.Message);
+        }
+
+        return Ok(response.Message);
     }
 
     [HttpGet("by-user/{userId}")]
