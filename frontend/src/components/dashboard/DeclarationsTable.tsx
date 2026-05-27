@@ -9,7 +9,7 @@ const STATUSES = ['Toate', 'Approved', 'Pending Documents', 'Under Review', 'Rej
 
 type Props = {
     declarations: Declaration[]
-    resolveUser?: (userId: string) => { name: string; type: string }
+    resolveUser?: (userId: string) => { name: string; type: string } | undefined
     onOpenDeclaration?: (declaration: Declaration) => Promise<void>
 }
 

@@ -5,7 +5,8 @@ import { getAdminDeclarations, openAdminDeclaration } from '../../../api/adminDe
 import type { AdminDeclarationResponse, AdminDeclarationsFilter } from '../../../api/types/adminDeclaration'
 import KpiCard from '../../../components/dashboard/KpiCard'
 import DeclarationsTable from '../../../components/dashboard/DeclarationsTable'
-import { PRODUCT_CATEGORIES, calculateTaxes } from '../../../components/dashboard/TaxBreakdown'
+import { calculateTaxes as calculateTaxesApi, getTaxCategories } from '../../../api/taxCalculatorApi'
+import type { TaxCalculationResult, TaxCategory } from '../../../api/types/taxCalculator'
 
 const PERSON_FILTERS: { value: AdminDeclarationsFilter; label: string }[] = [
     { value: 'all', label: 'Toate declarațiile' },
@@ -35,10 +36,12 @@ const PERSON_TYPE_LABELS: Record<string, string> = {
 const mapCurrencyEnumToLabel = (currency: number) => CURRENCY_LABEL_BY_ENUM[currency] ?? 'MDL'
 const mapStatusEnumToLabel = (status: number) => STATUS_BY_ENUM[status] ?? 'Under Review'
 
-const mapAdminToDeclaration = (item: AdminDeclarationResponse): Declaration => {
-    const category = PRODUCT_CATEGORIES[item.category] ?? PRODUCT_CATEGORIES[12]
+const mapAdminToDeclaration = (
+    item: AdminDeclarationResponse,
+    taxCalculation: TaxCalculationResult | undefined,
+    category: TaxCategory | undefined,
+): Declaration => {
     const baseValue = Number(item.totalCost)
-    const taxes = calculateTaxes(baseValue, category)
 
     return {
         id: String(item.id),
@@ -50,14 +53,14 @@ const mapAdminToDeclaration = (item: AdminDeclarationResponse): Declaration => {
         gross_weight: 0,
         customs_value: baseValue,
         currency: mapCurrencyEnumToLabel(item.currency),
-        vat: taxes.vat,
-        customs_duty: taxes.customsDuty,
-        excise: taxes.excise,
-        total_taxes: taxes.totalAmount,
+        vat: taxCalculation?.vat ?? 0,
+        customs_duty: taxCalculation?.customsDuty ?? 0,
+        excise: taxCalculation?.excise ?? 0,
+        total_taxes: taxCalculation?.totalAmount ?? 0,
         status: mapStatusEnumToLabel(item.status),
         sender_name: item.senderName ?? undefined,
         product_url: item.productURL,
-        category_label: category.label,
+        category_label: category?.label ?? taxCalculation?.categoryName,
     }
 }
 
@@ -78,8 +81,15 @@ function getApiErrorMessage(error: unknown) {
 export default function AdminDeclarations() {
     const [filter, setFilter] = useState<AdminDeclarationsFilter>('all')
     const [adminDeclarations, setAdminDeclarations] = useState<AdminDeclarationResponse[]>([])
+    const [taxCalculationsByDeclarationId, setTaxCalculationsByDeclarationId] = useState<Record<number, TaxCalculationResult>>({})
+    const [productCategories, setProductCategories] = useState<TaxCategory[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+
+    const categoryByValue = useMemo(
+        () => Object.fromEntries(productCategories.map((category) => [category.value, category])),
+        [productCategories],
+    )
 
     const loadDeclarations = useCallback(async () => {
         setLoading(true)
@@ -87,6 +97,15 @@ export default function AdminDeclarations() {
         try {
             const response = await getAdminDeclarations(filter)
             setAdminDeclarations(response ?? [])
+            const taxCalculationEntries = await Promise.all((response ?? []).map(async (item) => {
+                const taxCalculation = await calculateTaxesApi({
+                    baseValue: Number(item.totalCost),
+                    category: item.category,
+                })
+
+                return [item.id, taxCalculation] as const
+            }))
+            setTaxCalculationsByDeclarationId(Object.fromEntries(taxCalculationEntries))
             setError(null)
         } catch (err: unknown) {
             setError(getApiErrorMessage(err))
@@ -95,13 +114,30 @@ export default function AdminDeclarations() {
         }
     }, [filter])
 
+    const loadCategories = useCallback(async () => {
+        try {
+            const response = await getTaxCategories()
+            setProductCategories(response ?? [])
+        } catch {
+            setProductCategories([])
+        }
+    }, [])
+
     useEffect(() => {
         loadDeclarations()
     }, [loadDeclarations])
 
+    useEffect(() => {
+        loadCategories()
+    }, [loadCategories])
+
     const declarations = useMemo(
-        () => adminDeclarations.map(mapAdminToDeclaration),
-        [adminDeclarations],
+        () => adminDeclarations.map((item) => mapAdminToDeclaration(
+            item,
+            taxCalculationsByDeclarationId[item.id],
+            categoryByValue[item.category],
+        )),
+        [adminDeclarations, taxCalculationsByDeclarationId, categoryByValue],
     )
 
     const userLookup = useMemo(() => {
