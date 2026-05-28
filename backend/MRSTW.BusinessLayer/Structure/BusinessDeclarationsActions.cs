@@ -125,6 +125,24 @@ public class BusinessDeclarationsActions
             return packageValidation;
         }
 
+        if (!packageId.HasValue)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Declarația trebuie asociată unui colet existent."
+            };
+        }
+
+        if (_businessDeclarationsContext.BusinessDeclarations.Any(d => d.PackageId == packageId.Value))
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Pentru acest colet există deja o declarație."
+            };
+        }
+
         var declaration = new BusinessDeclarationEntity
         {
             UserId = request.UserId,
@@ -144,7 +162,9 @@ public class BusinessDeclarationsActions
         try
         {
             _businessDeclarationsContext.BusinessDeclarations.Add(declaration);
+            UpdatePackageStatus(packageId.Value, PackageStatusEnum.InReview);
             _businessDeclarationsContext.SaveChanges();
+            _packagesContext.SaveChanges();
         }
         catch (Exception e)
         {
@@ -374,12 +394,39 @@ public class BusinessDeclarationsActions
             };
         }
 
+        if (isAdmin && request.Status == DeclarationStatus.Approved && !HasDeclarationDocuments(declaration.Id))
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Declarația nu poate fi aprobată fără documente atașate."
+            };
+        }
+
         var normalizedTrackingCode = request.TrackingCode.Trim();
         var packageValidation = ResolvePackageId(declaration.UserId, request.PackageId, normalizedTrackingCode, out var packageId);
 
         if (!packageValidation.IsSuccess)
         {
             return packageValidation;
+        }
+
+        if (!packageId.HasValue && declaration.PackageId.HasValue)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Declarația nu poate fi dezasociată de coletul existent."
+            };
+        }
+
+        if (packageId.HasValue && _businessDeclarationsContext.BusinessDeclarations.Any(d => d.PackageId == packageId.Value && d.Id != declaration.Id))
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Pentru acest colet există deja o declarație."
+            };
         }
 
         declaration.PackageId = packageId;
@@ -399,7 +446,12 @@ public class BusinessDeclarationsActions
 
         try
         {
+            if (packageId.HasValue)
+            {
+                UpdatePackageStatus(packageId.Value, MapDeclarationStatusToPackageStatus(declaration.Status));
+            }
             _businessDeclarationsContext.SaveChanges();
+            _packagesContext.SaveChanges();
         }
         catch (Exception e)
         {
@@ -473,8 +525,13 @@ public class BusinessDeclarationsActions
 
             _documentsContext.Documents.RemoveRange(documents);
             _businessDeclarationsContext.BusinessDeclarations.Remove(declaration);
+            if (declaration.PackageId.HasValue)
+            {
+                UpdatePackageStatus(declaration.PackageId.Value, PackageStatusEnum.Pending);
+            }
             _documentsContext.SaveChanges();
             _businessDeclarationsContext.SaveChanges();
+            _packagesContext.SaveChanges();
         }
         catch (Exception e)
         {
@@ -552,6 +609,34 @@ public class BusinessDeclarationsActions
         return new ServiceResponse
         {
             IsSuccess = true
+        };
+    }
+
+    private void UpdatePackageStatus(int packageId, PackageStatusEnum status)
+    {
+        var package = _packagesContext.Packages.FirstOrDefault(p => p.Id == packageId);
+
+        if (package != null)
+        {
+            package.Status = status;
+        }
+    }
+
+    private bool HasDeclarationDocuments(int declarationId)
+    {
+        return _documentsContext.Documents.Any(document =>
+            document.DeclarationId == declarationId &&
+            document.DeclarationType == "business");
+    }
+
+    private PackageStatusEnum MapDeclarationStatusToPackageStatus(DeclarationStatus status)
+    {
+        return status switch
+        {
+            DeclarationStatus.Approved => PackageStatusEnum.Released,
+            DeclarationStatus.Rejected => PackageStatusEnum.Rejected,
+            DeclarationStatus.PendingDocuments => PackageStatusEnum.WaitingForDocuments,
+            _ => PackageStatusEnum.InReview
         };
     }
 }

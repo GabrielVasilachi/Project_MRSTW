@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { MouseEvent } from 'react'
+import axios from 'axios'
 import type { Declaration } from '../../types/declaration'
 import type { TaxCategory } from '../../api/types/taxCalculator'
 import StatusBadge from './StatusBadge'
@@ -104,8 +105,12 @@ function DeclarationModal({ d, user, onClose, onSave, productCategories, canEdit
             await onSave(d, values)
             setIsEditing(false)
             onClose()
-        } catch {
-            setSaveError('Nu s-a putut modifica declarația.')
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error) && typeof error.response?.data === 'string') {
+                setSaveError(error.response.data)
+            } else {
+                setSaveError('Nu s-a putut modifica declarația.')
+            }
         } finally {
             setIsSaving(false)
         }

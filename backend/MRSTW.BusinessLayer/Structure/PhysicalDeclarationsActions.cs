@@ -107,6 +107,24 @@ public class PhysicalDeclarationsActions
             return packageValidation;
         }
 
+        if (!packageId.HasValue)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Declarația trebuie asociată unui colet existent."
+            };
+        }
+
+        if (_physicalDeclarationsContext.PhysicalDeclarations.Any(d => d.PackageId == packageId.Value))
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Pentru acest colet există deja o declarație."
+            };
+        }
+
         var declaration = new PhysicalDeclarationEntity
         {
             UserId = request.UserId,
@@ -124,7 +142,9 @@ public class PhysicalDeclarationsActions
         try
         {
             _physicalDeclarationsContext.PhysicalDeclarations.Add(declaration);
+            UpdatePackageStatus(packageId.Value, PackageStatusEnum.InReview);
             _physicalDeclarationsContext.SaveChanges();
+            _packagesContext.SaveChanges();
         }
         catch (Exception e)
         {
@@ -330,12 +350,39 @@ public class PhysicalDeclarationsActions
             };
         }
 
+        if (isAdmin && request.Status == DeclarationStatus.Approved && !HasDeclarationDocuments(declaration.Id))
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Declarația nu poate fi aprobată fără documente atașate."
+            };
+        }
+
         var normalizedTrackingCode = request.TrackingCode.Trim();
         var packageValidation = ResolvePackageId(declaration.UserId, request.PackageId, normalizedTrackingCode, out var packageId);
 
         if (!packageValidation.IsSuccess)
         {
             return packageValidation;
+        }
+
+        if (!packageId.HasValue && declaration.PackageId.HasValue)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Declarația nu poate fi dezasociată de coletul existent."
+            };
+        }
+
+        if (packageId.HasValue && _physicalDeclarationsContext.PhysicalDeclarations.Any(d => d.PackageId == packageId.Value && d.Id != declaration.Id))
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Pentru acest colet există deja o declarație."
+            };
         }
 
         declaration.PackageId = packageId;
@@ -353,7 +400,12 @@ public class PhysicalDeclarationsActions
 
         try
         {
+            if (packageId.HasValue)
+            {
+                UpdatePackageStatus(packageId.Value, MapDeclarationStatusToPackageStatus(declaration.Status));
+            }
             _physicalDeclarationsContext.SaveChanges();
+            _packagesContext.SaveChanges();
         }
         catch (Exception e)
         {
@@ -425,8 +477,13 @@ public class PhysicalDeclarationsActions
 
             _documentsContext.Documents.RemoveRange(documents);
             _physicalDeclarationsContext.PhysicalDeclarations.Remove(declaration);
+            if (declaration.PackageId.HasValue)
+            {
+                UpdatePackageStatus(declaration.PackageId.Value, PackageStatusEnum.Pending);
+            }
             _documentsContext.SaveChanges();
             _physicalDeclarationsContext.SaveChanges();
+            _packagesContext.SaveChanges();
         }
         catch (Exception e)
         {
@@ -504,6 +561,34 @@ public class PhysicalDeclarationsActions
         return new ServiceResponse
         {
             IsSuccess = true
+        };
+    }
+
+    private void UpdatePackageStatus(int packageId, PackageStatusEnum status)
+    {
+        var package = _packagesContext.Packages.FirstOrDefault(p => p.Id == packageId);
+
+        if (package != null)
+        {
+            package.Status = status;
+        }
+    }
+
+    private bool HasDeclarationDocuments(int declarationId)
+    {
+        return _documentsContext.Documents.Any(document =>
+            document.DeclarationId == declarationId &&
+            document.DeclarationType == "physical");
+    }
+
+    private PackageStatusEnum MapDeclarationStatusToPackageStatus(DeclarationStatus status)
+    {
+        return status switch
+        {
+            DeclarationStatus.Approved => PackageStatusEnum.Released,
+            DeclarationStatus.Rejected => PackageStatusEnum.Rejected,
+            DeclarationStatus.PendingDocuments => PackageStatusEnum.WaitingForDocuments,
+            _ => PackageStatusEnum.InReview
         };
     }
 }

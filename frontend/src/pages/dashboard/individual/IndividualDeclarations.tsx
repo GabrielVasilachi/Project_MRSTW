@@ -45,7 +45,7 @@ const createProductFromPackage = (packageItem: PackageResponse, category: TaxCat
 })
 
 const createProductsFromPackages = (packages: PackageResponse[], category: TaxCategory): ProductDraft[] => (
-    packages.length > 0 ? packages.map((packageItem) => createProductFromPackage(packageItem, category)) : [createEmptyProduct(category)]
+    packages.map((packageItem) => createProductFromPackage(packageItem, category))
 )
 
 const getPackageOwnerLabel = (packageItem: PackageResponse) => (
@@ -142,6 +142,10 @@ export default function IndividualDeclarations() {
         )),
         [physicalDeclarations, taxCalculationsByDeclarationId, categoryByValue],
     )
+    const packagesWithoutDeclaration = useMemo(
+        () => userPackages.filter(packageItem => !packageItem.hasDeclaration),
+        [userPackages],
+    )
 
     const loadDeclarations = useCallback(async () => {
         if (!userId) {
@@ -226,7 +230,8 @@ export default function IndividualDeclarations() {
 
         const packageItem = userPackages.find(item => item.id === packageId)
 
-        if (!packageItem) {
+        if (!packageItem || packageItem.hasDeclaration) {
+            setSearchParams({}, { replace: true })
             return
         }
 
@@ -266,8 +271,13 @@ export default function IndividualDeclarations() {
     }, [userId])
 
     const handleOpenPopup = () => {
+        if (packagesWithoutDeclaration.length === 0) {
+            setError('Nu există colete fără declarație.')
+            return
+        }
+
         setPopupError(null)
-        setProducts(createProductsFromPackages(userPackages, defaultCategory))
+        setProducts(createProductsFromPackages(packagesWithoutDeclaration, defaultCategory))
         setIsPopupOpen(true)
     }
 
@@ -282,7 +292,17 @@ export default function IndividualDeclarations() {
 
     const handleAddProduct = () => {
         setPopupError(null)
-        setProducts((prev) => [...prev, createEmptyProduct(defaultCategory)])
+        setProducts((prev) => {
+            const usedPackageIds = new Set(prev.map(product => product.packageId).filter(Boolean))
+            const nextPackage = packagesWithoutDeclaration.find(packageItem => !usedPackageIds.has(packageItem.id))
+
+            if (!nextPackage) {
+                setPopupError('Nu mai există colete fără declarație.')
+                return prev
+            }
+
+            return [...prev, createProductFromPackage(nextPackage, defaultCategory)]
+        })
     }
 
     const handleDeleteProduct = (productId: string) => {
@@ -348,7 +368,8 @@ export default function IndividualDeclarations() {
             }))
 
             await loadDeclarations()
-            setProducts([createEmptyProduct(defaultCategory)])
+            await loadPackages()
+            setProducts([])
             setIsPopupOpen(false)
         } catch (err: unknown) {
             if (axios.isAxiosError(err) && typeof err.response?.data === 'string') {
@@ -364,6 +385,7 @@ export default function IndividualDeclarations() {
     const handleDeleteDeclaration = async (declaration: Declaration) => {
         await deletePhysicalDeclaration(Number(declaration.id))
         await loadDeclarations()
+        await loadPackages()
     }
 
     const handleUpdateDeclaration = async (declaration: Declaration, values: DeclarationEditValues) => {
@@ -390,7 +412,7 @@ export default function IndividualDeclarations() {
                 <div className="rounded-lg border border-gray-200 bg-white p-5">
                     <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                         <p className="text-base font-semibold text-gray-900">Colete asociate</p>
-                        <p className="text-sm text-gray-500">{userPackages.length} colete</p>
+                        <p className="text-sm text-gray-500">{userPackages.length} colete · {packagesWithoutDeclaration.length} fără declarație</p>
                     </div>
 
                     {packagesLoading ? (
@@ -408,6 +430,9 @@ export default function IndividualDeclarations() {
                                     <p className="font-mono text-sm font-semibold text-gray-900">{packageItem.trackingCode}</p>
                                     <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
                                         <span>{getPackageOwnerLabel(packageItem)}</span>
+                                        <span className={packageItem.hasDeclaration ? 'text-green-700' : 'text-amber-700'}>
+                                            {packageItem.hasDeclaration ? 'Declarație creată' : 'Fără declarație'}
+                                        </span>
                                     </div>
                                 </div>
                             ))}
@@ -421,7 +446,7 @@ export default function IndividualDeclarations() {
                     <button
                         type="button"
                         onClick={handleOpenPopup}
-                        disabled={packagesLoading}
+                        disabled={packagesLoading || packagesWithoutDeclaration.length === 0}
                         className="mt-4 flex w-full items-center gap-3 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-semibold text-sky-900 transition-colors hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                     >
                         <img src="/images/Declaration.svg" alt="Declaratie" className="h-6 w-6" />
