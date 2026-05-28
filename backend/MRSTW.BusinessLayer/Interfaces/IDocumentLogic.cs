@@ -6,6 +6,7 @@ public interface IDocumentLogic
 {
     ServiceResponse UploadDocument(int userId, string fileName, string contentType, long fileSize, byte[] fileData);
     ServiceResponse GetDocumentsByUserId(int userId);
+    ServiceResponse GetAllDocuments();
     ServiceResponse GetDocumentFile(int documentId);
     ServiceResponse DeleteDocument(int documentId, int userId);
 }
