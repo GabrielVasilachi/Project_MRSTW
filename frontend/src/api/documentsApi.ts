@@ -1,5 +1,10 @@
 import { api } from "./axios";
-import type { DocumentInfo } from "./types/document";
+import type { DocumentInfo, DocumentInfoWithUser } from "./types/document";
+
+export async function getAllDocuments() {
+    const response = await api.get<DocumentInfoWithUser[]>('/documents/all');
+    return response.data;
+}
 
 export async function getDocumentsByUserId(userId: number) {
     const response = await api.get<DocumentInfo[]>(`/documents/by-user/${userId}`);

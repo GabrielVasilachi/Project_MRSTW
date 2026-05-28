@@ -1,5 +1,6 @@
 using MRSTW.DataAccessLayer.Context;
 using MRSTW.Domain.Entities.Documents;
+using MRSTW.Domain.Enums;
 using MRSTW.Domain.Models.Documents;
 using MRSTW.Domain.Models.Service;
 
@@ -111,6 +112,45 @@ public class DocumentActions
             IsSuccess = true,
             Data = document
         };
+    }
+
+    public ServiceResponse GetAllDocumentsAction()
+    {
+        using var usersContext = new UsersDbContext();
+
+        var users = usersContext.Users
+            .Select(u => new { u.Id, u.FullName, u.RoleEnum })
+            .ToList()
+            .ToDictionary(u => u.Id);
+
+        var documents = _documentsContext.Documents
+            .OrderByDescending(d => d.UploadedAt)
+            .Select(d => new { d.Id, d.UserId, d.FileName, d.ContentType, d.FileSize, d.UploadedAt })
+            .ToList();
+
+        var result = documents.Select(d =>
+        {
+            users.TryGetValue(d.UserId, out var user);
+            return new DocumentInfoWithUserDto
+            {
+                Id = d.Id,
+                UserId = d.UserId,
+                FileName = d.FileName,
+                ContentType = d.ContentType,
+                FileSize = d.FileSize,
+                UploadedAt = d.UploadedAt,
+                UserFullName = user?.FullName ?? "Utilizator necunoscut",
+                UserRole = user?.RoleEnum switch
+                {
+                    UserRoleEnum.Admin => "Administrator",
+                    UserRoleEnum.Business => "Persoană juridică",
+                    UserRoleEnum.Individual => "Persoană fizică",
+                    _ => "Necunoscut"
+                } ?? "Necunoscut"
+            };
+        }).ToList();
+
+        return new ServiceResponse { IsSuccess = true, Data = result };
     }
 
     public ServiceResponse DeleteDocumentAction(int documentId, int userId)

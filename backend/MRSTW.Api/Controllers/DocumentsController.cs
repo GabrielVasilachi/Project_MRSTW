@@ -46,6 +46,14 @@ public class DocumentsController : ControllerBase
         return Ok(response.Data);
     }
 
+    [HttpGet("all")]
+    [Authorize(Roles = "Admin")]
+    public IActionResult GetAll()
+    {
+        var response = _documentLogic.GetAllDocuments();
+        return Ok(response.Data);
+    }
+
     [HttpGet("by-user/{userId}")]
     public IActionResult GetByUser([FromRoute] int userId)
     {

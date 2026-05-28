@@ -8,3 +8,8 @@ export type DocumentInfo = {
     fileSize: number;
     uploadedAt: string;
 };
+
+export type DocumentInfoWithUser = DocumentInfo & {
+    userFullName: string;
+    userRole: string;
+};

@@ -12,6 +12,9 @@ public class DocumentLogic : DocumentActions, IDocumentLogic
     public ServiceResponse GetDocumentsByUserId(int userId)
         => GetDocumentsByUserIdAction(userId);
 
+    public ServiceResponse GetAllDocuments()
+        => GetAllDocumentsAction();
+
     public ServiceResponse GetDocumentFile(int documentId)
         => GetDocumentFileAction(documentId);
 
