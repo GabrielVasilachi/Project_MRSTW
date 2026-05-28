@@ -7,5 +7,6 @@ public interface IPackagesLogic
 {
     ServiceResponse ScanPhysicalProfiles(PackageScanPhysicalProfilesRequestDto request);
     ServiceResponse ScanBusinessProfiles(PackageScanBusinessProfilesRequestDto request);
+    ServiceResponse GetAllPackages();
     ServiceResponse GetPackagesByUserId(int userId);
 }

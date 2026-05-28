@@ -44,4 +44,8 @@ export type PackageResponse = {
     status: number;
     userId?: number | null;
     createdAt: string;
+    hasDeclaration: boolean;
+    declarationId?: number | null;
+    declarationType?: string | null;
+    declarationProductName?: string | null;
 };

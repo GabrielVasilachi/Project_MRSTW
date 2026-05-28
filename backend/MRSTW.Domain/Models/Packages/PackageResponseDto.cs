@@ -14,4 +14,8 @@ public class PackageResponseDto
     public PackageStatusEnum Status { get; set; }
     public int? UserId { get; set; }
     public DateTime CreatedAt { get; set; }
+    public bool HasDeclaration { get; set; }
+    public int? DeclarationId { get; set; }
+    public string? DeclarationType { get; set; }
+    public string? DeclarationProductName { get; set; }
 }

@@ -20,6 +20,20 @@ public class PackagesController : ControllerBase
         _packagesLogic = bl.GetPackagesLogic();
     }
 
+    [HttpGet("all")]
+    [Authorize(Roles = "Admin")]
+    public IActionResult GetAllPackages()
+    {
+        var response = _packagesLogic.GetAllPackages();
+
+        if (!response.IsSuccess)
+        {
+            return BadRequest(response.Message);
+        }
+
+        return Ok(response.Data);
+    }
+
     [HttpGet("by-user/{userId}")]
     public IActionResult GetPackagesByUserId([FromRoute] int userId)
     {

@@ -17,6 +17,8 @@ public class PackagesActions
     private readonly ActivationTokensDbContext _activationTokensContext;
     private readonly BusinessProfilesDbContext _businessProfilesContext;
     private readonly PhysicalProfilesDbContext _physicalProfilesContext;
+    private readonly PhysicalDeclarationsDbContext _physicalDeclarationsContext;
+    private readonly BusinessDeclarationsDbContext _businessDeclarationsContext;
 
     public PackagesActions()
     {
@@ -25,6 +27,23 @@ public class PackagesActions
         _activationTokensContext = new ActivationTokensDbContext();
         _businessProfilesContext = new BusinessProfilesDbContext();
         _physicalProfilesContext = new PhysicalProfilesDbContext();
+        _physicalDeclarationsContext = new PhysicalDeclarationsDbContext();
+        _businessDeclarationsContext = new BusinessDeclarationsDbContext();
+    }
+
+    public ServiceResponse GetAllPackagesAction()
+    {
+        var packages = _packagesContext.Packages
+            .OrderByDescending(p => p.CreatedAt)
+            .ToList()
+            .Select(MapPackageResponse)
+            .ToList();
+
+        return new ServiceResponse
+        {
+            IsSuccess = true,
+            Data = packages
+        };
     }
 
     public ServiceResponse GetPackagesByUserIdAction(int userId)
@@ -41,19 +60,8 @@ public class PackagesActions
         var packages = _packagesContext.Packages
             .Where(p => p.UserId == userId)
             .OrderByDescending(p => p.CreatedAt)
-            .Select(p => new PackageResponseDto
-            {
-                Id = p.Id,
-                TrackingCode = p.TrackingCode,
-                PhoneNumber = p.PhoneNumber,
-                LocationAdress = p.LocationAdress,
-                FullName = p.FullName,
-                CompanyName = p.CompanyName,
-                ContactPerson = p.ContactPerson,
-                Status = p.Status,
-                UserId = p.UserId,
-                CreatedAt = p.CreatedAt
-            })
+            .ToList()
+            .Select(MapPackageResponse)
             .ToList();
 
         return new ServiceResponse
@@ -497,6 +505,44 @@ public class PackagesActions
         return new ServiceResponse
         {
             IsSuccess = true
+        };
+    }
+
+    private PackageResponseDto MapPackageResponse(PackageEntity package)
+    {
+        var physicalDeclaration = _physicalDeclarationsContext.PhysicalDeclarations
+            .FirstOrDefault(d =>
+                d.PackageId == package.Id ||
+                (d.UserId == package.UserId && d.TrackingCode == package.TrackingCode));
+        var businessDeclaration = _businessDeclarationsContext.BusinessDeclarations
+            .FirstOrDefault(d =>
+                d.PackageId == package.Id ||
+                (d.UserId == package.UserId && d.TrackingCode == package.TrackingCode));
+
+        var declarationId = physicalDeclaration?.Id ?? businessDeclaration?.Id;
+        var declarationType = physicalDeclaration != null
+            ? "Fizică"
+            : businessDeclaration != null
+                ? "Juridică"
+                : null;
+        var declarationProductName = physicalDeclaration?.ProductName ?? businessDeclaration?.ProductName;
+
+        return new PackageResponseDto
+        {
+            Id = package.Id,
+            TrackingCode = package.TrackingCode,
+            PhoneNumber = package.PhoneNumber,
+            LocationAdress = package.LocationAdress,
+            FullName = package.FullName,
+            CompanyName = package.CompanyName,
+            ContactPerson = package.ContactPerson,
+            Status = package.Status,
+            UserId = package.UserId,
+            CreatedAt = package.CreatedAt,
+            HasDeclaration = declarationId.HasValue,
+            DeclarationId = declarationId,
+            DeclarationType = declarationType,
+            DeclarationProductName = declarationProductName
         };
     }
 

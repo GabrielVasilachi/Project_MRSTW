@@ -21,4 +21,9 @@ public class PackagesLogic : PackagesActions, IPackagesLogic
     {
         return GetPackagesByUserIdAction(userId);
     }
+
+    public ServiceResponse GetAllPackages()
+    {
+        return GetAllPackagesAction();
+    }
 }

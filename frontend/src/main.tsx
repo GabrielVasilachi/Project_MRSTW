@@ -24,17 +24,20 @@ import Dashboard_Business from "./pages/dashboard/DashboardBusiness.tsx";
 import AdminDeclarations from './pages/dashboard/admin/AdminDeclarations.tsx'
 import AdminUsers from './pages/dashboard/admin/AdminUsers.tsx'
 import AdminAccountCreations from './pages/dashboard/admin/AdminAccountCreations.tsx'
+import AdminPackages from './pages/dashboard/admin/AdminPackages.tsx'
 import AdminDocuments from './pages/dashboard/admin/AdminDocuments.tsx'
 import AdminReports from './pages/dashboard/admin/AdminReports.tsx'
 import AdminAuditLog from './pages/dashboard/admin/AdminAuditLog.tsx'
 
 // Individual
 import IndividualDeclarations from './pages/dashboard/individual/IndividualDeclarations.tsx'
+import IndividualPackages from './pages/dashboard/individual/IndividualPackages.tsx'
 import IndividualDocuments from './pages/dashboard/individual/IndividualDocuments.tsx'
 import IndividualSettings from './pages/dashboard/individual/IndividualSettings.tsx'
 
 // Business
 import BusinessDeclarations from './pages/dashboard/business/BusinessDeclarations.tsx'
+import BusinessPackages from './pages/dashboard/business/BusinessPackages.tsx'
 import BusinessDocuments from './pages/dashboard/business/BusinessDocuments.tsx'
 import BusinessSettings from './pages/dashboard/business/BusinessSettings.tsx'
 
@@ -67,6 +70,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path={paths.Admin_Declarations} element={<AuthGuard allowedRoles={['admin']}><AdminDeclarations /></AuthGuard>} />
             <Route path={paths.Admin_Users} element={<AuthGuard allowedRoles={['admin']}><AdminUsers /></AuthGuard>} />
             <Route path={paths.Admin_AccountCreations} element={<AuthGuard allowedRoles={['admin']}><AdminAccountCreations /></AuthGuard>} />
+            <Route path={paths.Admin_Packages} element={<AuthGuard allowedRoles={['admin']}><AdminPackages /></AuthGuard>} />
             <Route path={paths.Admin_Documents} element={<AuthGuard allowedRoles={['admin']}><AdminDocuments /></AuthGuard>} />
             <Route path={paths.Admin_Reports} element={<AuthGuard allowedRoles={['admin']}><AdminReports /></AuthGuard>} />
             <Route path={paths.Admin_AuditLog} element={<AuthGuard allowedRoles={['admin']}><AdminAuditLog /></AuthGuard>} />
@@ -74,12 +78,14 @@ createRoot(document.getElementById('root')!).render(
             {/* pers-fizica */}
             <Route path={paths.Dashboard_Individual} element={<AuthGuard allowedRoles={['individual']}><Dashboard_Individual /></AuthGuard>} />
             <Route path={paths.Individual_Declarations} element={<AuthGuard allowedRoles={['individual']}><IndividualDeclarations /></AuthGuard>} />
+            <Route path={paths.Individual_Packages} element={<AuthGuard allowedRoles={['individual']}><IndividualPackages /></AuthGuard>} />
             <Route path={paths.Individual_Documents} element={<AuthGuard allowedRoles={['individual']}><IndividualDocuments /></AuthGuard>} />
             <Route path={paths.Individual_Settings} element={<AuthGuard allowedRoles={['individual']}><IndividualSettings /></AuthGuard>} />
 
             {/* pers-juridica */}
             <Route path={paths.Dashboard_Business} element={<AuthGuard allowedRoles={['business']}><Dashboard_Business /></AuthGuard>} />
             <Route path={paths.Business_Declarations} element={<AuthGuard allowedRoles={['business']}><BusinessDeclarations /></AuthGuard>} />
+            <Route path={paths.Business_Packages} element={<AuthGuard allowedRoles={['business']}><BusinessPackages /></AuthGuard>} />
             <Route path={paths.Business_Documents} element={<AuthGuard allowedRoles={['business']}><BusinessDocuments /></AuthGuard>} />
             <Route path={paths.Business_Settings} element={<AuthGuard allowedRoles={['business']}><BusinessSettings /></AuthGuard>} />
           </Route>

@@ -21,3 +21,8 @@ export async function getPackagesByUserId(userId: number) {
     const response = await api.get<PackageResponse[]>(`/packages/by-user/${userId}`);
     return response.data;
 }
+
+export async function getAllPackages() {
+    const response = await api.get<PackageResponse[]>("/packages/all");
+    return response.data;
+}
