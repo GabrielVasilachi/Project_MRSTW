@@ -16,4 +16,9 @@ public class AuthLogic : AuthActions, IAuthLogic
     {
         return SetPasswordAction(request);
     }
+
+    public ServiceResponse ChangePassword(int userId, AuthChangePasswordRequestDto request)
+    {
+        return ChangePasswordAction(userId, request);
+    }
 } 

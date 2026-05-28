@@ -8,6 +8,11 @@ export type AuthSetPasswordRequest = {
     password: string;
 };
 
+export type AuthChangePasswordRequest = {
+    currentPassword: string;
+    newPassword: string;
+};
+
 export type AuthLoginResponse = {
     id: number;
     fullName: string;

@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using MRSTW.Api.Extensions;
 using MRSTW.BusinessLayer;
 using MRSTW.BusinessLayer.Interfaces;
 using MRSTW.Domain.Models.Auth;
@@ -42,4 +44,25 @@ public class AuthController : ControllerBase
 
         return Ok(response.Message);
     }
-}
+
+    [Authorize]
+    [HttpPost("change-password")]
+    public IActionResult ChangePassword([FromBody] AuthChangePasswordRequestDto request)
+    {
+        var userId = User.GetUserId();
+
+        if (!userId.HasValue)
+        {
+            return Unauthorized();
+        }
+
+        var response = _authLogic.ChangePassword(userId.Value, request);
+
+        if (!response.IsSuccess)
+        {
+            return BadRequest(response.Message);
+        }
+
+        return Ok(response.Message);
+    }
+}    

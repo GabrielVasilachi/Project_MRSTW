@@ -4,6 +4,7 @@ import { getPhysicalProfileByUserId, updatePhysicalProfile } from '../../../api/
 import type { PhysicalProfileResponse } from '../../../api/types/profile'
 import { getSession, setSession } from '../../../auth/auth.session'
 import AccountVerificationBanner from '../../../components/dashboard/AccountVerificationBanner'
+import ChangePasswordForm from '../../../components/dashboard/ChangePasswordForm'
 import ProfileInfoRow from '../../../components/dashboard/ProfileInfoRow'
 import { hasMissingPhysicalProfileData, isMissingProfileValue } from '../../../utils/profileValidation'
 
@@ -293,6 +294,8 @@ export default function IndividualSettings() {
                     {isSaving ? 'Se salvează...' : 'Salvează modificările'}
                 </button>
             </div>
+
+            <ChangePasswordForm />
         </div>
     )
 }

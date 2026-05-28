@@ -4,6 +4,7 @@ import { getBusinessProfileByUserId, updateBusinessProfile } from '../../../api/
 import type { BusinessProfileResponse } from '../../../api/types/profile'
 import { getSession, setSession } from '../../../auth/auth.session'
 import BusinessVerificationBanner from '../../../components/dashboard/BusinessVerificationBanner'
+import ChangePasswordForm from '../../../components/dashboard/ChangePasswordForm'
 import ProfileInfoRow from '../../../components/dashboard/ProfileInfoRow'
 import { hasMissingBusinessProfileData, isMissingProfileValue } from '../../../utils/profileValidation'
 
@@ -313,6 +314,8 @@ export default function BusinessSettings() {
                     {isSaving ? 'Se salvează...' : 'Salvează modificările'}
                 </button>
             </div>
+
+            <ChangePasswordForm />
         </div>
     )
 }

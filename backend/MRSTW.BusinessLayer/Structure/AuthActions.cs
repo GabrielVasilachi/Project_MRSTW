@@ -184,4 +184,83 @@ public class AuthActions
             Message = "Parola a fost setata cu succes, iar contul a fost activat."
         };
     }
+
+    public ServiceResponse ChangePasswordAction(int userId, AuthChangePasswordRequestDto request)
+    {
+        if (userId <= 0)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "UserId este invalid."
+            };
+        }
+
+        if (string.IsNullOrWhiteSpace(request.CurrentPassword))
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Parola curenta este obligatorie."
+            };
+        }
+
+        if (string.IsNullOrWhiteSpace(request.NewPassword))
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Parola noua este obligatorie."
+            };
+        }
+
+        if (request.NewPassword.Length < 6)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Parola noua trebuie sa contina cel putin 6 caractere."
+            };
+        }
+
+        var user = _usersContext.Users.FirstOrDefault(u => u.Id == userId);
+
+        if (user == null)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Utilizatorul nu a fost gasit."
+            };
+        }
+
+        if (!PasswordHashService.VerifyPassword(user.PasswordHash, request.CurrentPassword, out _))
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Parola curenta este incorecta."
+            };
+        }
+
+        try
+        {
+            user.PasswordHash = PasswordHashService.HashPassword(request.NewPassword);
+            _usersContext.SaveChanges();
+        }
+        catch (Exception e)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = e.Message
+            };
+        }
+
+        return new ServiceResponse
+        {
+            IsSuccess = true,
+            Message = "Parola a fost modificata cu succes."
+        };
+    }
 }

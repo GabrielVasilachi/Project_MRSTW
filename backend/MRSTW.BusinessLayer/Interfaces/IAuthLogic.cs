@@ -7,4 +7,5 @@ public interface IAuthLogic
 {
     ServiceResponse Login(AuthLoginRequestDto request);
     ServiceResponse SetPassword(AuthSetPasswordRequestDto request);
+    ServiceResponse ChangePassword(int userId, AuthChangePasswordRequestDto request);
 }
