@@ -7,5 +7,6 @@ public interface IUsersLogic
 {
     ServiceResponse GetUsers();
     ServiceResponse UpdateUser(int userId, UserUpdateRequestDto request);
+    ServiceResponse DeleteUser(int userId);
     ServiceResponse RegenerateActivationToken(int userId);
 }

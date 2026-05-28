@@ -4,6 +4,7 @@ import type { Declaration } from '../../../types/declaration'
 import { getSession } from '../../../auth/auth.session'
 import { createBusinessDeclaration, deleteBusinessDeclaration, getBusinessDeclarationsByUserId, updateBusinessDeclaration } from '../../../api/businessDeclarationsApi'
 import type { BusinessDeclarationResponse } from '../../../api/types/businessDeclaration'
+import { getBusinessProfileByUserId } from '../../../api/profilesApi'
 import { getPackagesByUserId } from '../../../api/packagesApi'
 import type { PackageResponse } from '../../../api/types/package'
 import KpiCard from '../../../components/dashboard/KpiCard'
@@ -19,6 +20,7 @@ import { calculateTaxes as calculateTaxesApi, getTaxCategories } from '../../../
 import type { TaxCalculationResult, TaxCategory } from '../../../api/types/taxCalculator'
 import { getMDLRates, toMDL } from '../../../utils/exchangeRates'
 import type { InputCurrency } from '../../../utils/exchangeRates'
+import { hasMissingBusinessProfileData } from '../../../utils/profileValidation'
 
 const createProductId = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`
 const DEFAULT_CATEGORY: TaxCategory = { value: 12, label: '' }
@@ -121,6 +123,7 @@ export default function BusinessDeclarations() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [isSaving, setIsSaving] = useState(false)
+    const [needsVerification, setNeedsVerification] = useState(false)
 
     const defaultCategory = useMemo(
         () => productCategories.find((category) => category.value === 12) ?? productCategories[0] ?? DEFAULT_CATEGORY,
@@ -214,6 +217,35 @@ export default function BusinessDeclarations() {
     useEffect(() => {
         loadCategories()
     }, [loadCategories])
+
+    useEffect(() => {
+        if (!userId) {
+            setNeedsVerification(false)
+            return
+        }
+
+        let ignore = false
+
+        async function loadProfileStatus() {
+            try {
+                const profile = await getBusinessProfileByUserId(userId!)
+
+                if (!ignore) {
+                    setNeedsVerification(hasMissingBusinessProfileData(profile))
+                }
+            } catch {
+                if (!ignore) {
+                    setNeedsVerification(false)
+                }
+            }
+        }
+
+        loadProfileStatus()
+
+        return () => {
+            ignore = true
+        }
+    }, [userId])
 
     const handleOpenPopup = () => {
         setPopupError(null)
@@ -341,7 +373,7 @@ export default function BusinessDeclarations() {
 
     return (
         <div className="space-y-8">
-            <BusinessVerificationBanner />
+            {needsVerification ? <BusinessVerificationBanner /> : null}
 
             <div className="space-y-4">
                 <h1 className="text-2xl font-bold" style={{ color: '#1B3A5F' }}>Declarații companie</h1>

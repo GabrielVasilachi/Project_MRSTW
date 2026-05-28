@@ -45,6 +45,19 @@ public class UsersController : ControllerBase
         return Ok(response.Message);
     }
 
+    [HttpDelete("{userId}")]
+    public IActionResult DeleteUser([FromRoute] int userId)
+    {
+        var response = _usersLogic.DeleteUser(userId);
+
+        if (!response.IsSuccess)
+        {
+            return BadRequest(response.Message);
+        }
+
+        return Ok(response.Message);
+    }
+
     [HttpPost("{userId}/activation-token/regenerate")]
     public IActionResult RegenerateActivationToken([FromRoute] int userId)
     {

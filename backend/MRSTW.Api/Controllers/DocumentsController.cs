@@ -38,7 +38,7 @@ public class DocumentsController : ControllerBase
         await file.CopyToAsync(ms);
         var bytes = ms.ToArray();
 
-        var response = _documentLogic.UploadDocument(userId, file.FileName, file.ContentType, file.Length, bytes);
+        var response = _documentLogic.UploadDocument(userId, request.DeclarationId, file.FileName, file.ContentType, file.Length, bytes);
 
         if (!response.IsSuccess)
             return BadRequest(response.Message);

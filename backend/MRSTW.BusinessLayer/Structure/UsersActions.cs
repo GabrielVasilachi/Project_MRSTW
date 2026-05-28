@@ -1,5 +1,6 @@
 using MRSTW.DataAccessLayer.Context;
 using MRSTW.Domain.Entities.ActivationTokens;
+using MRSTW.Domain.Enums;
 using MRSTW.Domain.Models.Service;
 using MRSTW.Domain.Models.Users;
 
@@ -11,6 +12,11 @@ public class UsersActions
     private readonly ActivationTokensDbContext _activationTokensContext;
     private readonly AdminProfilesDbContext _adminProfilesContext;
     private readonly PackagesDbContext _packagesContext;
+    private readonly PhysicalProfilesDbContext _physicalProfilesContext;
+    private readonly BusinessProfilesDbContext _businessProfilesContext;
+    private readonly PhysicalDeclarationsDbContext _physicalDeclarationsContext;
+    private readonly BusinessDeclarationsDbContext _businessDeclarationsContext;
+    private readonly DocumentsDbContext _documentsContext;
 
     public UsersActions()
     {
@@ -18,6 +24,11 @@ public class UsersActions
         _activationTokensContext = new ActivationTokensDbContext();
         _adminProfilesContext = new AdminProfilesDbContext();
         _packagesContext = new PackagesDbContext();
+        _physicalProfilesContext = new PhysicalProfilesDbContext();
+        _businessProfilesContext = new BusinessProfilesDbContext();
+        _physicalDeclarationsContext = new PhysicalDeclarationsDbContext();
+        _businessDeclarationsContext = new BusinessDeclarationsDbContext();
+        _documentsContext = new DocumentsDbContext();
     }
 
     public ServiceResponse GetUsersAction()
@@ -240,6 +251,91 @@ public class UsersActions
             IsSuccess = true,
             Data = response,
             Message = response.Message
+        };
+    }
+
+    public ServiceResponse DeleteUserAction(int userId)
+    {
+        var user = _usersContext.Users.FirstOrDefault(u => u.Id == userId);
+
+        if (user == null)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Utilizatorul nu a fost gasit."
+            };
+        }
+
+        if (user.RoleEnum == UserRoleEnum.Admin)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = "Conturile de administrator nu pot fi sterse din acest ecran."
+            };
+        }
+
+        try
+        {
+            var physicalDeclarations = _physicalDeclarationsContext.PhysicalDeclarations
+                .Where(declaration => declaration.UserId == userId)
+                .ToList();
+            var businessDeclarations = _businessDeclarationsContext.BusinessDeclarations
+                .Where(declaration => declaration.UserId == userId)
+                .ToList();
+            var documents = _documentsContext.Documents
+                .Where(document => document.UserId == userId)
+                .ToList();
+            var activationTokens = _activationTokensContext.ActivationTokens
+                .Where(token => token.UserId == userId)
+                .ToList();
+            var physicalProfiles = _physicalProfilesContext.PhysicalProfiles
+                .Where(profile => profile.UserId == userId)
+                .ToList();
+            var businessProfiles = _businessProfilesContext.BusinessProfiles
+                .Where(profile => profile.UserId == userId)
+                .ToList();
+            var packages = _packagesContext.Packages
+                .Where(package => package.UserId == userId)
+                .ToList();
+
+            _physicalDeclarationsContext.PhysicalDeclarations.RemoveRange(physicalDeclarations);
+            _businessDeclarationsContext.BusinessDeclarations.RemoveRange(businessDeclarations);
+            _documentsContext.Documents.RemoveRange(documents);
+            _activationTokensContext.ActivationTokens.RemoveRange(activationTokens);
+            _physicalProfilesContext.PhysicalProfiles.RemoveRange(physicalProfiles);
+            _businessProfilesContext.BusinessProfiles.RemoveRange(businessProfiles);
+
+            foreach (var package in packages)
+            {
+                package.UserId = null;
+            }
+
+            _physicalDeclarationsContext.SaveChanges();
+            _businessDeclarationsContext.SaveChanges();
+            _documentsContext.SaveChanges();
+            _activationTokensContext.SaveChanges();
+            _physicalProfilesContext.SaveChanges();
+            _businessProfilesContext.SaveChanges();
+            _packagesContext.SaveChanges();
+
+            _usersContext.Users.Remove(user);
+            _usersContext.SaveChanges();
+        }
+        catch (Exception e)
+        {
+            return new ServiceResponse
+            {
+                IsSuccess = false,
+                Message = e.Message
+            };
+        }
+
+        return new ServiceResponse
+        {
+            IsSuccess = true,
+            Message = "Utilizatorul a fost sters cu succes."
         };
     }
 }

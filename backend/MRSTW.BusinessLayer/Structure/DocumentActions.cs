@@ -9,14 +9,21 @@ namespace MRSTW.BusinessLayer.Structure;
 public class DocumentActions
 {
     private readonly DocumentsDbContext _documentsContext;
+    private readonly PhysicalDeclarationsDbContext _physicalDeclarationsContext;
+    private readonly BusinessDeclarationsDbContext _businessDeclarationsContext;
 
     public DocumentActions()
     {
         _documentsContext = new DocumentsDbContext();
+        _physicalDeclarationsContext = new PhysicalDeclarationsDbContext();
+        _businessDeclarationsContext = new BusinessDeclarationsDbContext();
     }
 
-    public ServiceResponse UploadDocumentAction(int userId, string fileName, string contentType, long fileSize, byte[] fileData)
+    public ServiceResponse UploadDocumentAction(int userId, int declarationId, string fileName, string contentType, long fileSize, byte[] fileData)
     {
+        if (declarationId <= 0)
+            return new ServiceResponse { IsSuccess = false, Message = "DeclarationId este obligatoriu." };
+
         if (string.IsNullOrWhiteSpace(fileName))
             return new ServiceResponse { IsSuccess = false, Message = "Numele fișierului este obligatoriu." };
 
@@ -27,9 +34,16 @@ public class DocumentActions
         if (fileSize > maxSize)
             return new ServiceResponse { IsSuccess = false, Message = "Fișierul depășește limita de 10 MB." };
 
+        var declarationType = ResolveDeclarationType(userId, declarationId);
+
+        if (declarationType == null)
+            return new ServiceResponse { IsSuccess = false, Message = "Declaratia nu a fost gasita pentru acest utilizator." };
+
         var document = new DocumentEntity
         {
             UserId = userId,
+            DeclarationId = declarationId,
+            DeclarationType = declarationType,
             FileName = fileName.Trim(),
             ContentType = contentType,
             FileSize = fileSize,
@@ -55,6 +69,8 @@ public class DocumentActions
             {
                 Id = document.Id,
                 UserId = document.UserId,
+                DeclarationId = document.DeclarationId,
+                DeclarationType = document.DeclarationType,
                 FileName = document.FileName,
                 ContentType = document.ContentType,
                 FileSize = document.FileSize,
@@ -72,6 +88,8 @@ public class DocumentActions
             {
                 Id = d.Id,
                 UserId = d.UserId,
+                DeclarationId = d.DeclarationId,
+                DeclarationType = d.DeclarationType,
                 FileName = d.FileName,
                 ContentType = d.ContentType,
                 FileSize = d.FileSize,
@@ -153,5 +171,22 @@ public class DocumentActions
         }
 
         return new ServiceResponse { IsSuccess = true, Message = "Documentul a fost șters." };
+    }
+
+    private string? ResolveDeclarationType(int userId, int declarationId)
+    {
+        var physicalDeclarationExists = _physicalDeclarationsContext.PhysicalDeclarations
+            .Any(declaration => declaration.Id == declarationId && declaration.UserId == userId);
+
+        if (physicalDeclarationExists)
+            return "physical";
+
+        var businessDeclarationExists = _businessDeclarationsContext.BusinessDeclarations
+            .Any(declaration => declaration.Id == declarationId && declaration.UserId == userId);
+
+        if (businessDeclarationExists)
+            return "business";
+
+        return null;
     }
 }

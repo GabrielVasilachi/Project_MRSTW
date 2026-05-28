@@ -108,7 +108,7 @@ export default function AdminDocuments() {
                         <table className="min-w-full text-left text-sm">
                             <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-600">
                                 <tr>
-                                    {['Fișier', 'Tip', 'Utilizator', 'Rol', 'Dimensiune', 'Data', 'Acțiuni'].map(h => (
+                                    {['Fișier', 'Declarație', 'Tip', 'Utilizator', 'Rol', 'Dimensiune', 'Data', 'Acțiuni'].map(h => (
                                         <th key={h} className="px-6 py-3 font-medium">{h}</th>
                                     ))}
                                 </tr>
@@ -120,6 +120,9 @@ export default function AdminDocuments() {
                                         <tr key={doc.id} className="hover:bg-gray-50">
                                             <td className="px-6 py-3 font-mono text-xs text-gray-700 max-w-xs truncate" title={doc.fileName}>
                                                 {doc.fileName}
+                                            </td>
+                                            <td className="px-6 py-3 font-mono text-xs text-gray-600 whitespace-nowrap">
+                                                {doc.declarationId ? `#${doc.declarationId}` : '—'}
                                             </td>
                                             <td className="px-6 py-3">
                                                 <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${TYPE_COLORS[docType]}`}>

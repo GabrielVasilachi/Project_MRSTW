@@ -11,6 +11,11 @@ export async function updateUser(userId: number, data: UserUpdateRequest) {
     return response.data;
 }
 
+export async function deleteUser(userId: number) {
+    const response = await api.delete<string>(`/users/${userId}`);
+    return response.data;
+}
+
 export async function regenerateActivationToken(userId: number) {
     const response = await api.post<UserActivationTokenResponse>(`/users/${userId}/activation-token/regenerate`);
     return response.data;

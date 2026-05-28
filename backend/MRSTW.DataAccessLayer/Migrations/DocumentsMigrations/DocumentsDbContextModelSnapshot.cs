@@ -33,6 +33,13 @@ namespace MRSTW.DataAccessLayer.Migrations.DocumentsMigrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<int?>("DeclarationId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("DeclarationType")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
                     b.Property<byte[]>("FileData")
                         .IsRequired()
                         .HasColumnType("bytea");
@@ -52,6 +59,8 @@ namespace MRSTW.DataAccessLayer.Migrations.DocumentsMigrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DeclarationId");
 
                     b.HasIndex("UserId");
 

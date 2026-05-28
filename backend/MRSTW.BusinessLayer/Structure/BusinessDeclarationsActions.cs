@@ -13,12 +13,14 @@ public class BusinessDeclarationsActions
     private readonly BusinessDeclarationsDbContext _businessDeclarationsContext;
     private readonly UsersDbContext _usersContext;
     private readonly PackagesDbContext _packagesContext;
+    private readonly DocumentsDbContext _documentsContext;
 
     public BusinessDeclarationsActions()
     {
         _businessDeclarationsContext = new BusinessDeclarationsDbContext();
         _usersContext = new UsersDbContext();
         _packagesContext = new PackagesDbContext();
+        _documentsContext = new DocumentsDbContext();
     }
 
     public ServiceResponse CreateBusinessDeclarationAction(BusinessDeclarationCreateRequestDto request)
@@ -465,7 +467,13 @@ public class BusinessDeclarationsActions
 
         try
         {
+            var documents = _documentsContext.Documents
+                .Where(document => document.DeclarationId == declaration.Id && document.DeclarationType == "business")
+                .ToList();
+
+            _documentsContext.Documents.RemoveRange(documents);
             _businessDeclarationsContext.BusinessDeclarations.Remove(declaration);
+            _documentsContext.SaveChanges();
             _businessDeclarationsContext.SaveChanges();
         }
         catch (Exception e)
