@@ -13,16 +13,101 @@ const ACTION_COLORS: Record<string, string> = {
 
 const ACTIONS = ['Toate', 'Creare utilizator', 'Încărcare document', 'Creare token activare', 'Scanare colet']
 
+const TRUNCATE_LENGTH = 60
+
 function getApiErrorMessage(error: unknown) {
     if (axios.isAxiosError(error) && typeof error.response?.data === 'string') {
         return error.response.data
     }
-
     return 'Nu s-au putut încărca evenimentele de audit.'
 }
 
 function formatTimestamp(timestamp: string) {
     return new Date(timestamp).toLocaleString('ro-RO')
+}
+
+function DetailsCell({ details, onExpand }: { details: string; onExpand: () => void }) {
+    if (details.length <= TRUNCATE_LENGTH) {
+        return <span className="text-gray-600">{details}</span>
+    }
+    return (
+        <span className="text-gray-600">
+            {details.slice(0, TRUNCATE_LENGTH)}
+            <button
+                type="button"
+                onClick={onExpand}
+                className="ml-1 inline-flex items-center rounded px-1 py-0.5 text-xs font-bold text-sky-600 hover:bg-sky-50 hover:text-sky-800"
+                title="Vezi detalii complete"
+            >
+                ···
+            </button>
+        </span>
+    )
+}
+
+function DetailsModal({ entry, onClose }: { entry: AuditLogEntry; onClose: () => void }) {
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <button
+                type="button"
+                onClick={onClose}
+                className="absolute inset-0 bg-black/40"
+                aria-label="Închide"
+            />
+            <div className="relative z-10 w-full max-w-lg rounded-xl bg-white shadow-2xl">
+                <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+                    <p className="text-base font-semibold text-gray-900">Detalii eveniment</p>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="flex h-7 w-7 items-center justify-center rounded border border-gray-200 text-gray-500 hover:bg-gray-100"
+                    >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div className="space-y-3 px-6 py-5">
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Timestamp</p>
+                            <p className="mt-0.5 font-mono text-gray-700">{formatTimestamp(entry.timestamp)}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Acțiune</p>
+                            <span className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${ACTION_COLORS[entry.action] ?? 'bg-gray-100 text-gray-700'}`}>
+                                {entry.action}
+                            </span>
+                        </div>
+                        <div>
+                            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Actor</p>
+                            <p className="mt-0.5 text-gray-700">{entry.actorName ?? 'Sistem'}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Utilizator</p>
+                            <p className="mt-0.5 font-medium text-gray-900">{entry.user}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Rol</p>
+                            <p className="mt-0.5 text-gray-700">{entry.role}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Obiect</p>
+                            <p className="mt-0.5 font-mono text-xs text-gray-600">{entry.target}</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Detalii</p>
+                        <p className="mt-1 rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-800 leading-relaxed whitespace-pre-wrap break-words">
+                            {entry.details}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
 }
 
 export default function AdminAuditLog() {
@@ -31,16 +116,15 @@ export default function AdminAuditLog() {
     const [loading, setLoading] = useState(true)
     const [refreshing, setRefreshing] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [selectedEntry, setSelectedEntry] = useState<AuditLogEntry | null>(null)
+
     const filtered = filter === 'Toate' ? log : log.filter(entry => entry.action === filter)
     const documentLogs = log.filter(entry => entry.action === 'Încărcare document')
     const activationTokenLogs = log.filter(entry => entry.action === 'Creare token activare')
     const packageLogs = log.filter(entry => entry.action === 'Scanare colet')
 
     const loadAuditLogs = useCallback(async (isRefresh = false) => {
-        if (isRefresh) {
-            setRefreshing(true)
-        }
-
+        if (isRefresh) setRefreshing(true)
         try {
             const response = await getAuditLogs()
             setLog(response ?? [])
@@ -61,10 +145,7 @@ export default function AdminAuditLog() {
         const intervalId = window.setInterval(() => {
             loadAuditLogs(true)
         }, 15000)
-
-        return () => {
-            window.clearInterval(intervalId)
-        }
+        return () => window.clearInterval(intervalId)
     }, [loadAuditLogs])
 
     if (loading) {
@@ -153,13 +234,25 @@ export default function AdminAuditLog() {
                                         </span>
                                     </td>
                                     <td className="px-6 py-3 font-mono text-xs text-gray-600">{entry.target}</td>
-                                    <td className="px-6 py-3 text-gray-600 max-w-xl">{entry.details}</td>
+                                    <td className="px-6 py-3 max-w-xs">
+                                        <DetailsCell
+                                            details={entry.details}
+                                            onExpand={() => setSelectedEntry(entry)}
+                                        />
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </div>
             </div>
+
+            {selectedEntry && (
+                <DetailsModal
+                    entry={selectedEntry}
+                    onClose={() => setSelectedEntry(null)}
+                />
+            )}
         </div>
     )
 }
