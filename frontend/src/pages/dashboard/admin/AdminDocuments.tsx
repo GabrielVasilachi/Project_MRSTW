@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { useEffect, useState } from 'react'
-import { getAllDocuments, getDocumentFileUrl } from '../../../api/documentsApi'
+import { downloadDocumentFile, getAllDocuments } from '../../../api/documentsApi'
 import type { DocumentInfoWithUser } from '../../../api/types/document'
 import KpiCard from '../../../components/dashboard/KpiCard'
 import { formatBytes } from '../../../utils/format'
@@ -27,6 +27,7 @@ export default function AdminDocuments() {
     const [filter, setFilter] = useState<DocTypeFilter>('Toate')
     const [documents, setDocuments] = useState<DocumentInfoWithUser[]>([])
     const [loading, setLoading] = useState(true)
+    const [downloadingId, setDownloadingId] = useState<number | null>(null)
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
@@ -48,6 +49,25 @@ export default function AdminDocuments() {
     const filtered = filter === 'Toate' ? documents : documents.filter(d => getDocumentType(d.contentType) === filter)
     const totalSize = documents.reduce((sum, d) => sum + d.fileSize, 0)
     const lastUpload = documents.map(d => d.uploadedAt).sort((a, b) => b.localeCompare(a))[0]
+
+    async function downloadDocument(id: number, fileName: string) {
+        setDownloadingId(id)
+        setError(null)
+
+        try {
+            const file = await downloadDocumentFile(id)
+            const fileUrl = URL.createObjectURL(file)
+            const a = document.createElement('a')
+            a.href = fileUrl
+            a.download = fileName
+            a.click()
+            window.setTimeout(() => URL.revokeObjectURL(fileUrl), 0)
+        } catch {
+            setError('Eroare la descărcarea documentului.')
+        } finally {
+            setDownloadingId(null)
+        }
+    }
 
     if (loading) {
         return (
@@ -136,17 +156,17 @@ export default function AdminDocuments() {
                                                 {new Date(doc.uploadedAt).toLocaleDateString('ro-RO')}
                                             </td>
                                             <td className="px-6 py-3">
-                                                <a
-                                                    href={getDocumentFileUrl(doc.id)}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
+                                                <button
+                                                    type="button"
+                                                    onClick={() => downloadDocument(doc.id, doc.fileName)}
+                                                    disabled={downloadingId === doc.id}
                                                     className="inline-flex items-center gap-1 rounded-md border border-sky-200 bg-sky-50 px-2 py-1 text-xs font-medium text-sky-700 hover:bg-sky-100"
                                                 >
                                                     <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                                     </svg>
-                                                    Descarcă
-                                                </a>
+                                                    {downloadingId === doc.id ? 'Se descarcă...' : 'Descarcă'}
+                                                </button>
                                             </td>
                                         </tr>
                                     )

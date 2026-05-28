@@ -125,7 +125,7 @@ public class DocumentActions
 
         var documents = _documentsContext.Documents
             .OrderByDescending(d => d.UploadedAt)
-            .Select(d => new { d.Id, d.UserId, d.FileName, d.ContentType, d.FileSize, d.UploadedAt })
+            .Select(d => new { d.Id, d.UserId, d.DeclarationId, d.DeclarationType, d.FileName, d.ContentType, d.FileSize, d.UploadedAt })
             .ToList();
 
         var result = documents.Select(d =>
@@ -135,6 +135,8 @@ public class DocumentActions
             {
                 Id = d.Id,
                 UserId = d.UserId,
+                DeclarationId = d.DeclarationId,
+                DeclarationType = d.DeclarationType,
                 FileName = d.FileName,
                 ContentType = d.ContentType,
                 FileSize = d.FileSize,

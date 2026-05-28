@@ -3,6 +3,8 @@ import axios from 'axios'
 import type { Declaration } from '../../../types/declaration'
 import type { AdminDeclarationResponse, AdminDeclarationsFilter } from '../../../api/types/adminDeclaration'
 import { deleteBusinessDeclaration, getAllBusinessDeclarations, updateBusinessDeclaration } from '../../../api/businessDeclarationsApi'
+import { getAllDocuments } from '../../../api/documentsApi'
+import type { DocumentInfoWithUser } from '../../../api/types/document'
 import { deletePhysicalDeclaration, getAllPhysicalDeclarations, updatePhysicalDeclaration } from '../../../api/physicalDeclarationsApi'
 import KpiCard from '../../../components/dashboard/KpiCard'
 import DeclarationsTable from '../../../components/dashboard/DeclarationsTable'
@@ -88,6 +90,7 @@ function getApiErrorMessage(error: unknown) {
 export default function AdminDeclarations() {
     const [filter, setFilter] = useState<AdminDeclarationsFilter>('all')
     const [adminDeclarations, setAdminDeclarations] = useState<AdminDeclarationResponse[]>([])
+    const [documents, setDocuments] = useState<DocumentInfoWithUser[]>([])
     const [taxCalculationsByDeclarationId, setTaxCalculationsByDeclarationId] = useState<Record<number, TaxCalculationResult>>({})
     const [productCategories, setProductCategories] = useState<TaxCategory[]>([])
     const [loading, setLoading] = useState(true)
@@ -136,6 +139,15 @@ export default function AdminDeclarations() {
         }
     }, [])
 
+    const loadDocuments = useCallback(async () => {
+        try {
+            const response = await getAllDocuments()
+            setDocuments(response ?? [])
+        } catch {
+            setDocuments([])
+        }
+    }, [])
+
     useEffect(() => {
         loadDeclarations()
     }, [loadDeclarations])
@@ -143,6 +155,10 @@ export default function AdminDeclarations() {
     useEffect(() => {
         loadCategories()
     }, [loadCategories])
+
+    useEffect(() => {
+        loadDocuments()
+    }, [loadDocuments])
 
     const declarations = useMemo(
         () => adminDeclarations.map((item) => mapAdminToDeclaration(
@@ -171,6 +187,39 @@ export default function AdminDeclarations() {
     }, [adminDeclarations])
 
     const resolveUser = useCallback((userId: string) => userLookup.get(userId), [userLookup])
+
+    const documentsByDeclaration = useMemo(() => {
+        const map = new Map<string, DocumentInfoWithUser[]>()
+
+        documents.forEach((document) => {
+            if (!document.declarationId || !document.declarationType) {
+                return
+            }
+
+            const declarationType = document.declarationType === 'business' ? 'legal' : document.declarationType
+            const key = `${declarationType}:${document.declarationId}`
+            const current = map.get(key) ?? []
+            map.set(key, [...current, document])
+        })
+
+        return map
+    }, [documents])
+
+    const resolveDeclarationInfo = useCallback((declaration: Declaration) => {
+        const adminItem = adminById.get(declaration.id)
+        const declarationType = declaration.declaration_type ?? adminItem?.declarationType
+        const documentsForDeclaration = declarationType
+            ? documentsByDeclaration.get(`${declarationType}:${declaration.id}`) ?? []
+            : []
+
+        return {
+            documentsCount: documentsForDeclaration.length,
+            packageOwner: adminItem?.user.fullName ?? userLookup.get(declaration.user_id)?.name ?? '—',
+            personType: adminItem
+                ? PERSON_TYPE_LABELS[adminItem.personType] ?? adminItem.personType
+                : userLookup.get(declaration.user_id)?.type ?? '—',
+        }
+    }, [adminById, documentsByDeclaration, userLookup])
 
     const handleDeleteDeclaration = useCallback(async (declaration: Declaration) => {
         const adminItem = adminById.get(declaration.id)
@@ -223,8 +272,6 @@ export default function AdminDeclarations() {
     const pending = declarations.filter(d => d.status === 'Pending Documents').length
     const underReview = declarations.filter(d => d.status === 'Under Review').length
     const approved = declarations.filter(d => d.status === 'Approved').length
-    const rejected = declarations.filter(d => d.status === 'Rejected').length
-
     return (
         <div className="space-y-8">
             <div>
@@ -243,8 +290,8 @@ export default function AdminDeclarations() {
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 <KpiCard label="Total declarații" value={String(declarations.length)} />
                 <KpiCard label="Aprobate" value={String(approved)} />
+                <KpiCard label="Fără documente" value={String(declarations.filter(declaration => resolveDeclarationInfo(declaration).documentsCount === 0).length)} />
                 <KpiCard label="În procesare" value={String(underReview + pending)} />
-                <KpiCard label="Respinse" value={String(rejected)} />
             </div>
 
             <div className="rounded-lg border border-gray-200 bg-white">
@@ -277,6 +324,7 @@ export default function AdminDeclarations() {
                 <DeclarationsTable
                     declarations={declarations}
                     resolveUser={resolveUser}
+                    resolveDeclarationInfo={resolveDeclarationInfo}
                     onDeleteDeclaration={handleDeleteDeclaration}
                     onUpdateDeclaration={handleUpdateDeclaration}
                     productCategories={productCategories}

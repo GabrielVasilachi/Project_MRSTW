@@ -37,6 +37,7 @@ export type DeclarationEditValues = {
 type Props = {
     declarations: Declaration[]
     resolveUser?: (userId: string) => { name: string; type: string } | undefined
+    resolveDeclarationInfo?: (declaration: Declaration) => { documentsCount: number; packageOwner: string; personType: string } | undefined
     onOpenDeclaration?: (declaration: Declaration) => Promise<void>
     onDeleteDeclaration?: (declaration: Declaration) => Promise<void>
     onUpdateDeclaration?: (declaration: Declaration, values: DeclarationEditValues) => Promise<void>
@@ -249,7 +250,7 @@ function DeclarationModal({ d, user, onClose, onSave, productCategories, canEdit
     )
 }
 
-export default function DeclarationsTable({ declarations, resolveUser, onOpenDeclaration, onDeleteDeclaration, onUpdateDeclaration, productCategories, canEditStatus }: Props) {
+export default function DeclarationsTable({ declarations, resolveUser, resolveDeclarationInfo, onOpenDeclaration, onDeleteDeclaration, onUpdateDeclaration, productCategories, canEditStatus }: Props) {
     const [filter, setFilter] = useState('Toate')
     const [selected, setSelected] = useState<Declaration | null>(null)
     const [openingId, setOpeningId] = useState<string | null>(null)
@@ -344,7 +345,10 @@ export default function DeclarationsTable({ declarations, resolveUser, onOpenDec
                                 <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-600">
                                     <tr>
                                         <th className="px-6 py-3 font-medium">Tracking Code</th>
+                                        {resolveDeclarationInfo ? <th className="px-6 py-3 font-medium">Proprietar</th> : null}
+                                        {resolveDeclarationInfo ? <th className="px-6 py-3 font-medium">Tip</th> : null}
                                         <th className="px-6 py-3 font-medium">Descriere</th>
+                                        {resolveDeclarationInfo ? <th className="px-6 py-3 font-medium">Documente</th> : null}
                                         <th className="px-6 py-3 font-medium">Cantitate</th>
                                         <th className="px-6 py-3 font-medium">Valoare vamală</th>
                                         <th className="px-6 py-3 font-medium">Taxă vamală</th>
@@ -358,6 +362,7 @@ export default function DeclarationsTable({ declarations, resolveUser, onOpenDec
                                     {filtered.map(d => {
                                         const isOpening = openingId === d.id
                                         const isDeleting = deletingId === d.id
+                                        const declarationInfo = resolveDeclarationInfo?.(d)
                                         return (
                                             <tr
                                                 key={d.id}
@@ -367,7 +372,34 @@ export default function DeclarationsTable({ declarations, resolveUser, onOpenDec
                                                 onClick={() => handleRowClick(d)}
                                             >
                                                 <td className="px-6 py-3 font-mono text-xs font-medium text-gray-900">{d.awb_number}</td>
+                                                {resolveDeclarationInfo ? (
+                                                    <td className="px-6 py-3 text-gray-700 whitespace-nowrap">{declarationInfo?.packageOwner ?? '—'}</td>
+                                                ) : null}
+                                                {resolveDeclarationInfo ? (
+                                                    <td className="px-6 py-3 whitespace-nowrap">
+                                                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                                                            declarationInfo?.personType === 'Persoană Fizică'
+                                                                ? 'bg-blue-100 text-blue-700'
+                                                                : 'bg-emerald-100 text-emerald-700'
+                                                        }`}>
+                                                            {declarationInfo?.personType ?? '—'}
+                                                        </span>
+                                                    </td>
+                                                ) : null}
                                                 <td className="px-6 py-3 text-gray-700">{d.description}</td>
+                                                {resolveDeclarationInfo ? (
+                                                    <td className="px-6 py-3 whitespace-nowrap">
+                                                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                                                            declarationInfo?.documentsCount
+                                                                ? 'bg-green-100 text-green-700'
+                                                                : 'bg-amber-100 text-amber-700'
+                                                        }`}>
+                                                            {declarationInfo?.documentsCount
+                                                                ? `${declarationInfo.documentsCount} atașat(e)`
+                                                                : 'Fără documente'}
+                                                        </span>
+                                                    </td>
+                                                ) : null}
                                                 <td className="px-6 py-3 text-gray-700">{d.quantity}</td>
                                                 <td className="px-6 py-3 text-gray-700">{fmt(d.customs_value, d.currency)}</td>
                                                 <td className="px-6 py-3 text-gray-700">{fmt(d.customs_duty, d.currency)}</td>
@@ -392,7 +424,7 @@ export default function DeclarationsTable({ declarations, resolveUser, onOpenDec
                                 </tbody>
                                 <tfoot className="border-t-2 border-gray-200 bg-gray-50 text-sm font-semibold text-gray-800">
                                     <tr>
-                                        <td colSpan={3} className="px-6 py-3 text-right text-xs uppercase tracking-wide text-gray-500">
+                                        <td colSpan={resolveDeclarationInfo ? 6 : 3} className="px-6 py-3 text-right text-xs uppercase tracking-wide text-gray-500">
                                             Total ({filtered.length}):
                                         </td>
                                         <td className="px-6 py-3">{fmt(filtered.reduce((s, d) => s + d.customs_value, 0))}</td>

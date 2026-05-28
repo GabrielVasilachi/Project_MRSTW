@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import axios from 'axios'
 import type { Declaration } from '../../../types/declaration'
 import { getSession } from '../../../auth/auth.session'
@@ -106,6 +107,7 @@ const mapBusinessToDeclaration = (
 }
 
 export default function BusinessDeclarations() {
+    const [searchParams, setSearchParams] = useSearchParams()
     const session = getSession()
     const userId = session?.userId
         ? (parseInt(session.userId) || parseInt(session.userId.replace(/\D/g, '')) || null)
@@ -217,6 +219,25 @@ export default function BusinessDeclarations() {
     useEffect(() => {
         loadCategories()
     }, [loadCategories])
+
+    useEffect(() => {
+        const packageId = Number(searchParams.get('packageId'))
+
+        if (!packageId || !Number.isFinite(packageId) || packagesLoading || userPackages.length === 0) {
+            return
+        }
+
+        const packageItem = userPackages.find(item => item.id === packageId)
+
+        if (!packageItem) {
+            return
+        }
+
+        setPopupError(null)
+        setProducts([createProductFromPackage(packageItem, defaultCategory)])
+        setIsPopupOpen(true)
+        setSearchParams({}, { replace: true })
+    }, [defaultCategory, packagesLoading, searchParams, setSearchParams, userPackages])
 
     useEffect(() => {
         if (!userId) {

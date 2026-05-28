@@ -32,12 +32,6 @@ const STATUS_BY_ENUM: Record<number, string> = {
     3: 'Pending Documents',
 }
 
-const PACKAGE_STATUS_LABELS: Record<number, string> = {
-    0: 'Așteaptă documente',
-    1: 'În procesare',
-    2: 'Finalizat',
-}
-
 export default function DashboardIndividual() {
     const session = getSession()
     const parsedUserId = session?.userId ? Number(session.userId) : null
@@ -107,8 +101,10 @@ export default function DashboardIndividual() {
         [data.declarations],
     )
     const recentDeclarations = data.declarations.slice(0, 4)
-    const recentPackages = data.packages.slice(0, 3)
+    const recentPackages = data.packages.slice(0, 5)
     const recentDocuments = data.documents.slice(0, 3)
+    const packagesWithDeclaration = data.packages.filter(packageItem => packageItem.hasDeclaration)
+    const packagesWithoutDeclaration = data.packages.filter(packageItem => !packageItem.hasDeclaration)
 
     if (loading) {
         return (
@@ -138,28 +134,17 @@ export default function DashboardIndividual() {
         <div className="space-y-8">
             {needsVerification ? <AccountVerificationBanner /> : null}
 
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
                 <div>
                     <p className="text-sm font-medium text-gray-500">Dashboard persoană fizică</p>
                     <h1 className="mt-1 text-2xl font-bold" style={{ color: '#1B3A5F' }}>{profile.fullName}</h1>
                     <p className="mt-1 text-sm text-gray-500">{profile.email ?? 'email necompletat'} · {profile.phoneNumber}</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                    <Link to={paths.Individual_Declarations} className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700">
-                        Declarații
-                    </Link>
-                    <Link to={paths.Individual_Documents} className="rounded-md border border-blue-200 bg-white px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50">
-                        Documente
-                    </Link>
-                    <Link to={paths.Individual_Settings} className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                        Setări
-                    </Link>
-                </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-                <KpiCard label="Declarații" value={String(data.declarations.length)} />
-                <KpiCard label="Colete asociate" value={String(data.packages.length)} />
+                <KpiCard label="Colete" value={String(data.packages.length)} sub={`${packagesWithoutDeclaration.length} fără declarație`} />
+                <KpiCard label="Cu declarație" value={String(packagesWithDeclaration.length)} />
                 <KpiCard label="Documente" value={String(data.documents.length)} sub={formatBytes(data.documents.reduce((sum, document) => sum + document.fileSize, 0))} />
                 <KpiCard label="Valoare declarată" value={fmt(totalValue)} />
             </div>
@@ -168,26 +153,32 @@ export default function DashboardIndividual() {
                 <div className="rounded-lg border border-gray-200 bg-white">
                     <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
                         <div>
-                            <p className="text-base font-semibold text-gray-900">Declarații recente</p>
-                            <p className="mt-0.5 text-sm text-gray-500">Ultimele declarații create pe cont.</p>
+                            <p className="text-base font-semibold text-gray-900">Colete recente</p>
+                            <p className="mt-0.5 text-sm text-gray-500">Coletele scanate și starea declarației pentru fiecare.</p>
                         </div>
-                        <Link to={paths.Individual_Declarations} className="text-sm font-medium text-blue-600 hover:underline">
+                        <Link to={paths.Individual_Packages} className="text-sm font-medium text-blue-600 hover:underline">
                             Vezi toate
                         </Link>
                     </div>
-                    {recentDeclarations.length === 0 ? (
-                        <p className="px-6 py-8 text-center text-sm text-gray-400">Nu aveți declarații create.</p>
+                    {recentPackages.length === 0 ? (
+                        <p className="px-6 py-8 text-center text-sm text-gray-400">Nu există colete asociate.</p>
                     ) : (
                         <div className="divide-y divide-gray-100">
-                            {recentDeclarations.map(declaration => (
-                                <div key={declaration.id} className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
+                            {recentPackages.map(packageItem => (
+                                <div key={packageItem.id} className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
                                     <div>
-                                        <p className="font-medium text-gray-900">{declaration.productName}</p>
-                                        <p className="mt-1 font-mono text-xs text-gray-500">{declaration.trackingCode}</p>
+                                        <p className="font-medium text-gray-900">{packageItem.fullName || packageItem.trackingCode}</p>
+                                        <p className="mt-1 font-mono text-xs text-gray-500">{packageItem.trackingCode}</p>
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <span className="text-sm font-medium text-gray-700">{fmt(Number(declaration.totalCost))}</span>
-                                        <StatusBadge status={STATUS_BY_ENUM[declaration.status] ?? 'Under Review'} />
+                                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${packageItem.hasDeclaration ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                                            {packageItem.hasDeclaration ? 'Declarație creată' : 'Fără declarație'}
+                                        </span>
+                                        {!packageItem.hasDeclaration ? (
+                                            <Link to={`${paths.Individual_Declarations}?packageId=${packageItem.id}`} className="text-xs font-medium text-blue-600 hover:underline">
+                                                Adaugă
+                                            </Link>
+                                        ) : null}
                                     </div>
                                 </div>
                             ))}
@@ -205,20 +196,23 @@ export default function DashboardIndividual() {
 
             <div className="grid gap-6 lg:grid-cols-2">
                 <div className="rounded-lg border border-gray-200 bg-white">
-                    <div className="border-b border-gray-200 px-6 py-4">
-                        <p className="text-base font-semibold text-gray-900">Colete recente</p>
+                    <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+                        <p className="text-base font-semibold text-gray-900">Declarații recente</p>
+                        <Link to={paths.Individual_Declarations} className="text-sm font-medium text-blue-600 hover:underline">
+                            Vezi toate
+                        </Link>
                     </div>
-                    {recentPackages.length === 0 ? (
-                        <p className="px-6 py-8 text-center text-sm text-gray-400">Nu există colete asociate.</p>
+                    {recentDeclarations.length === 0 ? (
+                        <p className="px-6 py-8 text-center text-sm text-gray-400">Nu aveți declarații create.</p>
                     ) : (
                         <div className="divide-y divide-gray-100">
-                            {recentPackages.map(packageItem => (
-                                <div key={packageItem.id} className="flex items-center justify-between gap-3 px-6 py-4">
+                            {recentDeclarations.map(declaration => (
+                                <div key={declaration.id} className="flex items-center justify-between gap-3 px-6 py-4">
                                     <div>
-                                        <p className="font-mono text-sm font-semibold text-gray-900">{packageItem.trackingCode}</p>
-                                        <p className="mt-1 text-xs text-gray-500">{packageItem.locationAdress}</p>
+                                        <p className="text-sm font-semibold text-gray-900">{declaration.productName}</p>
+                                        <p className="mt-1 font-mono text-xs text-gray-500">{declaration.trackingCode}</p>
                                     </div>
-                                    <span className="text-xs font-medium text-gray-500">{PACKAGE_STATUS_LABELS[packageItem.status] ?? `Status ${packageItem.status}`}</span>
+                                    <StatusBadge status={STATUS_BY_ENUM[declaration.status] ?? 'Under Review'} />
                                 </div>
                             ))}
                         </div>
