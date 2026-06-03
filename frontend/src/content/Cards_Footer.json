@@ -2,8 +2,8 @@
   "navigation": [
     { "name": "Acasă", "link": "/" },
     { "name": "Cum funcționează", "link": "/guide" },
-    { "name": "Autentificare", "link": "/authentification" },
-    { "name": "Înregistrare", "link": "/signup" }
+    { "name": "Întrebări frecvente", "link": "/faq" },
+    { "name": "Autentificare", "link": "/login" }
   ],
   "contactInfo": {
     "phone": "+373 22 XXX XXX",
